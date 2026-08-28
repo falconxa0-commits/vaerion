@@ -1,0 +1,13 @@
+{
+  "name": "vae-context",
+  "version": "0.1.0-ms.0",
+  "private": true,
+  "description": "L2 context engine: One Context Path types, provenance + untrusted fencing, deterministic pack contract, scopes, and the research capability foundation.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "vae-foundation": "workspace:*"
+  }
+}

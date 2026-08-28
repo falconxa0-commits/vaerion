@@ -1,0 +1,13 @@
+{
+  "name": "vae-foundation",
+  "version": "0.1.0-ms.0",
+  "private": true,
+  "description": "L0 foundation: envelope contract, error catalog, exit-code alphabet, ULID identity, deterministic clock, canonical JSON, blake3 hashing, redaction, receipts, decimal-string money.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@noble/hashes": "^2.0.0"
+  }
+}

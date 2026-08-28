@@ -1,0 +1,10 @@
+{
+  "name": "@vaerion/sdk",
+  "version": "0.1.0-ms.0",
+  "private": true,
+  "description": "TypeScript SDK preparation: typed client for the loopback daemon API, conformance-locked to the envelope contract. Full SDK conformance suite lands with MS-5 (D17.2, D17.5).",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

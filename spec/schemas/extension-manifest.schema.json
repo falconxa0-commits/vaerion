@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vaerion.dev/schemas/extension-manifest.schema.json",
+  "title": "Vaerion Extension Manifest (D15.1, D15.4)",
+  "description": "Every extension declares itself in a versioned manifest; an undeclared capability is denied fail-closed. Extensions are principals, not guests (Stage 15).",
+  "type": "object",
+  "required": ["id", "version", "compatibility", "requestedCapabilities", "surfaces"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "minLength": 3, "description": "Unique identity, e.g. com.example.naming-helper." },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$", "description": "Semver (D17.3)." },
+    "compatibility": {
+      "type": "object",
+      "required": ["engine"],
+      "additionalProperties": false,
+      "properties": {
+        "engine": {
+          "type": "string",
+          "pattern": "^(>=|<=|<|>)\\s*\\d+\\.\\d+(\\.\\d+)?(\\s+(>=|<=|<|>)\\s*\\d+\\.\\d+(\\.\\d+)?)*$",
+          "description": "Range against engine contract versions; a range excluding the running engine is refused (E2006, D15.4)."
+        }
+      }
+    },
+    "requestedCapabilities": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z]+\\.[a-z*]+$" },
+      "description": "Capabilities requested; granted only through the broker (D15.5). Minimal-request principle enforced."
+    },
+    "surfaces": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Exposed surfaces (subcommands/hooks) — additive per D18.11 posture."
+    }
+  }
+}

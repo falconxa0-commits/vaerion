@@ -1,0 +1,60 @@
+{
+  "samples": [
+    {
+      "v": 1,
+      "type": "workspace.initialized",
+      "seq": 1,
+      "ts": "2026-01-01T00:00:00.000Z",
+      "actor": { "kind": "human", "id": "operator" },
+      "cause": { "kind": "command", "ref": "vae init" },
+      "payload": { "project": "demo", "engineVersion": "0.1.0-ms.0", "configFingerprint": "00" }
+    },
+    {
+      "v": 1,
+      "type": "run.started",
+      "seq": 1,
+      "ts": "2026-01-01T00:00:00.000Z",
+      "run_id": "01HZZZZZZZZZZZZZZZZZZZZZZZ",
+      "actor": { "kind": "human", "id": "operator" },
+      "cause": { "kind": "command", "ref": "vae run selfcheck" },
+      "payload": { "plan": "selfcheck", "steps": ["config"] }
+    },
+    {
+      "v": 1,
+      "type": "run.step.decision",
+      "seq": 2,
+      "ts": "2026-01-01T00:00:00.000Z",
+      "run_id": "01HZZZZZZZZZZZZZZZZZZZZZZZ",
+      "actor": { "kind": "human", "id": "operator" },
+      "cause": { "kind": "plan", "ref": "selfcheck:config" },
+      "payload": { "step": "config", "tool": "config.validate", "outcome": "allow", "reason_code": "OK" }
+    },
+    {
+      "v": 1,
+      "type": "broker.denied",
+      "seq": 3,
+      "ts": "2026-01-01T00:00:00.000Z",
+      "actor": { "kind": "engine", "id": "vae-core" },
+      "cause": { "kind": "plan", "ref": "selfcheck:config" },
+      "payload": { "outcome": "deny", "reason_code": "E2001", "explanation": "No explicit grant covers this capability." }
+    },
+    {
+      "v": 1,
+      "type": "doctor.check",
+      "seq": 1,
+      "ts": "2026-01-01T00:00:00.000Z",
+      "actor": { "kind": "engine", "id": "vae-core" },
+      "cause": { "kind": "command", "ref": "vae doctor" },
+      "payload": { "id": "journal.audit", "ok": true, "detail": "audit chain verified" }
+    },
+    {
+      "v": 1,
+      "type": "engine.error",
+      "seq": 1,
+      "ts": "2026-01-01T00:00:00.000Z",
+      "actor": { "kind": "engine", "id": "vae-core" },
+      "cause": { "kind": "command", "ref": "vae run ghost" },
+      "payload": { "error": { "code": "E1009", "message": "The declared run plan 'ghost' was not found.", "fix": "Reference a plan that exists under runs/." } }
+    }
+  ]
+}

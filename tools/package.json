@@ -1,0 +1,10 @@
+{
+  "name": "vaerion-tools",
+  "version": "0.1.0-ms.0",
+  "private": true,
+  "description": "The constitutional courts: layerlint, fixture conformance, secrets/telemetry scans, constitution alignment, contract emission. Verification tooling is not shipped and stands outside the L0–L4 layer system (blueprint §6: xtask).",
+  "type": "module",
+  "dependencies": {
+    "vae-foundation": "workspace:*"
+  }
+}

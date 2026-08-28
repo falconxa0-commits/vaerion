@@ -1,0 +1,13 @@
+{
+  "name": "vae-package",
+  "version": "0.1.0-ms.0",
+  "private": true,
+  "description": "L2 package builder: .vxn manifest types, document fingerprinting, reproducibility rules. Build/sign/verify pipeline lands with MS-6 (D21.2).",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "vae-foundation": "workspace:*"
+  }
+}

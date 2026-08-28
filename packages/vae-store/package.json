@@ -1,0 +1,13 @@
+{
+  "name": "vae-store",
+  "version": "0.1.0-ms.0",
+  "private": true,
+  "description": "L1 store: append-only NDJSON journals with blake3 hash chains (run + audit sister chain), content-addressed blob store, stateless event spine, single-writer discipline.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "vae-foundation": "workspace:*"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "vae-api",
+  "version": "0.1.0-ms.0",
+  "private": true,
+  "description": "L3 public API: loopback-only daemon, pairing-token authentication, canonical envelope responses, NDJSON journal streams, runtime OpenAPI emission.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "vae-foundation": "workspace:*",
+    "vae-agent": "workspace:*"
+  }
+}

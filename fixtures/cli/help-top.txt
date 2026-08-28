@@ -1,0 +1,36 @@
+# GOLDEN FIXTURE — cli/help-top.txt
+# Binding precedent (D4.3, D20.2). Bless with: bun tools/verify-fixtures.ts --bless
+# args: vae --help --plain
+# exit: 0
+
+exit: 0
+Vaerion — The AI-Native Development Engine
+
+vae 0.1.0-ms.0 — deterministic, local-first runtime where agents do real work under human authority.
+
+Usage: vae <command> [arguments] [flags]
+
+The Daily Seven (D3.2):
+  init       Scaffold a Vaerion workspace.
+  run        Execute a DECLARED run plan under the Capability Broker, with journaled decisions, checkpoints, and a Receipt..
+  resume     Continue a parked or interrupted run from journal truth, deterministically. Refuses on plan or configuration drift..
+  explain    Produce the post-hoc causal explanation of any run — the North Star. Reconstructs the story from journal truth only..
+  journal    Inspect the append-only record — human and machine renderings, redacted by default (D12.3), with chain verification..
+  doctor     Diagnose environment, configuration, provenance, credentials hygiene, and health. The standing diagnostic (D3.2)..
+  dev        Inner-loop development mode.
+
+The Five Guarantees (Part IV) hold on every command, forever:
+  1. --help always teaches.        4. Receipt after every change
+  2. --json always valid.          5. Honest exit codes: 0 ok · 2 usage · 3 refusal · 4 run failure · 5 internal
+  3. --dry-run before every change.
+
+Global flags:
+  --help, -h      Teach the command (Guarantee 1).
+  --json          Machine mode: NDJSON envelopes on stdout (Guarantee 2).
+  --dry-run       Preview every state change before it happens (Guarantee 3).
+  --plain         Pipe-safe rendering: no color, no tabulation (D3.7).
+  --no-color      Disable ANSI color, keep human layout.
+  --profile NAME  Select a declared configuration profile (D19.4).
+
+Errors are curriculum: every error carries an E#### code and a Fix line
+(31 seeded codes). Read any of them: vae help E2010

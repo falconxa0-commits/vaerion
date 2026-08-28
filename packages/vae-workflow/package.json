@@ -1,0 +1,13 @@
+{
+  "name": "vae-workflow",
+  "version": "0.1.0-ms.0",
+  "private": true,
+  "description": "L2 workflow: declared run plans, deterministic DAG validation and scheduling, park semantics, checkpoint port.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "vae-foundation": "workspace:*"
+  }
+}

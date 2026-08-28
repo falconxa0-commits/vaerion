@@ -1,0 +1,13 @@
+{
+  "name": "vae-config",
+  "version": "0.1.0-ms.0",
+  "private": true,
+  "description": "L0 configuration: VaerYaml strict-subset parser, versioned schema validation (fail-closed), layered resolution with provenance, pinned runtime snapshots.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "vae-foundation": "workspace:*"
+  }
+}

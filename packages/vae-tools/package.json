@@ -1,0 +1,13 @@
+{
+  "name": "vae-tools",
+  "version": "0.1.0-ms.0",
+  "private": true,
+  "description": "L1 tool system: versioned tool registry, strict input/output contracts, effect classes, typed failure taxonomy, broker-mediated invocation paths.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "vae-foundation": "workspace:*"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "vaerion",
+  "version": "0.1.0-ms.0",
+  "private": true,
+  "description": "Vaerion — The AI-Native Development Engine. Deterministic, local-first runtime where AI agents do real work under human authority.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "engines": {
+    "bun": ">=1.3.0"
+  },
+  "workspaces": [
+    "packages/*",
+    "sdks/*",
+    "tools"
+  ],
+  "scripts": {
+    "vae": "bun packages/vae-cli/src/main.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "bun test packages sdks tools",
+    "fixtures": "bun tools/verify-fixtures.ts",
+    "layerlint": "bun tools/layerlint.ts",
+    "security": "bun tools/check-secrets.ts && bun tools/check-telemetry.ts",
+    "constitution": "bun tools/constitution-check.ts",
+    "verify": "bun run constitution && bun run layerlint && bun run typecheck && bun run test && bun run fixtures && bun run security",
+    "verify:report": "bun tools/write-verification-report.ts"
+  },
+  "devDependencies": {
+    "bun-types": "^1.3.14",
+    "typescript": "^5.9.2"
+  }
+}

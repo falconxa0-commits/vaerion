@@ -1,0 +1,48 @@
+name: CI
+
+# The D20.8 gate set, operational minus journeys (journeys are MS-5,
+# per the ratified roadmap D22.2). A red gate is a veto, not a warning.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install (frozen)
+        run: bun install --frozen-lockfile
+
+      - name: Constitution alignment (law-in-repo intact)
+        run: bun run constitution
+
+      - name: Layerlint L0–L4 (D6.4, D20.9)
+        run: bun run layerlint
+
+      - name: Typecheck (strict)
+        run: bun run typecheck
+
+      - name: Unit, property, and integration tests
+        run: bun run test
+
+      - name: Golden fixture conformance (D20.2)
+        run: bun run fixtures
+
+      - name: Contract diff — OpenAPI (D17.1)
+        run: bun tools/emit-openapi.ts --check
+
+      - name: Security — no secrets (D19.5 posture)
+        run: bun tools/check-secrets.ts
+
+      - name: Security — zero telemetry (D2.5, FR-3)
+        run: bun tools/check-telemetry.ts
+
+      - name: Binary smoke — the Daily Seven exists
+        run: bun run vae -- --help

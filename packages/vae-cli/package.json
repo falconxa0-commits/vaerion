@@ -1,0 +1,15 @@
+{
+  "name": "vae-cli",
+  "version": "0.1.0-ms.0",
+  "private": true,
+  "description": "L4 porcelain: the `vae` binary — Daily Seven commands, Five Guarantees enforcement, one envelope in three renderings, honest exit codes.",
+  "type": "module",
+  "bin": {
+    "vae": "./src/main.ts",
+    "vaerion": "./src/main.ts"
+  },
+  "dependencies": {
+    "vae-foundation": "workspace:*",
+    "vae-api": "workspace:*"
+  }
+}

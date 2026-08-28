@@ -1,0 +1,17 @@
+# GOLDEN FIXTURE — cli/init-and-run.txt
+# Binding precedent (D4.3, D20.2). Bless with: bun tools/verify-fixtures.ts --bless
+# args: vae run selfcheck --plain
+# exit: 0
+
+exit: 0
+Run started — plan selfcheck
+Run completed — 3 steps
+
+Receipt
+  what changed:
+    - [executed] step:config
+    - [executed] step:audit-chain
+    - [executed] step:blobs
+  cost: steps=3 · journal_entries=8 · wall_ms=0 · usd=0.0000
+  undo: (journals are permanent — no undo, D12.5)
+  record: run_id=<ULID> · journal=.vaerion/journal/<ULID>.ndjson · chain_head=<HASH>

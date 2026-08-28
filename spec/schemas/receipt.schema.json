@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vaerion.dev/schemas/receipt.schema.json",
+  "title": "Vaerion Receipt v1 (Sacred Invariant V, D3.3)",
+  "description": "After every change: what changed · cost · undo · record. Evidence over promises. Money is a decimal string, never a float (D8.3).",
+  "type": "object",
+  "required": ["receipt_version", "command", "ok", "what_changed", "cost", "undo", "record"],
+  "additionalProperties": false,
+  "properties": {
+    "receipt_version": { "const": 1 },
+    "command": { "type": "string", "minLength": 1 },
+    "ok": { "type": "boolean" },
+    "what_changed": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["subject", "action"],
+        "properties": {
+          "subject": { "type": "string" },
+          "action": { "enum": ["created", "modified", "removed", "executed", "none"] },
+          "detail": { "type": "string" }
+        }
+      }
+    },
+    "cost": {
+      "type": "object",
+      "properties": {
+        "steps": { "type": "integer", "minimum": 0 },
+        "journal_entries": { "type": "integer", "minimum": 0 },
+        "bytes_written": { "type": "integer", "minimum": 0 },
+        "wall_ms": { "type": "integer", "minimum": 0 },
+        "usd": { "type": "string", "pattern": "^-?\\d+(\\.\\d+)?$" }
+      }
+    },
+    "undo": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Actionable undo steps. Journals carry no undo (permanent retention, D12.5)."
+    },
+    "record": {
+      "type": "object",
+      "properties": {
+        "run_id": { "type": "string" },
+        "journal": { "type": "string" },
+        "chain_head": { "type": "string" },
+        "refusal_log": { "type": "string" },
+        "audit_chain": { "type": "string" }
+      }
+    }
+  }
+}

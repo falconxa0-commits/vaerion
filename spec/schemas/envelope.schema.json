@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vaerion.dev/schemas/envelope.schema.json",
+  "title": "Vaerion Envelope v1 (D3.7)",
+  "description": "The one canonical event/output shape rendered human/plain/json. Additive-only within v1 (Article VIII); actor and cause are mandatory on every event (D9.3).",
+  "type": "object",
+  "required": ["v", "type", "seq", "ts", "actor", "cause", "payload"],
+  "additionalProperties": true,
+  "properties": {
+    "v": { "const": 1, "description": "Contract version. Additive-only within 1." },
+    "type": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Event type from spec/events.md. Unknown types are forwarded untouched (forward-compat duty)."
+    },
+    "seq": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Monotonic sequence within this event's stream (per run / per channel, D9.2)."
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 UTC. Declared metadata non-determinism (D11.4)."
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Run binding when the event belongs to a run (ULID, D11.2)."
+    },
+    "actor": {
+      "$ref": "#/$defs/principal"
+    },
+    "cause": {
+      "$ref": "#/$defs/cause"
+    },
+    "payload": {
+      "type": "object",
+      "description": "Event payload. Large content travels by blob_ref, never inline (D9.5)."
+    }
+  },
+  "$defs": {
+    "principal": {
+      "type": "object",
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": { "enum": ["human", "agent", "engine", "extension"] },
+        "id": { "type": "string", "minLength": 1 },
+        "display": { "type": "string" }
+      }
+    },
+    "cause": {
+      "type": "object",
+      "required": ["kind", "ref"],
+      "properties": {
+        "kind": { "type": "string", "minLength": 1 },
+        "ref": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

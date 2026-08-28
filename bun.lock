@@ -1,0 +1,172 @@
+{
+  "lockfileVersion": 1,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "vaerion",
+      "devDependencies": {
+        "bun-types": "^1.3.14",
+        "typescript": "^5.9.2",
+      },
+    },
+    "packages/vae-agent": {
+      "name": "vae-agent",
+      "version": "0.1.0-ms.0",
+      "dependencies": {
+        "vae-capabilities": "workspace:*",
+        "vae-config": "workspace:*",
+        "vae-foundation": "workspace:*",
+        "vae-store": "workspace:*",
+        "vae-tools": "workspace:*",
+        "vae-workflow": "workspace:*",
+      },
+    },
+    "packages/vae-api": {
+      "name": "vae-api",
+      "version": "0.1.0-ms.0",
+      "dependencies": {
+        "vae-agent": "workspace:*",
+        "vae-foundation": "workspace:*",
+      },
+    },
+    "packages/vae-capabilities": {
+      "name": "vae-capabilities",
+      "version": "0.1.0-ms.0",
+      "dependencies": {
+        "vae-config": "workspace:*",
+        "vae-foundation": "workspace:*",
+        "vae-store": "workspace:*",
+      },
+    },
+    "packages/vae-cli": {
+      "name": "vae-cli",
+      "version": "0.1.0-ms.0",
+      "bin": {
+        "vae": "./src/main.ts",
+        "vaerion": "./src/main.ts",
+      },
+      "dependencies": {
+        "vae-api": "workspace:*",
+        "vae-foundation": "workspace:*",
+      },
+    },
+    "packages/vae-config": {
+      "name": "vae-config",
+      "version": "0.1.0-ms.0",
+      "dependencies": {
+        "vae-foundation": "workspace:*",
+      },
+    },
+    "packages/vae-context": {
+      "name": "vae-context",
+      "version": "0.1.0-ms.0",
+      "dependencies": {
+        "vae-foundation": "workspace:*",
+      },
+    },
+    "packages/vae-ext-host": {
+      "name": "vae-ext-host",
+      "version": "0.1.0-ms.0",
+      "dependencies": {
+        "vae-foundation": "workspace:*",
+      },
+    },
+    "packages/vae-foundation": {
+      "name": "vae-foundation",
+      "version": "0.1.0-ms.0",
+      "dependencies": {
+        "@noble/hashes": "^2.0.0",
+      },
+    },
+    "packages/vae-gateway": {
+      "name": "vae-gateway",
+      "version": "0.1.0-ms.0",
+      "dependencies": {
+        "vae-foundation": "workspace:*",
+      },
+    },
+    "packages/vae-intel": {
+      "name": "vae-intel",
+      "version": "0.1.0-ms.0",
+      "dependencies": {
+        "vae-foundation": "workspace:*",
+      },
+    },
+    "packages/vae-package": {
+      "name": "vae-package",
+      "version": "0.1.0-ms.0",
+      "dependencies": {
+        "vae-foundation": "workspace:*",
+      },
+    },
+    "packages/vae-store": {
+      "name": "vae-store",
+      "version": "0.1.0-ms.0",
+      "dependencies": {
+        "vae-foundation": "workspace:*",
+      },
+    },
+    "packages/vae-tools": {
+      "name": "vae-tools",
+      "version": "0.1.0-ms.0",
+      "dependencies": {
+        "vae-foundation": "workspace:*",
+      },
+    },
+    "packages/vae-workflow": {
+      "name": "vae-workflow",
+      "version": "0.1.0-ms.0",
+      "dependencies": {
+        "vae-foundation": "workspace:*",
+      },
+    },
+    "tools": {
+      "name": "vaerion-tools",
+      "version": "0.1.0-ms.0",
+      "dependencies": {
+        "vae-foundation": "workspace:*",
+      },
+    },
+  },
+  "packages": {
+    "@noble/hashes": ["@noble/hashes@2.4.0", "", {}, "sha512-X5XaVWZIBCT7HHZGm5I7ZQXDwLG+bGXuSrMQAW+7Zvl87h1kmc1ZB1VSRJcpUfoUrGQp4Fkoxm5kZ+Ms+aW+eA=="],
+
+    "@types/node": ["@types/node@26.4.0", "", { "dependencies": { "undici-types": "~8.3.0" } }, "sha512-faiGnoIrLH/V8cibOMEAZ8pMw6oXqSukl29ra4mN8GdaB2ZewzeaLj+INpV5N+Z1eKWzY+IzaIZH2EIR6YZRNQ=="],
+
+    "bun-types": ["bun-types@1.4.0", "", { "dependencies": { "@types/node": "*" } }, "sha512-iIKw23BspnQQYd3prITOBxeUsxBHnwzX6YJfGMuNOZzeNcMmVqzIIVGRm1l69ogaPQmb4wB6BN8mA5bE9YuC5Q=="],
+
+    "typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "undici-types": ["undici-types@8.3.0", "", {}, "sha512-j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ=="],
+
+    "vae-agent": ["vae-agent@workspace:packages/vae-agent"],
+
+    "vae-api": ["vae-api@workspace:packages/vae-api"],
+
+    "vae-capabilities": ["vae-capabilities@workspace:packages/vae-capabilities"],
+
+    "vae-cli": ["vae-cli@workspace:packages/vae-cli"],
+
+    "vae-config": ["vae-config@workspace:packages/vae-config"],
+
+    "vae-context": ["vae-context@workspace:packages/vae-context"],
+
+    "vae-ext-host": ["vae-ext-host@workspace:packages/vae-ext-host"],
+
+    "vae-foundation": ["vae-foundation@workspace:packages/vae-foundation"],
+
+    "vae-gateway": ["vae-gateway@workspace:packages/vae-gateway"],
+
+    "vae-intel": ["vae-intel@workspace:packages/vae-intel"],
+
+    "vae-package": ["vae-package@workspace:packages/vae-package"],
+
+    "vae-store": ["vae-store@workspace:packages/vae-store"],
+
+    "vae-tools": ["vae-tools@workspace:packages/vae-tools"],
+
+    "vae-workflow": ["vae-workflow@workspace:packages/vae-workflow"],
+
+    "vaerion-tools": ["vaerion-tools@workspace:tools"],
+  }
+}

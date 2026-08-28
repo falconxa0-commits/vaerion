@@ -1,0 +1,15 @@
+{
+  "name": "vae-capabilities",
+  "version": "0.1.0-ms.0",
+  "private": true,
+  "description": "L1 capability broker: fail-closed pure-function decisions, deny-beats-allow, durable human gates with park, diff-only policy, audit-failure denial, refusal log.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "vae-foundation": "workspace:*",
+    "vae-config": "workspace:*",
+    "vae-store": "workspace:*"
+  }
+}

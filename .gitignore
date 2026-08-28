@@ -1,0 +1,10 @@
+# Vaerion engine state (never commit machine state — D21.5/D12.5 law: state is owned by the workspace, not the repo)
+.vaerion/
+dist/
+node_modules/
+*.log
+*.tsbuildinfo
+.DS_Store
+
+# Sandbox scratch used by fixture verification
+.tmp/

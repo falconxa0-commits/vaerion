@@ -1,0 +1,22 @@
+# GOLDEN FIXTURE — cli/init-dry-run.txt
+# Binding precedent (D4.3, D20.2). Bless with: bun tools/verify-fixtures.ts --bless
+# args: vae init --dry-run --plain
+# exit: 0
+
+exit: 0
+Previewed workspace scaffold (no effect).
+
+Receipt (prospective — dry-run, no effect)
+  what changed:
+    - [created] vaerion.yaml — prospective (dry-run)
+    - [created] vaerion.lock — prospective (dry-run)
+    - [created] .vaerion/journal — prospective (dry-run)
+    - [created] .vaerion/audit — prospective (dry-run)
+    - [created] .vaerion/blobs — prospective (dry-run)
+    - [created] .vaerion/runs — prospective (dry-run)
+    - [created] .vaerion/tmp — prospective (dry-run)
+    - [created] runs/selfcheck.yaml — prospective (dry-run)
+    - [created] PROJECT.md — prospective (dry-run)
+  cost: bytes_written=0
+  undo: rm -rf vaerion.yaml vaerion.lock .vaerion/journal .vaerion/audit .vaerion/blobs .vaerion/runs .vaerion/tmp runs/selfcheck.yaml PROJECT.md
+  record: chain_head=<HASH16>

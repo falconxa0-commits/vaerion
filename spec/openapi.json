@@ -1,0 +1,55 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Vaerion Local API",
+    "version": "0.1.0-ms.0",
+    "description": "Loopback-only API served by the vae daemon. Envelope-aligned (D17.7); pairing-token authenticated (D17.9)."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:7897"
+    }
+  ],
+  "paths": {
+    "/v1/health": {
+      "get": {
+        "summary": "Engine and workspace health",
+        "responses": {
+          "200": {
+            "description": "envelope(ok)"
+          }
+        }
+      }
+    },
+    "/v1/runs": {
+      "get": {
+        "summary": "List runs with journal status",
+        "responses": {
+          "200": {
+            "description": "envelope(RunSummary[])"
+          }
+        }
+      }
+    },
+    "/v1/runs/{runId}/journal": {
+      "get": {
+        "summary": "Stream a run's journal as NDJSON envelopes",
+        "responses": {
+          "200": {
+            "description": "NDJSON stream"
+          }
+        }
+      }
+    },
+    "/v1/spec": {
+      "get": {
+        "summary": "This OpenAPI document",
+        "responses": {
+          "200": {
+            "description": "OpenAPI 3.1 JSON"
+          }
+        }
+      }
+    }
+  }
+}

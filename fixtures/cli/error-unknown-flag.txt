@@ -1,0 +1,10 @@
+# GOLDEN FIXTURE — cli/error-unknown-flag.txt
+# Binding precedent (D4.3, D20.2). Bless with: bun tools/verify-fixtures.ts --bless
+# args: vae --bogus --plain
+# exit: 2
+
+exit: 2
+
+--- stderr ---
+E5004 An unknown flag was supplied: --bogus
+Fix: This is an engine bug: report it with the journal reference.

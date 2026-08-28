@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "type": "run.started",
+  "seq": 1,
+  "ts": "2026-01-01T00:00:00.000Z",
+  "run_id": "01HZZZZZZZZZZZZZZZZZZZZZZZ",
+  "actor": { "kind": "human", "id": "operator" },
+  "cause": { "kind": "command", "ref": "vae run selfcheck" },
+  "payload": { "plan": "selfcheck" }
+}

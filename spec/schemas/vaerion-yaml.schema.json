@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vaerion.dev/schemas/vaerion-yaml.schema.json",
+  "title": "vaerion.yaml v0.1 (D19.1–D19.9)",
+  "description": "Workspace configuration. Unknown keys are refused, never ignored (D19.2). Secrets are inputs, never configuration (D19.5). Policy is never widened by profiles (D19.4).",
+  "type": "object",
+  "required": ["schemaVersion"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "enum": ["0.1"] },
+    "project": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z][a-z0-9-]{1,62}$" },
+        "description": { "type": "string" }
+      }
+    },
+    "engine": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "journal": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "verifyOnStart": { "type": "boolean", "default": true, "description": "D12.1 posture: verify the audit chain when the engine opens a workspace." }
+          }
+        },
+        "runs": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "budget": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "maxSteps": { "type": "integer", "minimum": 1, "default": 64, "description": "Hard stop produces a graceful partial receipt (D11.5)." },
+                "usd": { "type": "string", "pattern": "^-?\\d+(\\.\\d+)?$", "default": "0.0000", "description": "Decimal-string money, never a float (D8.3)." }
+              }
+            }
+          }
+        }
+      }
+    },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Cumulative ceilings. The broker evaluates every privileged act against these; deny beats allow (D10.2).",
+      "properties": {
+        "fs": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "read": { "type": "array", "items": { "type": "string" } },
+            "write": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "net": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "allowHosts": { "type": "array", "items": { "type": "string" }, "description": "host or host:port. Empty by default: local-first, no network (Sacred Invariant VI)." }
+          }
+        },
+        "exec": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "allowCommands": {
+              "type": "array",
+              "items": { "type": "array", "items": { "type": "string" } },
+              "description": "Command allow-lists, e.g. [\"git\", \"status\"]."
+            }
+          }
+        },
+        "secrets": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "grant": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name", "to"],
+                "properties": {
+                  "name": { "type": "string", "description": "The secret's NAME — never its value (D19.5)." },
+                  "to": { "type": "array", "items": { "type": "string" } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "profiles": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "engine": { "type": "object" },
+          "permissions": { "type": "object", "description": "Profiles may only narrow; the broker enforces the ceiling (D19.4, Article II)." }
+        }
+      }
+    }
+  }
+}
