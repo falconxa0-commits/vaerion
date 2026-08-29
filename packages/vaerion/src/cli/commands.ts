@@ -16,7 +16,7 @@ import { ExitCode, type CliIo, type OutputMode } from "./io.ts";
 import { Renderer } from "./render.ts";
 import { ensureWorkspaceDirs, loadOrAdhocConfig, workspaceAt } from "./workspace.ts";
 import { VaerionError } from "../kernel/errors.ts";
-import { SystemClock } from "../kernel/clock.ts";
+import { SystemClock, SystemRng } from "../kernel/clock.ts";
 import { SystemIdGen, crn } from "../kernel/ids.ts";
 import { RunHarness, initialRunState, runStateReducer, type RunState } from "../runtime/run.ts";
 import { ENGINE_VERSION } from "../journal/writer.ts";
@@ -44,6 +44,12 @@ import { buildEvidenceRecord, type EvidenceRecord } from "../research/evidence.t
 import { makeCitations } from "../research/citation.ts";
 import { LocalIndex } from "../research/local-index.ts";
 import { prepareContext } from "../research/context.ts";
+import { GatewayService, GatewayGatePrompt, type BudgetGuard } from "../gateway/service.ts";
+import { fetchTransport } from "../gateway/transport.ts";
+import { defaultSecretPort } from "../gateway/secrets.ts";
+import { meteringFromRecords } from "../gateway/metering.ts";
+import { MODEL_OPS, type ModelOp } from "../gateway/types.ts";
+import { formatMicroUsd } from "../gateway/pricing.ts";
 
 export interface CommandContext {
   io: CliIo;
@@ -210,12 +216,168 @@ function reviewDiffOfAction(action: Record<string, unknown> | undefined): Review
   }
 }
 
+/* ───────────────────────────  run model (MS-3)  ──────────────────────── */
+
+function jsonFlag(ctx: CommandContext, name: string): string[] {
+  const v = ctx.flags[name];
+  if (typeof v !== "string" || v.length === 0) {
+    throw new VaerionError("E1600", `missing required flag --${name} (a JSON array of strings)`);
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(v);
+  } catch (err) {
+    throw new VaerionError("E1600", `--${name} is not valid JSON: ${(err as Error).message}`);
+  }
+  if (!Array.isArray(parsed) || parsed.some((x) => typeof x !== "string")) {
+    throw new VaerionError("E1600", `--${name} must be a JSON array of strings`);
+  }
+  return parsed as string[];
+}
+
+/**
+ * `vae run model` — a model invocation through the gateway single gate.
+ * Flow (unchanged broker law): decide (model.invoke, journaled) →
+ * [prompt gate pauses the run] → act (adapter → sanctioned transport) →
+ * meter (gateway.invoke.recorded on the spine) → receipt.
+ */
+async function runModel(ctx: CommandContext): Promise<number> {
+  const model = reqFlag(ctx, "model");
+  const op = (typeof ctx.flags.op === "string" && ctx.flags.op.length > 0 ? String(ctx.flags.op) : "chat") as ModelOp;
+  if (!MODEL_OPS.includes(op)) {
+    throw new VaerionError("E1600", `unknown --op "${op}" (supported: ${MODEL_OPS.join(", ")})`);
+  }
+  const seed = typeof ctx.flags.seed === "string" && ctx.flags.seed.length > 0 ? parseInt(String(ctx.flags.seed), 10) : undefined;
+  const maxOutputTokens = typeof ctx.flags["max-tokens"] === "string" && ctx.flags["max-tokens"].length > 0 ? parseInt(String(ctx.flags["max-tokens"]), 10) : undefined;
+  const intent = typeof ctx.flags.intent === "string" && ctx.flags.intent.length > 0 ? String(ctx.flags.intent) : `invoke ${model} (${op}) from the CLI`;
+
+  const request: import("../gateway/types.ts").ModelRequest = { op, model };
+  if (op === "chat") {
+    const prompt = reqFlag(ctx, "prompt");
+    const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [];
+    if (typeof ctx.flags.system === "string" && ctx.flags.system.length > 0) messages.push({ role: "system", content: String(ctx.flags.system) });
+    messages.push({ role: "user", content: prompt });
+    request.messages = messages;
+  } else if (op === "embed") {
+    request.input = jsonFlag(ctx, "input-json");
+  } else {
+    request.query = reqFlag(ctx, "query");
+    request.documents = jsonFlag(ctx, "docs-json");
+  }
+  if (seed !== undefined && Number.isInteger(seed)) request.seed = seed;
+  if (maxOutputTokens !== undefined && Number.isInteger(maxOutputTokens) && (maxOutputTokens as number) > 0) request.maxOutputTokens = maxOutputTokens;
+
+  const plan = {
+    model,
+    op,
+    steps: [
+      "broker.decision (model.invoke, journaled; ceiling = gateway.providers)",
+      op === "chat" ? "act: adapter → sanctioned transport (stream normalized)" : `act: ${op} via adapter`,
+      "meter: usage + integer micro-USD cost journaled (gateway.invoke.recorded)",
+      "receipt + journal verify",
+    ],
+  };
+  if (ctx.dryRun) {
+    r(ctx).result({ command: "run", kind: "model", dry_run: true, side_effects: 0, plan });
+    return ExitCode.ok;
+  }
+
+  const ws = workspaceAt(ctx.cwd);
+  await ensureWorkspaceDirs(ws);
+  const { config, fingerprint: configFingerprint, adhoc } = await loadOrAdhocConfig(ws);
+  const renderer = r(ctx);
+  if (adhoc && ctx.mode === "plain") renderer.result({ note: "no vaerion.yaml found — using ad-hoc config (Fix: run `vae init`)" });
+
+  const clock = new SystemClock();
+  const idGen = new SystemIdGen();
+  const runId = crn("run", idGen.next());
+  const traceId = `t_${idGen.next().slice(-10).toLowerCase()}`;
+  // The human at the terminal is the direct authority; the ceiling law still
+  // constrains WHICH provider/model scopes exist (gateway.providers).
+  const graph = graphFromConfig(config, `graph_${configFingerprint.slice(0, 12)}`);
+  const harness = await RunHarness.create({ workspaceDir: ws.root, runId, traceId, configFingerprint, clock, idGen, permissionGraph: graph });
+
+  try {
+    // The canonical local-human principal: graphFromConfig grants the "human"
+    // node the model.invoke ceiling scopes (gateway.providers) and every
+    // declared secret.read name. An undeclared model therefore hits the
+    // BROKER ceiling deny (journaled + refusal-logged), never a silent skip.
+    const principal = { kind: "human" as const, id: "human", runId };
+    const gateway = new GatewayService({
+      clock,
+      rng: new SystemRng(),
+      idGen,
+      transport: fetchTransport,
+      secrets: defaultSecretPort(),
+    });
+    const budgets = config.gateway?.budgets;
+    const budget: BudgetGuard = { tokensUsed: 0, microUsdUsed: 0, tokensPerRun: budgets?.tokensPerRun, microUsdPerRun: budgets?.microUsdPerRun };
+
+    const result = await gateway.invoke(harness, { request, principal, policy: policyFromConfig(config), requestId: idGen.next(), intent, budget });
+    const closed = await harness.close(`model ${model} ${op} ok (${result.usage?.inputTokens ?? 0}in/${result.usage?.outputTokens ?? 0}out tokens, ${result.attempts} attempt(s))`);
+    const metering = meteringFromRecords((await readJournal(RunHarness.journalPathFor(ws.root, runId))).records);
+    renderer.result({
+      command: "run",
+      kind: "model",
+      run_id: runId,
+      trace_id: traceId,
+      model: result.model,
+      provider: result.provider,
+      op: result.op,
+      text: result.op === "chat" ? result.text : undefined,
+      embeddings: result.op === "embed" ? result.frames.filter((f): f is Extract<typeof f, { type: "embedding" }> => f.type === "embedding").length : undefined,
+      rankings: result.op === "rerank"
+        ? result.frames.filter((f): f is Extract<typeof f, { type: "rerank" }> => f.type === "rerank").map((f) => ({ index: f.index, score: f.score }))
+        : undefined,
+      usage: result.usage,
+      cost: result.cost === null ? null : { ...result.cost, display: formatMicroUsd(result.cost.totalMicroUsd) },
+      attempts: result.attempts,
+      latency_ms: result.latencyMs,
+      stop_reason: result.stopReason,
+      metering: {
+        invocations: metering.invocations,
+        failed: metering.failed,
+        input_tokens: metering.inputTokens,
+        output_tokens: metering.outputTokens,
+        total_micro_usd: metering.totalMicroUsd,
+      },
+      receipt: closed.receipt,
+      journal_verified: closed.verify.ok,
+    });
+    return closed.verify.ok ? ExitCode.ok : ExitCode.partial;
+  } catch (err) {
+    if (err instanceof GatewayGatePrompt) {
+      const gate = err.gate;
+      renderer.result({
+        command: "run",
+        kind: "model",
+        run_id: runId,
+        trace_id: traceId,
+        awaiting: true,
+        gate: { gate_id: gate.gate_id, state: gate.state, question: gate.question, options: gate.options, decision_id: gate.decision_id ?? null },
+        decision: { decision_id: err.record.decision_id, kind: err.decision.kind, domain: err.record.domain, scope: err.record.scope, intent: err.record.intent },
+        hint: `review with: vae resume ${runId} · resolve with: vae resume ${runId} --answer '{"approved":true}'`,
+      });
+      await harness.release();
+      return ExitCode.ok;
+    }
+    const code = (err as { code?: string }).code;
+    if (code === "E1300" || code === "E1301" || code === "E1302") {
+      await harness.close(`run ${runId} denied by broker on ${model} (${code})`).catch(() => undefined);
+    } else {
+      await harness.close(`run ${runId} failed: ${(err as Error).message.slice(0, 120)}`).catch(() => undefined);
+    }
+    throw err;
+  }
+}
+
 export async function cmdRun(ctx: CommandContext): Promise<number> {
   cwdHolder = ctx.cwd;
   const kind = ctx.flags._positional1;
-  if (kind !== "research" && kind !== "demo") {
-    throw new VaerionError("E1600", "unknown run kind (supported: research, demo)", { got: String(kind) });
+  if (kind !== "research" && kind !== "demo" && kind !== "model") {
+    throw new VaerionError("E1600", "unknown run kind (supported: research, demo, model)", { got: String(kind) });
   }
+  if (kind === "model") return runModel(ctx);
   const ws = workspaceAt(ctx.cwd);
   const sources =
     kind === "demo"
@@ -511,6 +673,15 @@ export async function cmdExplain(ctx: CommandContext): Promise<number> {
     narrative.push(`refusal ${refusal.reason_code} ${refusal.domain} ${refusal.scope} — ${refusal.reason} (policy ${refusal.policy})`);
   }
 
+  // Gateway metering surface (MS-3): the run's spend folded from the journal.
+  const metering = meteringFromRecords(read.records);
+  if (metering.invocations > 0 || metering.failed > 0) {
+    narrative.push(`gateway: ${metering.invocations} invocation(s), ${metering.failed} failed, ${metering.inputTokens}in/${metering.outputTokens}out tokens, ${formatMicroUsd(metering.totalMicroUsd)} (${metering.totalMicroUsd} µUSD)`);
+    for (const [model, per] of Object.entries(metering.byModel)) {
+      narrative.push(`  ${model}: ${per.invocations} ok · ${per.failed} failed · ${per.inputTokens}in/${per.outputTokens}out · ${per.totalMicroUsd} µUSD`);
+    }
+  }
+
   r(ctx).result({
     command: "explain",
     run_id: target,
@@ -525,6 +696,15 @@ export async function cmdExplain(ctx: CommandContext): Promise<number> {
       decision_id: refusal.decision_id,
       at: refusal.at,
     })),
+    gateway: {
+      invocations: metering.invocations,
+      failed: metering.failed,
+      input_tokens: metering.inputTokens,
+      output_tokens: metering.outputTokens,
+      total_micro_usd: metering.totalMicroUsd,
+      unpriced: metering.unpriced,
+      by_model: metering.byModel,
+    },
     narrative,
   });
   return verify.ok ? ExitCode.ok : ExitCode.partial;
@@ -695,8 +875,47 @@ export async function cmdDoctor(ctx: CommandContext): Promise<number> {
     fix: refusals.ok ? undefined : "restore .vaerion/refusals.log from backup; never edit it",
   });
 
-  // 6. Zero telemetry sanity (structural: engine has no egress paths).
-  checks.push({ check: "zero-telemetry", ok: true, detail: "engine contains no network egress paths; doctor performs no phone-home" });
+  // 6. Zero telemetry sanity (structural: exactly ONE sanctioned egress site).
+  checks.push({
+    check: "zero-telemetry",
+    ok: true,
+    detail: "engine contains exactly one sanctioned egress site (gateway/transport.ts), reachable only behind journaled broker decisions; doctor performs no phone-home",
+  });
+
+  // 7. Gateway diagnostics (MS-3): capability matrix + declared providers.
+  //    No network is touched and NO secret values are resolved here — secret
+  //    reads are broker-mediated by law (ADR-0013); doctor reports names only.
+  const { GATEWAY_PROVIDERS } = await import("../config/config.ts");
+  const gatewayMatrix = new GatewayService({ clock: new SystemClock(), rng: new SystemRng(), idGen: new SystemIdGen(), transport: fetchTransport, secrets: defaultSecretPort() }).matrix();
+  checks.push({
+    check: "gateway-matrix",
+    ok: true,
+    detail: gatewayMatrix.map((a) => `${a.provider}[${a.ops.join("/")}]${a.requiresSecret ? ` (secret: ${a.secretName})` : " (local)"}`).join(" · "),
+  });
+  if (cfgExists) {
+    try {
+      const { config: gwConfig } = await loadOrAdhocConfig(ws);
+      const providers = gwConfig.gateway?.providers ?? {};
+      const enabled = Object.entries(providers).filter(([, p]) => p.enabled);
+      const secretNames = Object.keys(gwConfig.secrets ?? {});
+      checks.push({
+        check: "gateway-config",
+        ok: true,
+        detail: `providers enabled: ${enabled.length === 0 ? "none (gateway unreachable by ceiling — declare gateway.providers in vaerion.yaml)" : enabled.map(([n, p]) => `${n}(${(p.models ?? []).length} model(s))`).join(", ")}; known: ${[...GATEWAY_PROVIDERS].join(", ")}`,
+      });
+      checks.push({
+        check: "gateway-secrets",
+        ok: true,
+        detail: secretNames.length === 0 ? "no secret names declared" : `${secretNames.length} declared (names only — values resolve at call time via keychain/env behind broker decisions): ${secretNames.join(", ")}`,
+      });
+      if (gwConfig.gateway?.budgets) {
+        const b = gwConfig.gateway.budgets;
+        checks.push({ check: "gateway-budgets", ok: true, detail: `tokensPerRun=${b.tokensPerRun ?? "unlimited"} · microUsdPerRun=${b.microUsdPerRun ?? "unlimited"}` });
+      }
+    } catch {
+      // config check already reported the failure above; never double-fail here.
+    }
+  }
 
   const failed = checks.filter((c) => !c.ok);
   r(ctx).result({
@@ -713,21 +932,27 @@ export async function cmdDoctor(ctx: CommandContext): Promise<number> {
 export async function cmdDev(ctx: CommandContext): Promise<number> {
   const ws = workspaceAt(ctx.cwd);
   const runs = await listJournals(ws.journalDir);
+  const matrix = new GatewayService({ clock: new SystemClock(), rng: new SystemRng(), idGen: new SystemIdGen(), transport: fetchTransport, secrets: defaultSecretPort() }).matrix();
   r(ctx).result({
     command: "dev",
     engine_version: ENGINE_VERSION,
     substrate: "typescript on bun (ADR-0018, Proposed)",
     layers: {
       L0: ["kernel(errors,ids,clock,canonical,redact,hash)", "config"],
-      L1: ["spine", "journal", "store(blob-cas)", "receipts", "broker/contracts"],
+      L1: ["spine", "journal", "store(blob-cas)", "receipts", "broker/contracts", "gateway"],
       L2: ["runtime(run)", "research"],
       L4: ["cli"],
     },
     daily_seven: ["init", "run", "resume", "explain", "journal", "doctor", "dev"],
+    gateway: {
+      single_gate: "gateway/service.ts — decide(model.invoke) → journal → act",
+      egress: "gateway/transport.ts — the ONE sanctioned egress site",
+      matrix,
+    },
     workspace: { root: ws.root, runs: runs.length },
     spec: "spec/ (single source of truth)",
     constitution: "docs/constitution/VAERION_CONSTITUTION_v1.0.md",
-    next_milestone: "MS-2 Permission Broker (contracts frozen; engine implementation next)",
+    next_milestone: "MS-4 Intelligence + Agents (agent executor over journaled decisions; workflow DAGs; cassette evals)",
   });
   return ExitCode.ok;
 }

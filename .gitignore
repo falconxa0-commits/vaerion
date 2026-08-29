@@ -41,6 +41,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 local-*
+# exception: the research local index is ENGINE SOURCE, not a local artifact
+# (the blanket local-* pattern above silently dropped it from every commit —
+# root cause of the MS-2/MS-3 "missing module" incidents).
+!packages/vaerion/src/research/local-index.ts
 .claude
 .z-ai-config
 *.log

@@ -31,6 +31,13 @@ remain valid unchanged.
   top-level `secrets` block (NAME → `grant: [principal-id patterns]`;
   names only — values are resolved exclusively at call time per ADR-0013).
   Strict unknown-key rejection is unchanged.
+- 0.1.2 correction (same date, during MS-3 verification): the
+  `gateway.providers` propertyNames enum and pattern were widened to
+  include `mockbrain` — the ADR-0012 seeded virtual provider is declared
+  like any provider, so its reachability stays governed by the same
+  fail-closed ceiling law (declaring it grants nothing). The prior text
+  ("mockbrain is always available and is not declared here") contradicted
+  the ceiling law and is superseded by this entry.
 
 ## 0.1.1 — 2026-08-29 (MS-2 broker wiring; additive only)
 

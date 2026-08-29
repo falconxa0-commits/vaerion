@@ -30,6 +30,7 @@ import { evaluatePolicy } from "./contracts/decision.ts";
 import type { PermissionGraph } from "./contracts/permission-graph.ts";
 import { grantsFor } from "./contracts/permission-graph.ts";
 import type { VaerionConfig } from "../config/config.ts";
+import { VaerionError } from "../kernel/errors.ts";
 
 export interface BrokerEvaluation {
   decision: BrokerDecision;
@@ -164,7 +165,7 @@ export interface ConfigGrantInput {
  */
 export function graphFromConfig(config: VaerionConfig, graphId: string, extraGrants: ConfigGrantInput[] = []): PermissionGraph {
   const fail: (why: string) => never = (why) => {
-    throw Object.assign(new Error(`permission ceiling: ${why}`), { code: "E1300" });
+    throw new VaerionError("E1300", `permission ceiling: ${why}`);
   };
   const capabilities: PermissionGraph["capabilities"] = {};
   const edges: PermissionGraph["edges"] = [];
@@ -231,4 +232,18 @@ export function graphFromConfig(config: VaerionConfig, graphId: string, extraGra
     edges,
     capabilities,
   };
+}
+
+/**
+ * Does the config grant the named secret to this principal id? (ADR-0013:
+ * "scoped grants naming which principals may read which secret"). Patterns
+ * are matched with the capability scope matcher (`gateway:*` covers
+ * `gateway:<runId>`, `*` covers everything). Fail-closed: no match = no.
+ * Lives in the BROKER layer (not config): it is an authorization question
+ * and needs the capability scope matcher — L0 must never import L1.
+ */
+export function secretGrantFor(config: VaerionConfig, secretName: string, principalId: string): boolean {
+  const entry = config.secrets?.[secretName];
+  if (entry === undefined) return false;
+  return entry.grant.some((pattern) => scopeMatches(pattern, principalId));
 }

@@ -138,7 +138,7 @@ export class GatewayService {
 
   constructor(opts: GatewayServiceOptions) {
     if (!opts || !opts.clock || !opts.rng || !opts.idGen || !opts.transport || !opts.secrets) {
-      throw Object.assign(new Error("GatewayService: clock, rng, idGen, transport, secrets required"), { code: "E1600" });
+      throw new VaerionError("E1600", "GatewayService: clock, rng, idGen, transport, secrets required");
     }
     const list = opts.adapters ?? defaultAdapters();
     this.adapters = new Map(list.map((a) => [a.provider, a]));
@@ -182,8 +182,12 @@ export class GatewayService {
 
   /**
    * Invoke a model through the single gate. Journaled order is exactly:
-   * budget pre-check failure → gateway.invoke.failed; broker decision →
-   * (secret decision) → invocation → gateway.invoke.recorded|failed.
+   * budget pre-check failure → (silent refusal: never authorized, nothing
+   * spent); broker decision → (secret decision) → invocation →
+   * gateway.invoke.recorded | gateway.invoke.failed. EVERY terminal failure
+   * after authorization — including secret.read denies and unresolved
+   * secrets — journals gateway.invoke.failed (R-MG3: failures are never
+   * silent on the spine).
    */
   async invoke(host: GatewayHost, input: GatewayInvokeInput): Promise<InvocationResult> {
     const { provider } = parseModelId(input.request.model);
@@ -233,12 +237,12 @@ export class GatewayService {
     }
     const decisionId = invokeDecision.record.decision_id;
 
-    const fail = async (code: "E1704" | "E1705" | "E1702" | "E1706" | "E1601", message: string, detail: Record<string, unknown>): Promise<never> => {
+    const fail = async (code: "E1300" | "E1301" | "E1302" | "E1702" | "E1703" | "E1704" | "E1705" | "E1706" | "E1601", message: string, detail: Record<string, unknown>, refDecisionId: string = decisionId): Promise<never> => {
       await host.emit(
         "gateway.invoke.failed",
-        { model, provider, op: input.request.op, error_code: code, message, decision_id: decisionId, ...detail },
+        { model, provider, op: input.request.op, error_code: code, message, decision_id: refDecisionId, ...detail },
         input.principal,
-        { kind: "decision", ref: decisionId },
+        { kind: "decision", ref: refDecisionId },
       );
       throw new VaerionError(code, message, detail);
     };
@@ -258,14 +262,20 @@ export class GatewayService {
         input.policy,
       );
       if (secretDecision.decision.kind === "deny") {
-        throw new VaerionError(secretDecision.decision.reason_code, `secret.read denied by broker: ${secretDecision.decision.reason}`, { name: adapter.secretName, decision_id: secretDecision.record.decision_id });
+        // The invocation was authorized but its credential read was refused:
+        // a terminal failure after authorization — journaled (R-MG3).
+        return await fail(secretDecision.decision.reason_code, `secret.read denied by broker: ${secretDecision.decision.reason}`, { name: adapter.secretName }, secretDecision.record.decision_id);
       }
       if (secretDecision.decision.kind === "prompt") {
         if (secretDecision.gate === undefined) throw new VaerionError("E1900", "prompt decision returned without a gate record");
         throw new GatewayGatePrompt(secretDecision.decision, secretDecision.record, secretDecision.gate);
       }
-      const resolved = await this.secrets.resolve(adapter.secretName);
-      secret = requireResolvedSecret(adapter.secretName, resolved);
+      try {
+        const resolved = await this.secrets.resolve(adapter.secretName);
+        secret = requireResolvedSecret(adapter.secretName, resolved);
+      } catch (err) {
+        return await fail(err instanceof VaerionError && (err.code as string) === "E1704" ? "E1704" : "E1702", (err as Error).message, { name: adapter.secretName }, secretDecision.record.decision_id);
+      }
     }
 
     // 3. Breaker gate (R-MG2): an open breaker is a loud refusal.
@@ -305,6 +315,7 @@ export class GatewayService {
     const stopReason = lastStopReason(frames);
     const text = assembleText(frames);
     const latencyMs = Math.max(0, this.clock.nowMs() - startedMs);
+    const textHash = text.length > 0 ? await blake3HexOf(text) : null;
 
     // 6. Journal the completed invocation (R-MG3/R-RT2: the full metering
     //    payload is journaled so rollups fold from the journal alone).
@@ -320,7 +331,7 @@ export class GatewayService {
         attempts,
         latency_ms: latencyMs,
         stop_reason: stopReason,
-        text_hash: text.length > 0 ? blake3HexOf(text) : null,
+        text_hash: textHash,
         // R-MG5: the journaled text is redacted — secrets never persist.
         text: redactDeep(text),
         frames: frames.length,
@@ -344,7 +355,7 @@ export class GatewayService {
       stopReason,
       attempts,
       latencyMs,
-      textHash: text.length > 0 ? blake3HexOf(text) : null,
+      textHash,
     };
   }
 

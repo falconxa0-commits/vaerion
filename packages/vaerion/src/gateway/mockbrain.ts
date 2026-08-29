@@ -74,30 +74,39 @@ async function mockChatText(req: ModelRequest): Promise<string> {
   return `mock(seed=${req.seed ?? 0}): on ${topic} — ${sentence}.`;
 }
 
-/** Deterministic embedding: blake3-projected vector (dim 64), values in [-1, 1). */
+/** Deterministic embedding: blake3-projected vector (dim 64), values in (-1, 1).
+ * Entropy comes from successive hash blocks ({text, seed, block}) so the
+ * dimension is exactly MOCKBRAIN_EMBED_DIM for every input (a single 64-hex
+ * digest carries only 32 byte-usable values — block chaining is the fix,
+ * never silent truncation). */
 async function mockEmbedVector(text: string, seed: number | undefined): Promise<number[]> {
-  const digest = await hashOf({ text, seed: seed ?? 0 });
   const vector: number[] = [];
-  for (const u of uint32Stream(digest)) {
-    for (let k = 0; k < 4 && vector.length < MOCKBRAIN_EMBED_DIM; k++) {
-      const v = ((u >>> (k * 8)) & 0xff) / 127.5 - 1; // [-1, 1)
-      vector.push(Math.round(v * 10000) / 10000);
+  for (let block = 0; vector.length < MOCKBRAIN_EMBED_DIM; block++) {
+    const digest = await hashOf({ text, seed: seed ?? 0, block });
+    for (const u of uint32Stream(digest)) {
+      for (let k = 0; k < 4 && vector.length < MOCKBRAIN_EMBED_DIM; k++) {
+        const v = (((u >>> (k * 8)) & 0xff) + 0.5) / 128 - 1; // strictly inside (-1, 1)
+        vector.push(Math.round(v * 10000) / 10000);
+      }
+      if (vector.length >= MOCKBRAIN_EMBED_DIM) break;
     }
-    if (vector.length >= MOCKBRAIN_EMBED_DIM) break;
   }
   return vector;
 }
 
-/** Deterministic rerank: token-overlap Jaccard plus a stable hash tie-breaker. */
+/** Deterministic rerank: token-overlap Jaccard scaled by a stable hash
+ * tie-breaker — the score ALWAYS stays inside [0, 1] (a similarity above 1
+ * would be a contract lie) while identical contents still score identically. */
 async function mockRerankScore(query: string, doc: string, seed: number | undefined): Promise<number> {
   const q = new Set(tokenize(query));
   const d = new Set(tokenize(doc));
   if (q.size === 0 || d.size === 0) return 0;
   let inter = 0;
   for (const w of q) if (d.has(w)) inter++;
+  const jaccard = inter / (q.size + d.size - inter);
   const digest = await hashOf({ query, doc, seed: seed ?? 0 });
   const jitter = (parseInt(digest.slice(0, 4), 16) % 100) / 10000; // tiny stable tie-breaker
-  return Math.round((inter / (q.size + d.size - inter) + jitter) * 10000) / 10000;
+  return Math.round((jaccard + jitter * (1 - jaccard)) * 10000) / 10000;
 }
 
 /** Deterministic token estimate (4 chars/token) — usage accounting for mocks. */

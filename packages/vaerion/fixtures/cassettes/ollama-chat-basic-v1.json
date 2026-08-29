@@ -1,0 +1,12 @@
+{
+  "cassette_id": "ollama-chat-basic-v1",
+  "provider": "ollama",
+  "op": "chat",
+  "request_fingerprint": "e0fedb962228fdb36a88698bfb4292b5338bb7249a40c80ce3862b69e8f80391",
+  "status": 200,
+  "chunks": [
+    "{\"model\":\"llama3.2\",\"created_at\":\"2026-08-29T12:00:00Z\",\"message\":{\"role\":\"assistant\",\"content\":\"Hel\"},\"done\":false}\n",
+    "{\"model\":\"llama3.2\",\"created_at\":\"2026-08-29T12:00:01Z\",\"message\":{\"role\":\"assistant\",\"content\":\"lo\"},\"done\":false}\n",
+    "{\"model\":\"llama3.2\",\"created_at\":\"2026-08-29T12:00:02Z\",\"message\":{\"role\":\"assistant\",\"content\":\"\"},\"done_reason\":\"stop\",\"done\":true,\"prompt_eval_count\":9,\"eval_count\":2}\n"
+  ]
+}

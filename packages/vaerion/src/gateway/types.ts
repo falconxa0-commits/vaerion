@@ -14,6 +14,7 @@
  */
 
 import type { Clock, Rng } from "../kernel/clock.ts";
+import { VaerionError } from "../kernel/errors.ts";
 
 /** Operations the gateway normalizes (R-MG1). */
 export type ModelOp = "chat" | "embed" | "rerank";
@@ -50,7 +51,7 @@ export interface ModelRequest {
 export function parseModelId(model: string): { provider: string; modelId: string } {
   const at = model.indexOf("/");
   if (at <= 0 || at === model.length - 1) {
-    throw Object.assign(new Error(`model must be "provider/model-id", got: ${model}`), { code: "E1700" });
+    throw new VaerionError("E1700", `model must be "provider/model-id", got: ${model}`);
   }
   return { provider: model.slice(0, at), modelId: model.slice(at + 1) };
 }
@@ -71,7 +72,7 @@ export type StreamFrame =
 export function assertStreamFrame(f: unknown): asserts f is StreamFrame {
   const x = f as Partial<StreamFrame> | null;
   const fail: (m: string) => never = (m) => {
-    throw Object.assign(new Error(`stream contract violated: ${m}`), { code: "E1702" });
+    throw new VaerionError("E1702", `stream contract violated: ${m}`);
   };
   if (!x || typeof x !== "object") fail("frame must be an object");
   const t = (x as { type?: unknown }).type;

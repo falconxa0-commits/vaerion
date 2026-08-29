@@ -1,0 +1,10 @@
+{
+  "cassette_id": "openai-embed-basic-v1",
+  "provider": "openai",
+  "op": "embed",
+  "request_fingerprint": "00ac643200af8e86de974459b015a4e1a844ace1ca6991a3d6597317c622dcd7",
+  "status": 200,
+  "chunks": [
+    "{\"object\":\"list\",\"data\":[{\"object\":\"embedding\",\"index\":0,\"embedding\":[0.0125,-0.0375,0.0625,0.0875]}],\"model\":\"text-embedding-3-small\",\"usage\":{\"prompt_tokens\":2,\"total_tokens\":2}}"
+  ]
+}

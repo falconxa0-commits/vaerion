@@ -110,6 +110,7 @@ async function* openAiChatFrames(chunks: AsyncIterable<{ text: string }>): Async
   const raw: string[] = await readAllChunks(chunks);
   const parsed = parseSseChunks(raw);
   let finalUsage: { inputTokens: number; outputTokens: number } | null = null;
+  let stopReason: string | null = null;
   for (const item of parsed) {
     if (!item.ok) throw new VaerionError("E1702", item.error);
     for (const frame of mapOpenAiEvent(item.value)) {

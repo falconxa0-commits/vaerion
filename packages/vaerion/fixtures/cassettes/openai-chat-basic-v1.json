@@ -1,0 +1,14 @@
+{
+  "cassette_id": "openai-chat-basic-v1",
+  "provider": "openai",
+  "op": "chat",
+  "request_fingerprint": "732f8657a1c09c46731bf949c16da5537e954eb466ac58244968ca70b939b7c0",
+  "status": 200,
+  "chunks": [
+    "data: {\"id\":\"chatcmpl-rec\",\"object\":\"chat.completion.chunk\",\"created\":1735689600,\"model\":\"gpt-4o\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"Hel\"},\"finish_reason\":null}]}\n\n",
+    "data: {\"id\":\"chatcmpl-rec\",\"object\":\"chat.completion.chunk\",\"created\":1735689600,\"model\":\"gpt-4o\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"lo\"},\"finish_reason\":null}]}\n\n",
+    "data: {\"id\":\"chatcmpl-rec\",\"object\":\"chat.completion.chunk\",\"created\":1735689600,\"model\":\"gpt-4o\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}]}\n\n",
+    "data: {\"id\":\"chatcmpl-rec\",\"object\":\"chat.completion.chunk\",\"created\":1735689600,\"model\":\"gpt-4o\",\"choices\":[],\"usage\":{\"prompt_tokens\":11,\"completion_tokens\":2,\"total_tokens\":13}}\n\n",
+    "data: [DONE]\n\n"
+  ]
+}

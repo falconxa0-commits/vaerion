@@ -25,13 +25,20 @@ Daily Seven (the complete command surface):
   run demo [--sources P,P] [--query Q]
                              index declared local sources; journal everything;
                              close with a receipt
+  run model --model P/M [--prompt TEXT | --op embed --input-json JSON |
+             --op rerank --query Q --docs-json JSON] [--seed N] [--max-tokens N]
+                             invoke a model through the gateway single gate:
+                             broker decision → adapter → sanctioned transport →
+                             metered on the spine
   resume RUN_ID [--answer JSON]
                              restore a run; resolve a pending human gate
   explain RUN_ID             reconstruct the run's narrative from its journal
   journal ls | show RUN | verify RUN | recover RUN | export RUN [--out P]
                              append-only journal operations
-  doctor                     verify config, journals, blobs, audit chain (no phone-home)
-  dev                        engine status: version, layers, milestone position
+  doctor                     verify config, journals, blobs, audit chain, gateway
+                             matrix (no phone-home)
+  dev                        engine status: version, layers, gateway matrix,
+                             milestone position
 
 Global flags:
   --json                     stable NDJSON output (machine mode, guaranteed)
@@ -51,17 +58,29 @@ const COMMAND_HELP: Record<string, string> = {
   Refuses to overwrite an existing vaerion.yaml. --dry-run prints the plan.`,
   run: `vae run research --sources P[,P] --query Q [--max-docs N] [--dry-run]
 vae run demo [--sources P,P] [--query Q]
+vae run model --model P/M [--prompt TEXT] [--system TEXT] [--seed N]
+              [--op chat|embed|rerank] [--input-json JSON] [--query Q]
+              [--docs-json JSON] [--max-tokens N] [--intent TEXT] [--dry-run]
 
-  Executes a local research run through the full constitutional pipeline:
-  declared capability → broker decision PER SOURCE (journaled) →
-  fingerprint → fence → blob CAS → evidence → local index → query →
-  citations → context pack → snapshot → receipt. Every step is attributed
-  and hash-chained. Config policy rules (vaerion.yaml policy:) evaluate
-  first: deny stops the run (exit 3), prompt pauses it with a durable gate
-  (exit 0, awaiting) for 'vae resume'.
+  research/demo execute a local research run through the full
+  constitutional pipeline: declared capability → broker decision PER SOURCE
+  (journaled) → fingerprint → fence → blob CAS → evidence → local index →
+  query → citations → context pack → snapshot → receipt. Every step is
+  attributed and hash-chained. Config policy rules (vaerion.yaml policy:)
+  evaluate first: deny stops the run (exit 3), prompt pauses it with a
+  durable gate (exit 0, awaiting) for 'vae resume'.
 
   demo defaults to ./docs/constitution + ./docs/adr with a fixed query.
-  Exit 3 if the broker denies; 5 if the journal fails final verification.`,
+  Exit 3 if the broker denies; 5 if the journal fails final verification.
+
+  model invokes through the gateway SINGLE GATE: broker decision
+  (model.invoke, journaled; ceiling = gateway.providers in vaerion.yaml) →
+  secret.read decision when the provider needs a credential (value resolved
+  at call time, never journaled) → adapter over the sanctioned transport →
+  usage + integer micro-USD cost metered on the spine → receipt.
+  mockbrain/* models are the local seeded virtual provider (no network,
+  byte-identical outputs for the same seed). A prompt policy pauses the run
+  with a durable gate; a deny exits 3; budget overrun exits with E1703.`,
   resume: `vae resume RUN_ID [--answer JSON]
 
   Restore a run deterministically from its journal. If a durable human gate
@@ -73,7 +92,9 @@ vae run demo [--sources P,P] [--query Q]
   explain: `vae explain RUN_ID
 
   Reconstruct the run's narrative (decisions, gates, events, receipt) from
-  its hash-chained journal. Exit 5 if the journal fails verification.`,
+  its hash-chained journal, plus the gateway metering rollup (tokens and
+  integer micro-USD per model) folded from the same journal. Exit 5 if the
+  journal fails verification.`,
   journal: `vae journal ls
 vae journal show RUN_ID
 vae journal verify RUN_ID
@@ -87,8 +108,11 @@ vae journal export RUN_ID [--out PATH] [--dry-run]
 
   Verifies config validity, every journal's hash chain, every referenced
   blob in the CAS, evidence↔blob↔fingerprint triangulation, audit-ledger
-  continuity, and the Refusal Log chain. Performs NO network access —
-  zero telemetry is constitutional. Exit 5 with Fix: hints on failures.`,
+  continuity, the Refusal Log chain, and the gateway picture: provider
+  capability matrix, declared providers/secret NAMES/budgets. Performs NO
+  network access and resolves NO secret values — zero telemetry is
+  constitutional and secret reads are broker-mediated by law. Exit 5 with
+  Fix: hints on failures.`,
   dev: `vae dev
 
   Engine status: version, substrate (ADR-0018), layer map, workspace state,
@@ -119,7 +143,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
       const value = eq === -1 ? undefined : a.slice(eq + 1);
       if (value !== undefined) {
         parsed.flags[name] = value;
-      } else if (i + 1 < argv.length && !(argv[i + 1] as string).startsWith("--") && ["cwd", "sources", "query", "max-docs", "answer", "out", "name", "profile"].includes(name)) {
+      } else if (i + 1 < argv.length && !(argv[i + 1] as string).startsWith("--") && ["cwd", "sources", "query", "max-docs", "answer", "out", "name", "profile", "model", "prompt", "system", "op", "seed", "max-tokens", "intent", "input-json", "docs-json"].includes(name)) {
         parsed.flags[name] = argv[i + 1] as string;
         i++;
       } else {
@@ -195,7 +219,16 @@ export async function runCli(argv: string[], io: CliIo, cwd: string): Promise<Cl
     if (isVaerionError(err)) {
       const renderer = new (await import("./render.ts")).Renderer(io, mode);
       renderer.error(err);
-      const code = err.code === "E1600" ? ExitCode.usage : err.code === "E1300" || err.code === "E1301" || err.code === "E1302" ? ExitCode.brokerDenied : err.code === "E1601" ? ExitCode.providerDown : ExitCode.internal;
+      const code =
+        err.code === "E1600" || err.code === "E1700" || err.code === "E1701"
+          ? ExitCode.usage
+          : err.code === "E1300" || err.code === "E1301" || err.code === "E1302"
+            ? ExitCode.brokerDenied
+            : err.code === "E1702" || err.code === "E1704" || err.code === "E1705" || err.code === "E1706" || err.code === "E1601"
+              ? ExitCode.providerDown
+              : err.code === "E1703"
+                ? ExitCode.partial
+                : ExitCode.internal;
       return { code };
     }
     const msg = err instanceof Error ? err.message : String(err);

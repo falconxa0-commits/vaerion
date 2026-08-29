@@ -49,7 +49,7 @@ export { brokerEvents, type BrokerDecisionRecordedPayload, type BrokerGateOpened
 export { ChainedAuditWriter, decisionToAuditBody, verifyAuditLedger, type AuditWriter, type AuditEntry, type AuditEntryKind, type AuditVerifyReport } from "./broker/contracts/audit.ts";
 
 // broker engine (L1 — MS-2)
-export { BrokerEngine, graphCovers, graphFromConfig, type BrokerEvaluation, type BrokerEngineInput, type ConfigGrantInput } from "./broker/engine.ts";
+export { BrokerEngine, graphCovers, graphFromConfig, secretGrantFor, type BrokerEvaluation, type BrokerEngineInput, type ConfigGrantInput } from "./broker/engine.ts";
 export { RefusalLogWriter, readRefusals, readRefusalHead, verifyRefusalLog, refusalFromBody, type RefusalEntry, type RefusalAppendInput, type RefusalVerifyReport, type RefusalFilter } from "./broker/refusal-log.ts";
 
 // model gateway (L1 — MS-3, the single gate)
@@ -66,7 +66,6 @@ export { CircuitBreaker, TransportRetries, backoffDelayMs, isRetryable, DEFAULT_
 export { envSecretPort, macKeychainSecretPort, defaultSecretPort, requireResolvedSecret, type SecretPort } from "./gateway/secrets.ts";
 export { meteringFromRecords, type GatewayMeteringRollup, type PerModelMetering } from "./gateway/metering.ts";
 export { GatewayService, GatewayGatePrompt, type GatewayHost, type GatewayInvokeInput, type GatewayServiceOptions, type GatewayIdGen, type BudgetGuard } from "./gateway/service.ts";
-export { secretGrantFor } from "./config/config.ts";
 
 // runtime (L2)
 export { RunHarness, initialRunState, runStateReducer, readAuditHead, type RunState, type RunHarnessOptions } from "./runtime/run.ts";

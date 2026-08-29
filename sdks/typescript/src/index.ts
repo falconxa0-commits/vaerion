@@ -25,6 +25,18 @@ import {
   readRefusals,
   verifyEvidenceSet,
   verifyAuditLedger,
+  graphFromConfig,
+  GatewayService,
+  meteringFromRecords,
+  SystemClock,
+  SystemRng,
+  SystemIdGen,
+  crn,
+  policyFromConfig,
+  loadConfig,
+  fetchTransport,
+  defaultSecretPort,
+  formatMicroUsd,
   type RunState,
   type JournalRecord,
   type VerifyReport,
@@ -36,6 +48,12 @@ import {
   type EvidenceVerificationReport,
   type EvidenceRecord,
   type AuditVerifyReport,
+  type GatewayMeteringRollup,
+  type ModelRequest,
+  type InvocationResult,
+  type GatewayTransport,
+  type SecretPort,
+  type VaerionConfig,
 } from "@vaerion/engine";
 
 export interface VaeClientOptions {
@@ -198,6 +216,85 @@ export class VaeClient {
   /** Audit-ledger verification for the workspace (machine parity with doctor). */
   async verifyAudit(): Promise<AuditVerifyReport> {
     return verifyAuditLedger(`${this.cwd}/.vaerion/audit.log`);
+  }
+
+  /* ── MS-3 gateway surface (machine parity with `vae run model`) ── */
+
+  /**
+   * One model invocation through the gateway SINGLE GATE, in-process: the
+   * SAME engine calls the CLI makes — broker decision (model.invoke,
+   * journaled; ceiling = gateway.providers) → adapter → sanctioned transport
+   * → metering journaled → receipt. The principal is the local human; the
+   * permission-graph ceiling still constrains which provider/model scopes
+   * exist. Transport and secrets are injectable (tests stay hermetic via
+   * cassettes/MockBrain; production defaults to the sanctioned fetch site
+   * and keychain-first resolution).
+   */
+  async gatewayInvoke(input: {
+    request: ModelRequest;
+    intent?: string;
+    transport?: GatewayTransport;
+    secrets?: SecretPort;
+  }): Promise<{ result: InvocationResult; runId: string; receipt: unknown; journalVerified: boolean }> {
+    const clock = new SystemClock();
+    const idGen = new SystemIdGen();
+    const runId = crn("run", idGen.next());
+    const traceId = `t_${idGen.next().slice(-10).toLowerCase()}`;
+    const { config, fingerprint } = await loadConfig(`${this.cwd}/vaerion.yaml`);
+    const graph = graphFromConfig(config, `graph_${fingerprint.slice(0, 12)}`);
+    const harness = await RunHarness.create({
+      workspaceDir: this.cwd,
+      runId,
+      traceId,
+      configFingerprint: fingerprint,
+      clock,
+      idGen,
+      permissionGraph: graph,
+    });
+    try {
+      const gateway = new GatewayService({
+        clock,
+        rng: new SystemRng(),
+        idGen,
+        transport: input.transport ?? fetchTransport,
+        secrets: input.secrets ?? defaultSecretPort(),
+      });
+      const budgets = config.gateway?.budgets;
+      const result = await gateway.invoke(harness, {
+        request: input.request,
+        // Canonical local-human principal — the same node graphFromConfig
+        // grants model.invoke ceiling scopes and declared secret names.
+        principal: { kind: "human", id: "human", runId },
+        policy: policyFromConfig(config),
+        requestId: idGen.next(),
+        intent: input.intent ?? `invoke ${input.request.model} (${input.request.op}) via SDK`,
+        budget: { tokensUsed: 0, microUsdUsed: 0, tokensPerRun: budgets?.tokensPerRun, microUsdPerRun: budgets?.microUsdPerRun },
+      });
+      const closed = await harness.close(`model ${result.model} ${result.op} ok via SDK`);
+      return { result, runId, receipt: closed.receipt, journalVerified: closed.verify.ok };
+    } catch (err) {
+      await harness.close(`run ${runId} gateway invoke ended: ${(err as Error).message.slice(0, 120)}`).catch(() => undefined);
+      throw err;
+    }
+  }
+
+  /**
+   * Gateway metering rollup for one run — a pure fold over the run's
+   * journal, identical to what `vae explain` reports (integer micro-USD).
+   */
+  async metering(runId: string): Promise<GatewayMeteringRollup> {
+    return meteringFromRecords(await this.journalRecords(runId));
+  }
+
+  /** The declared capability matrix (same data `vae doctor`/`dev` surface). */
+  async gatewayMatrix(): Promise<Array<{ provider: string; ops: string[]; requiresSecret: boolean; secretName: string | null }>> {
+    return new GatewayService({
+      clock: new SystemClock(),
+      rng: new SystemRng(),
+      idGen: new SystemIdGen(),
+      transport: fetchTransport,
+      secrets: defaultSecretPort(),
+    }).matrix();
   }
 }
 

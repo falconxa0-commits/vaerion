@@ -36,7 +36,7 @@ export interface Cassette {
 export function assertCassetteShape(value: unknown): asserts value is Cassette {
   const c = value as Partial<Cassette> | null;
   const fail: (why: string) => never = (why) => {
-    throw Object.assign(new Error(`cassette shape invalid: ${why}`), { code: "E1702" });
+    throw new VaerionError("E1702", `cassette shape invalid: ${why}`);
   };
   if (!c || typeof c !== "object") fail("cassette must be an object");
   if (typeof c.cassette_id !== "string" || c.cassette_id.length === 0) fail("cassette_id missing");
@@ -67,6 +67,9 @@ function textChunksToIterable(chunks: readonly string[]): AsyncIterable<Transpor
  *     a loud defect, never an excuse to touch the network.
  */
 export function cassetteTransport(cassettes: readonly Cassette[]): GatewayTransport {
+  // Replay law starts with shape law: every cassette is validated loudly at
+  // construction — a malformed fixture is a contract defect, not a replay miss.
+  for (const cassette of cassettes) assertCassetteShape(cassette);
   const byFingerprint = new Map(cassettes.map((c) => [c.request_fingerprint, c] as const));
   return {
     name: "cassette",

@@ -68,8 +68,13 @@ function scanFiles(dir: string, check: string, patterns: RegExp[], allow: (rel: 
   }
 }
 
-// C1 — network ban (engine + SDK). Allow: none. (CLI doctor text mentions "network" in prose only.)
-scanFiles(ENGINE, "C1-network", [/\bfetch\(/, /node:http/, /node:https/, /node:net\b/, /axios/, /\bhttps?:\/\//], () => false);
+// C1 — network ban (engine + SDK). Allow: the SINGLE sanctioned egress site
+// (MS-3, constitution D-J/C1 amendment): gateway/transport.ts carries the
+// provider endpoint map and is reachable ONLY behind journaled broker
+// decisions (model.invoke/secret.read, decide→journal→act). Everywhere else
+// the ban is absolute. (CLI doctor text mentions "network" in prose only.)
+const C1_ALLOW = (rel: string): boolean => rel.endsWith("packages/vaerion/src/gateway/transport.ts");
+scanFiles(ENGINE, "C1-network", [/\bfetch\(/, /node:http/, /node:https/, /node:net\b/, /axios/, /\bhttps?:\/\//], C1_ALLOW);
 scanFiles(SDK, "C1-network", [/\bfetch\(/, /node:http/, /node:https/, /node:net\b/, /axios/], () => false);
 
 // C2 — determinism ports. Allow: the port implementations themselves.

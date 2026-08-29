@@ -145,6 +145,13 @@ async function* streamAnthropicFrames(chunks: AsyncIterable<{ text: string }>): 
         outputTokens = m.outputTokens;
         continue;
       }
+      if (m.frame.type === "usage") {
+        // message_start baseline: captured into the coalesced frame, never
+        // yielded as an intermediate usage frame — exactly ONE usage frame
+        // flows per stream (the coalesced law this module documents).
+        inputTokens = m.frame.inputTokens;
+        continue;
+      }
       if (m.frame.type === "done") {
         yield { type: "usage", inputTokens, outputTokens };
       }

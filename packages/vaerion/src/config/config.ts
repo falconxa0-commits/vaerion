@@ -13,12 +13,14 @@ import { blake3HexOf } from "../kernel/hash.ts";
 import { VaerionError } from "../kernel/errors.ts";
 import { canonicalJson } from "../kernel/canonical.ts";
 import type { PolicyContract, PolicyRule } from "../broker/contracts/decision.ts";
-import { scopeMatches } from "../broker/contracts/capability.ts";
 
 export const CONFIG_SCHEMA_VERSION = "0.1";
 
-/** Known gateway provider keys (fail-closed: unknown keys are config drift). */
-export const GATEWAY_PROVIDERS: ReadonlySet<string> = new Set(["anthropic", "openai", "ollama"]);
+/** Known gateway provider keys (fail-closed: unknown keys are config drift).
+ * mockbrain (ADR-0012) is declared like any provider: its ceiling scopes make
+ * the seeded virtual provider reachable through the broker — hermetic by law,
+ * never a test-only backdoor. */
+export const GATEWAY_PROVIDERS: ReadonlySet<string> = new Set(["anthropic", "openai", "ollama", "mockbrain"]);
 
 export interface GatewayProviderConfig {
   enabled: boolean;
@@ -345,6 +347,20 @@ export function policyFromConfig(config: VaerionConfig): PolicyContract {
       });
     }
   }
+  // Model Gateway (MS-3): the human at the terminal is the direct authority
+  // for model invocations; the permission-graph ceiling (gateway.providers)
+  // still constrains WHICH provider/model scopes exist at all. Declared
+  // policy rules above always win (first match), so a project can deny or
+  // prompt on any model invocation. Non-human principals get no structural
+  // model.invoke grant — they must be declared explicitly (fail-closed).
+  rules.push({
+    id: "human-model-invoke-allow",
+    principalKinds: ["human"],
+    domain: "model.invoke",
+    scope: "*",
+    effect: "allow",
+    rationale: "local human model gateway access (ceiling-checked against gateway.providers)",
+  });
   // Secrets (ADR-0013): humans may read locally; non-human principals only
   // through an explicit scoped grant. The grant patterns are matched against
   // the requesting principal id at decision time by secretGrantFor (below).
@@ -357,18 +373,6 @@ export function policyFromConfig(config: VaerionConfig): PolicyContract {
     rationale: "local human keychain access",
   });
   return { policy_id: `default-${config.project.name}`, version: 1, rules };
-}
-
-/**
- * Does the config grant the named secret to this principal id? (ADR-0013:
- * "scoped grants naming which principals may read which secret"). Patterns
- * are matched with the capability scope matcher (`gateway:*` covers
- * `gateway:<runId>`, `*` covers everything). Fail-closed: no match = no.
- */
-export function secretGrantFor(config: VaerionConfig, secretName: string, principalId: string): boolean {
-  const entry = config.secrets?.[secretName];
-  if (entry === undefined) return false;
-  return entry.grant.some((pattern) => scopeMatches(pattern, principalId));
 }
 
 /**

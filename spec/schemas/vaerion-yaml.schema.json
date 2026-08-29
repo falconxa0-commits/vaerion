@@ -208,18 +208,19 @@
       "additionalProperties": false,
       "properties": {
         "providers": {
-          "description": "Known provider keys only: anthropic, openai, ollama. The offline virtual provider mockbrain is always available and is not declared here.",
+          "description": "Known provider keys only: anthropic, openai, ollama, mockbrain. The offline virtual provider mockbrain (ADR-0012) is declared like any provider \u2014 its ceiling scopes make it reachable through the broker; declaring none grants nothing.",
           "type": "object",
           "additionalProperties": false,
           "propertyNames": {
             "enum": [
               "anthropic",
               "openai",
-              "ollama"
+              "ollama",
+              "mockbrain"
             ]
           },
           "patternProperties": {
-            "^(anthropic|openai|ollama)$": {
+            "^(anthropic|openai|ollama|mockbrain)$": {
               "type": "object",
               "additionalProperties": false,
               "required": [
