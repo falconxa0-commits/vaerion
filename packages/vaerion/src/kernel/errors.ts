@@ -57,6 +57,14 @@ export type ErrorCode =
   | "E1704" // gateway_secret_unresolved
   | "E1705" // gateway_breaker_open
   | "E1706" // gateway_transport_refused
+  // 18xx — agents, workflow, evals (MS-4)
+  | "E1800" // agent_plan_invalid
+  | "E1801" // agent_tool_unknown
+  | "E1802" // agent_tool_args_invalid
+  | "E1803" // workflow_dag_invalid
+  | "E1804" // agent_step_limit_exceeded
+  | "E1805" // eval_golden_mismatch
+  | "E1806" // citation_enforcement_violation
   // 19xx — internal invariants (never user-caused; always a bug)
   | "E1900" // internal_unreachable
   | "E1901"; // canonical_json_rejected_value
@@ -111,6 +119,13 @@ export const ERROR_CATALOG: Readonly<Record<ErrorCode, ErrorDescriptor>> = {
   E1704: { code: "E1704", name: "gateway_secret_unresolved", summary: "A declared secret resolved to nothing at call time (keychain and environment both empty).", fix: "Store the value in the OS keychain (service \"vae\", account = the secret name) or export it as an environment variable, then retry; names live in config, values never do." },
   E1705: { code: "E1705", name: "gateway_breaker_open", summary: "The provider's circuit breaker is open after repeated failures.", fix: "Wait for the cooldown and probe again with `vae doctor`; the failures that opened it are journaled and must be investigated, not papered over." },
   E1706: { code: "E1706", name: "gateway_transport_refused", summary: "The transport refused the provider call (unreachable, DNS, aborted).", fix: "Check connectivity and provider status; the call was broker-authorized, so a repeated refusal is environmental. `vae doctor` reports the breaker state." },
+  E1800: { code: "E1800", name: "agent_plan_invalid", summary: "The planner produced a plan that does not satisfy the plan contract.", fix: "Check the planner model's output against the plan JSON shape (steps with kind model|tool|note|context); scripted planners must declare valid steps." },
+  E1801: { code: "E1801", name: "agent_tool_unknown", summary: "The requested tool is not declared in this workspace.", fix: "Declare the tool under tools: in vaerion.yaml; undeclared tools are refused fail-closed by the broker pipeline." },
+  E1802: { code: "E1802", name: "agent_tool_args_invalid", summary: "Tool arguments failed the declared argument shape.", fix: "Match the tool's declared args schema (JSON object with the expected keys and types); see the tool's declaration in vaerion.yaml." },
+  E1803: { code: "E1803", name: "workflow_dag_invalid", summary: "The workflow DAG is invalid (cycle, missing dependency, or duplicate node id).", fix: "Repair the DAG definition so every dependency references an existing node and the graph is acyclic; `vae run workflow --dag FILE` validates before executing." },
+  E1804: { code: "E1804", name: "agent_step_limit_exceeded", summary: "The agent reached its step ceiling before completing the goal.", fix: "Raise agents.maxSteps in vaerion.yaml deliberately, narrow the goal, or resume the run; the steps already journaled are real work and are never hidden." },
+  E1805: { code: "E1805", name: "eval_golden_mismatch", summary: "An evaluation report or transcript differs from its blessed golden fixture.", fix: "Re-run the scenario suite; if the change is intended, re-bless with VAE_BLESS=1 and review the diff — golden drift is a contract change, never noise." },
+  E1806: { code: "E1806", name: "citation_enforcement_violation", summary: "An answer used research context without referencing its citations.", fix: "Answer with explicit citation references (cit_NNNN from the prepared context pack); unattributed claims over research content are refused by law." },
   E1900: { code: "E1900", name: "internal_unreachable", summary: "An internal invariant was violated (engine bug).", fix: "File a bug with the trace id; this is never user-caused." },
   E1901: { code: "E1901", name: "canonical_json_rejected_value", summary: "Value cannot be canonically serialized (float/undefined/symbol).", fix: "Encode the value as an integer or string before journaling; hashed content must be byte-stable." },
 };

@@ -41,6 +41,22 @@ export interface SecretsConfig {
   [secretName: string]: { grant: string[] };
 }
 
+/** Agent loop declaration (MS-4): the supervisor's step ceiling + planner model. */
+export interface AgentsConfig {
+  /** Ceiling on journaled agent steps per run (default 24; must be >= 1). */
+  maxSteps?: number;
+  /** Model used by the LLM planner through the gateway single gate. */
+  plannerModel?: string;
+}
+
+/** Declared tool (MS-4): undeclared tools are refused fail-closed (E1801). */
+export interface ToolDeclarationConfig {
+  name: string;
+  /** Broker scope for the tool.exec decision (defaults to the tool name). */
+  scope?: string;
+  description?: string;
+}
+
 export interface VaerionConfig {
   schemaVersion: string;
   project: {
@@ -69,10 +85,14 @@ export interface VaerionConfig {
   gateway?: GatewayConfig;
   /** Secret NAMES with scoped grants (ADR-0013) — values never live here. */
   secrets?: SecretsConfig;
+  /** Agent loop declaration (MS-4). */
+  agents?: AgentsConfig;
+  /** Declared tools (MS-4) — the only tool.exec scopes that can be authorized. */
+  tools?: ToolDeclarationConfig[];
   telemetry: { enabled: false };
 }
 
-const TOP_LEVEL_KEYS: ReadonlySet<string> = new Set(["schemaVersion", "project", "permissions", "research", "policy", "gateway", "secrets", "telemetry"]);
+const TOP_LEVEL_KEYS: ReadonlySet<string> = new Set(["schemaVersion", "project", "permissions", "research", "policy", "gateway", "secrets", "agents", "tools", "telemetry"]);
 const PROJECT_KEYS: ReadonlySet<string> = new Set(["name", "description"]);
 const PERMISSIONS_KEYS: ReadonlySet<string> = new Set(["net", "exec"]);
 const RESEARCH_KEYS: ReadonlySet<string> = new Set(["capabilities"]);
@@ -81,6 +101,8 @@ const GATEWAY_KEYS: ReadonlySet<string> = new Set(["providers", "budgets"]);
 const GATEWAY_PROVIDER_KEYS: ReadonlySet<string> = new Set(["enabled", "models"]);
 const GATEWAY_BUDGET_KEYS: ReadonlySet<string> = new Set(["tokensPerRun", "microUsdPerRun"]);
 const SECRETS_ENTRY_KEYS: ReadonlySet<string> = new Set(["grant"]);
+const AGENTS_KEYS: ReadonlySet<string> = new Set(["maxSteps", "plannerModel"]);
+const TOOL_DECLARATION_KEYS: ReadonlySet<string> = new Set(["name", "scope", "description"]);
 const POLICY_RULE_KEYS: ReadonlySet<string> = new Set(["id", "principalKinds", "domain", "scope", "effect", "gateLabel", "rationale"]);
 const PRINCIPAL_KINDS: ReadonlySet<string> = new Set(["human", "agent", "tool", "extension", "research", "system"]);
 const POLICY_EFFECTS: ReadonlySet<string> = new Set(["allow", "deny", "prompt"]);
@@ -270,6 +292,48 @@ export function validateConfig(value: unknown): VaerionConfig {
       const grant = entry.grant;
       if (!Array.isArray(grant) || grant.length === 0 || grant.some((g) => typeof g !== "string" || g.length === 0)) {
         throw new VaerionError("E1202", `secrets.${name}.grant must be a non-empty array of principal-id patterns`);
+      }
+    }
+  }
+
+  const agents = c.agents as Record<string, unknown> | undefined;
+  if (agents !== undefined) {
+    if (!agents || typeof agents !== "object" || Array.isArray(agents)) {
+      throw new VaerionError("E1202", "agents must be a mapping");
+    }
+    for (const key of Object.keys(agents)) {
+      if (!AGENTS_KEYS.has(key)) throw new VaerionError("E1201", `unknown agents key: ${key}`, { key: `agents.${key}` });
+    }
+    if (agents.maxSteps !== undefined && (!Number.isInteger(agents.maxSteps) || (agents.maxSteps as number) < 1)) {
+      throw new VaerionError("E1202", "agents.maxSteps must be a positive integer");
+    }
+    if (agents.plannerModel !== undefined && (typeof agents.plannerModel !== "string" || !(agents.plannerModel as string).includes("/"))) {
+      throw new VaerionError("E1202", 'agents.plannerModel must be a canonical "provider/model-id" string');
+    }
+  }
+
+  const tools = c.tools as unknown;
+  if (tools !== undefined) {
+    if (!Array.isArray(tools)) throw new VaerionError("E1202", "tools must be an array of tool declarations");
+    const seen = new Set<string>();
+    for (const t of tools) {
+      const td = t as Record<string, unknown>;
+      if (!td || typeof td !== "object" || Array.isArray(td)) {
+        throw new VaerionError("E1202", "each tools entry must be a mapping");
+      }
+      for (const key of Object.keys(td)) {
+        if (!TOOL_DECLARATION_KEYS.has(key)) throw new VaerionError("E1201", `unknown tools entry key: ${key}`, { key: `tools.${key}` });
+      }
+      if (typeof td.name !== "string" || !/^[a-z][a-z0-9._-]{0,62}$/.test(td.name)) {
+        throw new VaerionError("E1202", `tools name must match ^[a-z][a-z0-9._-]{0,62}$, got: ${String(td.name)}`);
+      }
+      if (seen.has(td.name)) throw new VaerionError("E1202", `duplicate tool declaration: ${td.name as string}`);
+      seen.add(td.name as string);
+      if (td.scope !== undefined && (typeof td.scope !== "string" || (td.scope as string).length === 0)) {
+        throw new VaerionError("E1202", `tools.${td.name as string}.scope must be a non-empty string when present`);
+      }
+      if (td.description !== undefined && typeof td.description !== "string") {
+        throw new VaerionError("E1202", `tools.${td.name as string}.description must be a string when present`);
       }
     }
   }

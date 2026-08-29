@@ -99,6 +99,50 @@
       "description": "A tool invocation was refused by the broker and the denial was journaled."
     },
     {
+      "type": "agent.run.started",
+      "description": "A supervised agent run began over journaled decisions; the payload carries the goal, planner kind, and step ceiling."
+    },
+    {
+      "type": "agent.step.recorded",
+      "description": "One agent step (model invocation, tool call, note, or context pack) completed; the payload links the step to its decisions and carries usage when model-backed."
+    },
+    {
+      "type": "agent.step.failed",
+      "description": "An agent step failed after its retries; the payload carries the error code and the step coordinates."
+    },
+    {
+      "type": "agent.run.completed",
+      "description": "The agent run reached an outcome (goal, step_limit, failed, or awaiting_gate); every journaled step remains replayable."
+    },
+    {
+      "type": "workflow.started",
+      "description": "A deterministic workflow DAG execution began; the payload carries the workflow id and node count."
+    },
+    {
+      "type": "workflow.node.started",
+      "description": "A workflow node began executing after its dependencies completed."
+    },
+    {
+      "type": "workflow.node.completed",
+      "description": "A workflow node completed; its output is content-addressed in the blob store and referenced by blob_ref."
+    },
+    {
+      "type": "workflow.node.failed",
+      "description": "A workflow node failed after its retries; the payload carries the error code."
+    },
+    {
+      "type": "workflow.completed",
+      "description": "The workflow DAG finished; the payload summarizes completed and failed nodes for deterministic resume."
+    },
+    {
+      "type": "reasoning.note.recorded",
+      "description": "A scratchpad note was appended to the run's persistent reasoning session."
+    },
+    {
+      "type": "reasoning.folded",
+      "description": "Older scratchpad notes were folded into a deterministic summary checkpoint; the fold is recomputable from the journal alone."
+    },
+    {
       "type": "store.blob.put",
       "description": "Content was stored in the blake3 content-addressed blob store; the payload carries the blob_ref."
     }

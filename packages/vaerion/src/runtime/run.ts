@@ -146,6 +146,13 @@ export class RunHarness {
   private readonly traceIdValue: string;
   private closedHarness = false;
   private resolvedGateIds = new Set<string>();
+  /** Approved prompt decisions become durable authority for the SAME
+   *  principal+domain+scope (MS-4: restart-safe agent resume; the human's
+   *  recorded approval is the authority, never a bypass — every elevated
+   *  re-decision is still journaled + audited as its own decision record). */
+  private elevatedAuths = new Set<string>();
+  /** Prompt decisions made in THIS session, by decision id (for elevation wiring). */
+  private promptedDecisions = new Map<string, { principalId: string; domain: string; scope: string }>();
 
   private constructor(
     journal: JournalWriter,
@@ -169,6 +176,13 @@ export class RunHarness {
   /** Seed gate idempotency from a restored state (cross-restart law). */
   seedResolvedGates(gateIds: string[]): void {
     for (const id of gateIds) this.resolvedGateIds.add(id);
+  }
+
+  /** Seed elevation authority from a restored journal (cross-restart law).
+   *  Entries are principal|domain|scope triples whose prompt decision was
+   *  resolved with explicit human approval. */
+  seedElevations(entries: Array<{ principalId: string; domain: string; scope: string }>): void {
+    for (const e of entries) this.elevatedAuths.add(`${e.principalId}|${e.domain}|${e.scope}`);
   }
 
   static journalPathFor(workspaceDir: string, runId: string): string {
@@ -228,6 +242,36 @@ export class RunHarness {
    * additionally open a durable gate linked to the decision record.
    */
   async decide(req: DecisionRequest, policy: PolicyContract, graph?: PermissionGraph | null): Promise<{ decision: BrokerDecision; record: BrokerDecisionRecord; gate?: GateRecord }> {
+    // Elevation law (MS-4): an explicitly approved prompt decision for THIS
+    // principal+domain+scope is durable authority. The re-decision is still a
+    // full decide→journal→act record whose policy names the elevation —
+    // nothing bypasses the broker; the human's recorded approval IS the rule.
+    const elevationKey = `${req.principal.id}|${req.domain}|${req.scope}`;
+    if (this.elevatedAuths.has(elevationKey)) {
+      const record: BrokerDecisionRecord = {
+        decision_id: this.idGen.next(),
+        request_id: req.request_id,
+        run_id: this.journal.runId,
+        trace_id: this.traceIdValue,
+        principal: req.principal,
+        domain: req.domain,
+        scope: req.scope,
+        intent: req.intent,
+        action: redactDeep(req.action) as Record<string, unknown>,
+        decision: { kind: "allow", policy: "human-elevation" },
+        resolved_by: "human",
+        decided_at: this.clock.nowIso(),
+      };
+      await this.journal.appendDecision(record);
+      await this.audit.append("decision", record.decision_id, decisionToAuditBody(record));
+      await this.emit(
+        "broker.decision.recorded",
+        brokerEvents.decisionRecorded(record) as unknown as Record<string, unknown>,
+        req.principal,
+        { kind: "decision", ref: record.decision_id },
+      );
+      return { decision: record.decision, record };
+    }
     // Per-call graph wins; else the standing graph from construction; else policy-only.
     const effectiveGraph = graph !== undefined ? graph : this.standingGraph;
     const engine = new BrokerEngine({ policy, graph: effectiveGraph });
@@ -275,6 +319,7 @@ export class RunHarness {
         opened_at: this.clock.nowIso(),
       };
       await this.journal.appendGate(gate);
+      this.promptedDecisions.set(record.decision_id, { principalId: req.principal.id, domain: req.domain, scope: req.scope });
       await this.emit(
         "broker.gate.opened",
         brokerEvents.gateOpened(gate) as unknown as Record<string, unknown>,
@@ -304,6 +349,22 @@ export class RunHarness {
     this.resolvedGateIds.add(gate.gate_id);
     const approved = answer.approved !== false;
     if (approved && gate.decision_id) {
+      // Elevation wiring (cross-session safe): the prompt decision may have
+      // been made in a PREVIOUS session (resume flow) — when the in-memory
+      // cache lacks it, the decision record is looked up from THIS run's
+      // journal. The journal is the truth; the cache is an accelerator.
+      let prompted = this.promptedDecisions.get(gate.decision_id);
+      if (prompted === undefined) {
+        const journalPath = RunHarness.journalPathFor(this.workspaceDir, this.journal.runId);
+        const read = await readJournal(journalPath).catch(() => null);
+        const dec = read?.records.find(
+          (rec): rec is Extract<typeof rec, { k: "decision" }> => rec.k === "decision" && rec.decision.decision_id === gate.decision_id,
+        );
+        if (dec) prompted = { principalId: dec.decision.principal.id, domain: dec.decision.domain, scope: dec.decision.scope };
+      }
+      if (prompted) {
+        this.elevatedAuths.add(`${prompted.principalId}|${prompted.domain}|${prompted.scope}`);
+      }
       // Human authority moment: the prompt decision is elevated by explicit approval.
       await this.audit.append("elevation", gate.decision_id, {
         decision_id: gate.decision_id,
@@ -403,6 +464,19 @@ export class RunHarness {
     const { journal, audit, refusals } = await RunHarness.openWriters(opts);
     const harness = new RunHarness(journal, new EventBus(), audit, refusals, opts);
     harness.seedResolvedGates(result.state.resolvedGates.map((g) => g.gate_id));
+    // Elevation seeding (cross-restart): every RESOLVED-APPROVED gate whose
+    // linked decision record is in this journal grants durable authority for
+    // that principal+domain+scope. Denials grant nothing.
+    for (const gate of result.state.resolvedGates) {
+      if (gate.decision_id === undefined) continue;
+      if (gate.answer && (gate.answer as Record<string, unknown>).approved === false) continue;
+      const dec = read.records.find(
+        (rec): rec is Extract<typeof rec, { k: "decision" }> => rec.k === "decision" && rec.decision.decision_id === gate.decision_id,
+      );
+      if (dec) {
+        harness.elevatedAuths.add(`${dec.decision.principal.id}|${dec.decision.domain}|${dec.decision.scope}`);
+      }
+    }
     await harness.emit(
       "run.restored",
       { run_id: opts.runId, status: result.state.status, last_seq: result.state.lastSeq },

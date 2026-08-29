@@ -4,6 +4,32 @@ All changes to files under `spec/` are recorded here. Evolution is
 additive-only within a major version; removals require a major bump and a
 deprecation window. Every entry requires two approvals on the change itself.
 
+## 0.1.3 — 2026-08-29 (MS-4 intelligence + agents; additive only)
+
+Additive contract surface for the Agent Runtime, Workflow DAG Engine,
+Reasoning Sessions, and Evaluation Harness (MS-4). Nothing removed, nothing
+renamed; all prior v0.1 documents remain valid unchanged.
+
+- `events/registry.json` — added event types `agent.run.started`,
+  `agent.step.recorded`, `agent.step.failed`, `agent.run.completed`,
+  `workflow.started`, `workflow.node.started`, `workflow.node.completed`,
+  `workflow.node.failed`, `workflow.completed`, `reasoning.note.recorded`,
+  and `reasoning.folded`. Registry version stays 1; evolution is additive
+  per ADR-0002.
+- `errors.yaml` — added the 18xx range (agents, workflow, evals): `E1800`
+  agent_plan_invalid, `E1801` agent_tool_unknown, `E1802`
+  agent_tool_args_invalid, `E1803` workflow_dag_invalid, `E1804`
+  agent_step_limit_exceeded, `E1805` eval_golden_mismatch, `E1806`
+  citation_enforcement_violation. Catalog version stays 1; codes are
+  additive and never reused (ADR-0014).
+- `schemas/vaerion-yaml.schema.json` — added optional top-level `agents`
+  block (`maxSteps` positive integer; `plannerModel` canonical
+  provider/model-id string) and optional top-level `tools` array
+  (declarations with `name`, optional `scope`, optional `description`).
+  Declaring a tool grants nothing by itself — `tool.exec` authorization
+  still requires explicit broker policy rules. Strict unknown-key
+  rejection is unchanged.
+
 ## 0.1.2 — 2026-08-29 (MS-3 model gateway; additive only)
 
 Additive contract surface for the Model Gateway (MS-3, the single gate per

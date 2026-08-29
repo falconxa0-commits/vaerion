@@ -28,6 +28,17 @@ import {
   graphFromConfig,
   GatewayService,
   meteringFromRecords,
+  AgentRuntime,
+  agentStateFromRecords,
+  agentMetricsFromRecords,
+  InlinePlanner,
+  ToolRegistry,
+  ToolInvocationService,
+  echoTool,
+  clockReadTool,
+  agentGrants,
+  WorkflowEngine,
+  assertWorkflowDag,
   SystemClock,
   SystemRng,
   SystemIdGen,
@@ -54,6 +65,12 @@ import {
   type GatewayTransport,
   type SecretPort,
   type VaerionConfig,
+  type PlanStep,
+  type ToolExecutor,
+  type AgentRunResult,
+  type AgentMetrics,
+  type WorkflowDag,
+  type WorkflowRunResult,
 } from "@vaerion/engine";
 
 export interface VaeClientOptions {
@@ -295,6 +312,125 @@ export class VaeClient {
       transport: fetchTransport,
       secrets: defaultSecretPort(),
     }).matrix();
+  }
+
+  /* ── MS-4 agents surface (machine parity with `vae run agent`) ── */
+
+  /**
+   * One supervised agent run, in-process: the SAME engine calls the CLI
+   * makes — AgentRuntime over journaled decisions, declared tools through
+   * the broker tool pipeline, model steps through the gateway single gate,
+   * metrics folded from the journal. Steps must be declared (InlinePlanner)
+   * or the config's planner model is used; custom executors are injectable.
+   */
+  async agentRun(input: {
+    goal: string;
+    steps?: PlanStep[];
+    maxSteps?: number;
+    tools?: Array<{ name: string; scope?: string; executor: ToolExecutor }>;
+    transport?: GatewayTransport;
+    secrets?: SecretPort;
+  }): Promise<{ result: AgentRunResult; metrics: AgentMetrics; receipt: unknown; journalVerified: boolean }> {
+    const { config, fingerprint } = await loadConfig(`${this.cwd}/vaerion.yaml`);
+    const clock = new SystemClock();
+    const idGen = new SystemIdGen();
+    const runId = crn("run", idGen.next());
+    const traceId = `t_sdk_agent_${idGen.next().slice(-8).toLowerCase()}`;
+    const graph = graphFromConfig(config, `graph_${fingerprint.slice(0, 12)}`, agentGrants(config, policyFromConfig(config), { kind: "agent", id: `agent:${runId.slice(-8).toLowerCase()}` }));
+    const harness = await RunHarness.create({ workspaceDir: this.cwd, runId, traceId, configFingerprint: fingerprint, clock, idGen, permissionGraph: graph });
+    const principal = { kind: "agent" as const, id: `agent:${runId.slice(-8).toLowerCase()}` };
+    try {
+      const gateway = new GatewayService({
+        clock,
+        rng: new SystemRng(),
+        idGen,
+        transport: input.transport ?? fetchTransport,
+        secrets: input.secrets ?? defaultSecretPort(),
+      });
+      const merged = [
+        ...(config.tools ?? []).map((d) => ({ name: d.name, scope: d.scope ?? d.name, description: d.description ?? null })),
+        ...(input.tools ?? []).filter((t) => !(config.tools ?? []).some((d) => d.name === t.name)).map((t) => ({ name: t.name, scope: t.scope ?? t.name, description: null })),
+      ];
+      const executors = new Map<string, ToolExecutor>([
+        ["echo", echoTool],
+        ["clock.read", clockReadTool],
+        ...(input.tools ?? []).map((t) => [t.name, t.executor] as const),
+      ]);
+      const tools = new ToolInvocationService({ clock, idGen, registry: new ToolRegistry(merged), executors, blobStore: this.blobs() });
+      const planner = new InlinePlanner({ goal: input.goal, steps: input.steps ?? [] });
+      const runtime = new AgentRuntime({
+        harness,
+        clock,
+        idGen,
+        maxSteps: input.maxSteps ?? config.agents?.maxSteps ?? 24,
+        gateway,
+        tools,
+        research: null,
+        actor: principal,
+      });
+      const result = await runtime.run({
+        goal: input.goal,
+        principal,
+        policy: policyFromConfig(config),
+        planner,
+        budget: { tokensUsed: 0, microUsdUsed: 0, tokensPerRun: config.gateway?.budgets?.tokensPerRun, microUsdPerRun: config.gateway?.budgets?.microUsdPerRun },
+      });
+      const closed = await harness.close(`agent run ${runId}: ${result.outcome} after ${result.steps} step(s) via SDK`);
+      const metrics = agentMetricsFromRecords(await this.journalRecords(runId));
+      return { result, metrics, receipt: closed.receipt, journalVerified: closed.verify.ok };
+    } catch (err) {
+      await harness.close(`agent run ${runId} ended: ${(err as Error).message.slice(0, 120)}`).catch(() => undefined);
+      throw err;
+    }
+  }
+
+  /**
+   * One deterministic workflow DAG run, in-process (machine parity with
+   * `vae run workflow`): fail-closed DAG validation, journaled topological
+   * execution, content-addressed node outputs.
+   */
+  async workflowRun(input: { dag: WorkflowDag; transport?: GatewayTransport; secrets?: SecretPort }): Promise<{ result: WorkflowRunResult; receipt: unknown; journalVerified: boolean }> {
+    assertWorkflowDag(input.dag);
+    const { config, fingerprint } = await loadConfig(`${this.cwd}/vaerion.yaml`);
+    const clock = new SystemClock();
+    const idGen = new SystemIdGen();
+    const runId = crn("run", idGen.next());
+    const traceId = `t_sdk_wf_${idGen.next().slice(-8).toLowerCase()}`;
+    const graph = graphFromConfig(config, `graph_${fingerprint.slice(0, 12)}`, agentGrants(config, policyFromConfig(config), { kind: "agent", id: "agent:workflow" }));
+    const harness = await RunHarness.create({ workspaceDir: this.cwd, runId, traceId, configFingerprint: fingerprint, clock, idGen, permissionGraph: graph });
+    try {
+      const gateway = new GatewayService({
+        clock,
+        rng: new SystemRng(),
+        idGen,
+        transport: input.transport ?? fetchTransport,
+        secrets: input.secrets ?? defaultSecretPort(),
+      });
+      const registry = ToolRegistry.fromConfig(config.tools ?? []);
+      const tools = new ToolInvocationService({
+        clock,
+        idGen,
+        registry,
+        executors: new Map<string, ToolExecutor>([
+          ["echo", echoTool],
+          ["clock.read", clockReadTool],
+        ]),
+        blobStore: this.blobs(),
+      });
+      const engine = new WorkflowEngine({ harness, clock, idGen, blobRoot: `${this.cwd}/.vaerion/blobs`, gateway, tools, research: null, actor: { kind: "system", id: "workflow" } });
+      const result = await engine.run({ dag: input.dag, principal: { kind: "agent", id: "agent:workflow" }, policy: policyFromConfig(config), budget: { tokensUsed: 0, microUsdUsed: 0 } });
+      const closed = await harness.close(`workflow ${input.dag.id}: ${result.outcome} via SDK`);
+      return { result, receipt: closed.receipt, journalVerified: closed.verify.ok };
+    } catch (err) {
+      await harness.close(`workflow run ${runId} ended: ${(err as Error).message.slice(0, 120)}`).catch(() => undefined);
+      throw err;
+    }
+  }
+
+  /** Agent metrics for one run — a pure fold, identical to `vae explain`. */
+  async agentMetrics(runId: string): Promise<{ metrics: AgentMetrics; state: ReturnType<typeof agentStateFromRecords> }> {
+    const records = await this.journalRecords(runId);
+    return { metrics: agentMetricsFromRecords(records), state: agentStateFromRecords(runId, "sdk", records) };
   }
 }
 

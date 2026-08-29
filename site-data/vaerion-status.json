@@ -1,70 +1,70 @@
 {
-  "generatedAt": "2026-08-29T18:43:30.000Z",
+  "generatedAt": "2026-08-29T21:16:52.204Z",
   "engineVersion": "0.1.0-ms1",
   "substrate": "TypeScript on Bun (ADR-0018, Proposed — pending Founder ratification)",
   "verification": {
-    "generatedAt": "2026-08-29T18:40:52.946Z",
+    "generatedAt": "2026-08-29T21:16:52.170Z",
     "ok": true,
     "gates": [
       {
         "gate": "typecheck-engine",
         "ok": true,
-        "durationMs": 2771
+        "durationMs": 3290
       },
       {
         "gate": "typecheck-sdk",
         "ok": true,
-        "durationMs": 2089
+        "durationMs": 2655
       },
       {
         "gate": "tests",
         "ok": true,
-        "durationMs": 541
+        "durationMs": 838
       },
       {
         "gate": "layerlint",
         "ok": true,
-        "durationMs": 24
+        "durationMs": 28
       },
       {
         "gate": "constitutional-check",
         "ok": true,
-        "durationMs": 155
+        "durationMs": 173
       },
       {
         "gate": "repo-lint",
         "ok": true,
-        "durationMs": 8400
+        "durationMs": 8304
       }
     ]
   },
   "tests": {
-    "suites": 14,
-    "assertedExpectations": 1405,
-    "totalTests": 183,
+    "suites": 19,
+    "assertedExpectations": 1563,
+    "totalTests": 218,
     "coverage": {
-      "lines": 83.37,
-      "branches": 88.96,
-      "floors": "bunfig.toml coverageThreshold (OBJ-Q6, ratcheted at MS-3)"
+      "lines": 84.62,
+      "branches": 89.45,
+      "floors": "bunfig.toml coverageThreshold (OBJ-Q6, ratcheted at MS-4)"
     },
     "note": "counts from the latest full run of `bun test tests/ --coverage`"
   },
   "code": {
     "engine": {
-      "files": 67,
-      "lines": 9102
+      "files": 81,
+      "lines": 12429
     },
     "engineTests": {
-      "files": 14,
-      "lines": 4214
+      "files": 19,
+      "lines": 5355
     },
     "sdk": {
       "files": 1,
-      "lines": 303
+      "lines": 439
     },
     "tools": {
       "files": 4,
-      "lines": 470
+      "lines": 471
     }
   },
   "contracts": {
@@ -137,16 +137,16 @@
     {
       "id": "MS-4",
       "name": "Intelligence + Agents",
-      "status": "pending",
-      "progress": 5,
-      "evidence": "Research local index + context packs + evidence triangulation prefigure intel/context; agent executor not started."
+      "status": "complete",
+      "progress": 100,
+      "evidence": "AgentRuntime supervisor loop (plan → decide → journal → act per step; round/index coordinates; bounded retries; broker refusals fatal; gates pause with awaiting_gate; approved gates = durable elevation authority for restart-safe resume; step ceiling loud E1804); planners (InlinePlanner declared determinism device + ModelPlanner through the gateway single gate with E1800 plan contract); tool invocation pipeline (declare → validate E1801/E1802 → requested → decide tool.call → execute → completed/denied journaled with blake3 result hashes + blob receipts; builtin deterministic tools); reasoning sessions (journaled scratchpads, deterministic memory folding recomputable from the journal, ReasoningSession fold state); Workflow DAG engine (fail-closed validation E1803, deterministic Kahn+lexicographic scheduling, content-addressed node outputs via blob CAS, crash-safe resume skipping completed nodes); eval harness (real hermetic agent runs, normalized transcripts with deep volatile stripping, deterministic transcript hashes, honest expectation scoring, replay fold equality, golden governance VAE_BLESS=1 with E1805 drift refusal); agent metrics folded from journal alone (tokens/cost/latency from gateway metering records only — no double counting); research integration (One Context Path behind context steps; citation enforcement E1806 on answer steps); CLI run agent/run workflow + resume continuation + doctor agents picture + explain agent metrics; SDK agentRun/workflowRun/agentMetrics parity; spec 0.1.3 (36 events, 48 codes, agents/tools config blocks); config agents.maxSteps/plannerModel + tools declarations with agentGrants ceiling-internal derivation; coverage ratcheted to measured 84.62/89.45."
     },
     {
       "id": "MS-5",
       "name": "Surfaces",
       "status": "pending",
       "progress": 12,
-      "evidence": "CLI Daily Seven operational with broker review loop; SDK in-process client with broker surface (refusals/audit/evidence verification); daemon + SDK-parity-over-HTTP pending."
+      "evidence": "CLI Daily Seven operational with broker review loop + agent/workflow runs; SDK in-process client with broker + gateway + agent surface; daemon + SDK-parity-over-HTTP pending."
     },
     {
       "id": "MS-6",
@@ -163,17 +163,18 @@
       "evidence": "Post-hardening."
     }
   ],
-  "overallProgress": 52,
+  "overallProgress": 64,
   "risks": [
     "Substrate: TypeScript-on-Bun reference implementation awaits Founder ADR-0018 ratification before shipping milestones.",
-    "Journal per-record fsync trades durability for throughput; batching decision needed before MS-4 scale testing.",
+    "Journal per-record fsync trades durability for throughput; batching decision needed before agent-scale testing.",
     "Provider price table is build-time data (2026-08); provider drift is a data update with a reviewed contract change.",
-    "Breaker state is per-process (deliberately not journaled); multi-process breaker sharing is an MS-5 daemon concern."
+    "Breaker state is per-process (deliberately not journaled); multi-process breaker sharing is an MS-5 daemon concern.",
+    "ModelPlanner success path needs a recorded real-provider cassette for end-to-end golden coverage (MockBrain output is not plan JSON by design)."
   ],
   "nextWork": [
-    "MS-4: agent executor over journaled decisions; workflow DAGs on the spine; hermetic evals (cassette/MockBrain per ADR-0012).",
+    "MS-5: loopback daemon (ADR-0010) so SDK parity holds over the wire, not only in-process; HTTP/SSE transport; extension kit.",
+    "Record real-provider planning cassettes through scripts/record-cassettes.ts when network access is available.",
     "Ratify or amend ADR-0018 (substrate) and re-baseline shipping goals accordingly.",
-    "MS-5: loopback daemon (ADR-0010) so SDK parity holds over the wire, not only in-process.",
     "Coverage: per-module ratchets on top of the total-based floors (mechanical follow-up)."
   ]
 }

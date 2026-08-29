@@ -1,10 +1,10 @@
-# ARCHITECTURE_REPORT — Vaerion (as of MS-3)
+# ARCHITECTURE_REPORT — Vaerion (as of MS-4)
 
 | | |
 |---|---|
 | **Date** | 2026-08-29 |
-| **Scope** | Architecture state after MS-3 (Model Gateway) — layers, boundaries, data flows, and the one sanctioned seam |
-| **Verification** | ALL 6 GATES GREEN (`VERIFICATION_REPORT.md`); layerlint: 67 files / 208 runtime edges / 0 violations |
+| **Scope** | Architecture state after MS-4 (Intelligence + Agents) — layers, boundaries, data flows, and the one sanctioned seam |
+| **Verification** | ALL 6 GATES GREEN (`VERIFICATION_REPORT.md`); layerlint: 81 files / 353 runtime edges / 0 violations |
 
 ---
 
@@ -89,3 +89,31 @@ Deliberately NOT a store: breaker health (per-process live state; the failures t
 - **Retry scope**: connection establishment only, by law; mid-stream failures are terminal for the invocation (partial output must never be re-sent or double-metered).
 - **Egress matrix**: v0.1 ships three providers + MockBrain; adding a provider is one adapter + one endpoint entry + a reviewed price-table row.
 - **daemon direction**: ADR-0019 covers the outbound provider direction; the MS-5 loopback daemon adds an inbound listener and must amend the ADR.
+
+
+---
+
+## 12. MS-4 architecture additions (Intelligence + Agents)
+
+### 12.1 New L2 subsystems and their dependency law
+
+`agents/`, `workflow/`, `evals/` are L2 (layerlint-classified this milestone): they may import L0 (kernel, config) and L1 (spine, journal, store, receipts, broker, gateway) and each other, never L4. The layer matrix did not change; the population did (67 → 81 engine files, 208 → 353 checked runtime edges).
+
+### 12.2 The agent control loop (who owns what)
+
+- **Plan** (`agents/planner.ts`) → **Execute** (`agents/executor.ts`) → **Authorize** (broker via RunHarness.decide) → **Journal** (single writer) → **Act** (gateway/tool/reasoning/research) — the decide→journal→act law is inherited, not restated: the agent runtime composes the same ports the CLI and gateway use.
+- **Supervision** (`agents/runtime.ts`): retries are bounded and injected; broker refusals are fatal; gate prompts pause with `awaiting_gate` and the journal left open; the ceiling is loud (E1804); completion is honest (failures ⇒ `failed`).
+- **Elevation durability** (`runtime/run.ts`): an approved prompt decision grants authority for the SAME principal+domain+scope across restarts. It is journaled as its own decision record (policy `human-elevation`) and audited — the human's recorded approval is the rule, never a bypass.
+- **Snapshot law sharpened**: subsystem folds (agent, workflow) never trust another fold's snapshot bag; until subsystem-shaped snapshots exist they deterministically replay from the beginning. Snapshots remain accelerators, never truth.
+
+### 12.3 Workflow DAG determinism
+
+Scheduling = Kahn's algorithm with a lexicographic tie-break; execution is SEQUENTIAL in that order (parallel scheduling requires a ratified ADR because concurrent ordering would break replay byte-stability). Node outputs are content-addressed (blob CAS) and journaled by blob_ref; resume = journal fold + skip completed nodes.
+
+### 12.4 Evals as a constitutional device
+
+The eval harness (ADR-0012) runs REAL agent runs hermetically: declared plans, builtin deterministic tools, MockBrain, fixed clocks, seeded ids. The transcript is the run's own spine with volatile identity stripped deep; the transcript hash is the golden anchor (VAE_BLESS=1 is the only bless path; drift is E1805).
+
+### 12.5 Money and metrics
+
+Agent metrics are a pure fold over the journal; token/cost/latency accounting comes EXCLUSIVELY from `gateway.invoke.*` records (the single gate's metering truth) — step events contribute structure, never spend. Integer micro-USD throughout.

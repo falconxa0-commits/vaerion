@@ -1,12 +1,67 @@
-# BUILD_REPORT — Vaerion MS-0 → MS-3 (Model Gateway)
+# BUILD_REPORT — Vaerion MS-0 → MS-4 (Intelligence + Agents)
+
+---
+
+## 0. What was built in MS-4 (this milestone)
+
+### 0.1 The agents subsystem (`packages/vaerion/src/agents/` — 8 modules)
+
+| Module | Law it implements |
+|---|---|
+| `runtime.ts` | **AgentRuntime** — the supervisor over journaled decisions. The loop: plan → per step decide → journal → act → journal outcome, with round/index coordinates on every step (crash-safe dedup). Bounded retries with injected backoff; broker refusals (E1300/E1301) are FATAL — authority is never retried around; gate prompts journal `agent.run.completed {outcome: "awaiting_gate"}` and leave the journal OPEN (gates survive process death, R-A4); the step ceiling stops LOUDLY (E1804) with journaled work intact. Honest completion: a plan that finishes with journaled failures reports outcome `failed`, never `goal`. `agentRunStateReducer` is the pure fold (R-RT2); `AgentRuntime.resume` verifies the chain, folds, and continues from the first unjournaled step. |
+| `tools.ts` | **ToolInvocationService** — every tool invocation crosses the broker pipeline: declared-before-used (E1801 fail-closed BEFORE journaling — mirror of the gateway's unknown-model law), typed args (E1802; declared keys required, `?` suffix optional, unknown keys are drift), `tool.call.requested` → `tool.call` broker decision (decide → journal → act) → `tool.call.completed` (with blake3 `result_hash`, optional blob_ref receipt) | `tool.call.denied`. Deterministic builtin executors (`echo`, `clock.read` on the injected clock, `research.search` over an injected index with journal-safe integer milli-scores). |
+| `planner.ts` | **Plan contract + two real planners.** `parsePlanText`/`assertPlan` enforce the plan JSON shape (E1800 — planner drift is a loud failure). `InlinePlanner` is the DECLARED determinism device (ADR-0012 law, like cassettes: a declared plan, never a fake LLM). `ModelPlanner` plans through the gateway SINGLE GATE — its invocation is broker-authorized, metered, and journaled like any model call. |
+| `reasoning.ts` | **ReasoningSession** — persistent scratchpads ON the journal: `reasoning.note.recorded` (redacted) and `reasoning.folded` events; `reasoningStateReducer` is the pure fold; memory folding (`foldSummary`) is a pure function of the unfolded notes (first-sentence extraction, fixed bounds) — recomputable from the journal alone, byte-stable; snapshot-assisted restore never alters the fold. |
+| `executor.ts` | **StepExecutor** — runs one step through its constitutional path: model → GatewayService (single gate), tool → ToolInvocationService (broker pipeline), note → ReasoningSession, context → ResearchPort (One Context Path). Gate prompts PROPAGATE (human authority is not a failure); other failures are honest outcomes. Citation enforcement (E1806): answer steps with `requiresCitations` over prepared research content must reference a prepared `cit_NNNN`. |
+| `metrics.ts` | **agentMetricsFromRecords** — a pure fold over journal records: run structure (steps/failures/retries from `agent.*`), spend (tokens/cost/latency/attempts EXCLUSIVELY from `gateway.invoke.recorded`/`failed` — the metering truth; step events never double-count), tools, context, gates. |
+| `research-port.ts` | **LocalResearchPort** — the One Context Path behind `context` steps: declared capability → deterministic local retrieval (fingerprint → fence → blob CAS → evidence → BM25 index) → query → citations → context pack, every step journaled. Undeclared capability ⇒ E1403. |
+| `grants.ts` | **agentGrants** — the agent principal's ceiling-internal grants, derived ONLY from human declarations: `tool.call` over declared tool scopes; `model.invoke` over concrete declared models admitted by declared policy rules. Declare nothing, grant nothing. |
+
+### 0.2 The workflow subsystem (`packages/vaerion/src/workflow/`)
+
+- `dag.ts` — **fail-closed validation** (E1803: duplicates, missing deps, self-deps, cycles via Kahn reachability, malformed nodes) and **deterministic scheduling** (Kahn's topological order, lexicographic tie-break — the same DAG always schedules identically; replay and resume see the same order).
+- `engine.ts` — **WorkflowEngine**: `workflow.started` → per node in topo order `workflow.node.started` → the step executes through the StepExecutor law → output content-addressed in the blob CAS → `workflow.node.completed {result_hash, blob_ref}` | `workflow.node.failed {error_code}` → `workflow.completed {outcome, completed, failed}`. Node failures stop dependents (never half-run). **Resume is the fold**: `WorkflowEngine.resume` verifies the chain, folds `workflowStateReducer`, and `run(dag, {resumeState})` skips completed nodes — crash-safe by the single-writer lock, replay-safe because everything is journal records.
+
+### 0.3 The evals subsystem (`packages/vaerion/src/evals/`)
+
+- `harness.ts` — **EvalHarness** (ADR-0012 hermetic law): scenarios run REAL agent runs (InlinePlanner, builtin tools, MockBrain when model steps are declared) in real workspaces; the transcript is the run's spine (decision/gate/receipt records + events) with volatile fields stripped DEEP (ids, seq, timestamps); deterministic transcript hash (blake3 over canonical JSON); honest expectation scoring (outcome, step bounds, tools used, model invocations, citations, chain verification); replay comparison (double fold equality folded into `replayHash`); golden governance — bless ONLY via `VAE_BLESS=1`, drift refuses E1805, missing golden refuses honestly rather than silently creating.
+
+### 0.4 Broker law extended (elevation made durable)
+
+- **RunHarness elevation law**: an explicitly APPROVED prompt decision becomes durable authority for the SAME principal+domain+scope. The re-decision is still a full decide → journal → act record (policy `human-elevation`) — nothing bypasses the broker; the human's recorded approval IS the rule. Cross-restart safe: `restore()` seeds elevations from resolved-approved gates × their decision records in the journal, and `resolveGate()` looks up the decision record from the journal when the prompt came from a previous session. Without this, resuming an agent run would re-prompt forever — the gate would be pointless for continuation. Denials grant nothing.
+
+### 0.5 Surfaces
+
+- **CLI**: `run agent --goal TEXT [--planner inline|model] [--steps N] [--plan-json JSON]`; `run workflow --dag FILE [--resume RUN_ID]`; `resume` now CONTINUES agent runs after gate approval (elevation applies) and ends denied runs at exit 3; `explain` carries the agent picture (outcome, per-step narrative, tools, context, metrics fold); `doctor` reports declared tools (fail-closed note) + the agent loop ceiling; `dev` lists the L2 map (runtime, research, agents, workflow, evals) and the MS-5 position. Help texts teach all of it.
+- **SDK** (`@vaerion/sdk`): `agentRun()` (in-process supervised run, injectable transport/secrets/executors), `workflowRun()` (fail-closed DAG validation + journaled execution), `agentMetrics(runId)` (same fold as explain) — machine parity with the CLI.
+
+### 0.6 Config + spec evolution (0.1.2 → 0.1.3, additive only)
+
+- `vaerion.yaml`: optional `agents` block (`maxSteps` ≥ 1, `plannerModel` canonical provider/model) and optional `tools` array (`name` + optional `scope`/`description`). Declaring a tool grants nothing by itself — `tool.call` authorization still requires explicit policy rules. Strict unknown-key rejection unchanged.
+- `events/registry.json`: +11 types — `agent.run.started`, `agent.step.recorded`, `agent.step.failed`, `agent.run.completed`, `workflow.started`, `workflow.node.started`, `workflow.node.completed`, `workflow.node.failed`, `workflow.completed`, `reasoning.note.recorded`, `reasoning.folded` (**36** event types).
+- `errors.yaml` + kernel catalog: the 18xx range E1800–E1806 (**48** codes) — in verified sync.
+- CHANGELOG-SPEC 0.1.3 records everything; registry/catalog versions stay 1 (additive per ADR-0002/0014).
+
+### 0.7 Real defects found by verification and fixed at root cause (7)
+
+1. **Snapshot trust across folds** — agent/workflow folds accepted the HARNESS RunState snapshot bag (default validator), crashing `explain` on any run with a snapshot. Fix: subsystem folds validate snapshots against their OWN shape (agent/workflow folds reject foreign bags; deterministic full replay from the beginning).
+2. **Swallowed gate prompts** — the StepExecutor's catch converted `GatewayGatePrompt`/`ToolGatePrompt` into failed outcomes, so the supervisor never paused (and claimed `goal` after failures). Fix: gate prompts propagate (`isGatePrompt` rethrow); human authority is not a failure.
+3. **Type-only `instanceof`** — `GatewayGatePrompt` was imported type-only in the executor, so the `instanceof` check itself threw `ReferenceError` at runtime ("GatewayGatePrompt is not defined"), mislabeling refusals E1900. Fix: value import.
+4. **Blind budget guard** — the runtime never updated live token/µUSD counters, so pre/post budget checks saw zeros within a run and results reported 0 spend. Fix: live accounting in the loop; the fold recomputes identical numbers from the journal (R-RT2).
+5. **Metrics double-counting** — model invocations were counted from BOTH step events and gateway metering records. Fix: spend folds from `gateway.invoke.*` exclusively (the single gate's own records).
+6. **Args law contradiction** — `validateArgs` treated declared args as optional, contradicting its documented law; missing required args fell through to the broker (E1300 instead of E1802). Fix: declared keys are required (`?` suffix optional), missing ⇒ E1802 before any journaling.
+7. **Dishonest goal outcome** — a plan that finished with journaled failures reported `goal`. Fix: failures ⇒ outcome `failed` (honest completion law).
+Also: elevation lookup is now journal-backed (gates resolved after a restore elevate correctly), and `next_milestone`/arg-parser pins were updated for the advanced milestone (label change, not behavior).
+
+---
 
 | | |
 |---|---|
-| **Milestone** | MS-0 ✅ · MS-1 ✅ · MS-2 ✅ · **MS-3 (Model Gateway) — complete** |
+| **Milestone** | MS-0 ✅ · MS-1 ✅ · MS-2 ✅ · MS-3 ✅ · **MS-4 (Intelligence + Agents) — complete** |
 | **Date** | 2026-08-29 |
 | **Substrate** | TypeScript on Bun (ADR-0018, Proposed — pending Founder ratification) |
 | **Verification** | ALL 6 GATES GREEN — see `VERIFICATION_REPORT.md` (`.vaerion-verification.json`) |
-| **Overall progress** | **52%** of the MS-0 → GA arc (measured: milestone board average in `tools/status.ts` → `site-data/vaerion-status.json`) |
+| **Overall progress** | **64%** of the MS-0 → GA arc (measured: milestone board average in `tools/status.ts` → `site-data/vaerion-status.json`) |
 
 ---
 

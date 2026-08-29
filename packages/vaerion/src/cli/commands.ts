@@ -36,7 +36,7 @@ import { renderUnified, assertReviewDiffShape, type ReviewDiff } from "../broker
 import { type PolicyContract, type PolicyRule } from "../broker/contracts/decision.ts";
 import { policyFromConfig } from "../config/config.ts";
 import { researchPrincipal } from "../research/principal.ts";
-import { declareResearchCapability } from "../research/capability.ts";
+import { declareResearchCapability, type ResearchCapabilityDeclaration } from "../research/capability.ts";
 import { fingerprintDocument } from "../research/fingerprint.ts";
 import { fenceUntrusted } from "../research/fencing.ts";
 import { provenanceOf } from "../research/provenance.ts";
@@ -50,6 +50,13 @@ import { defaultSecretPort } from "../gateway/secrets.ts";
 import { meteringFromRecords } from "../gateway/metering.ts";
 import { MODEL_OPS, type ModelOp } from "../gateway/types.ts";
 import { formatMicroUsd } from "../gateway/pricing.ts";
+import { ToolRegistry, ToolInvocationService, echoTool, clockReadTool, researchSearchTool, ToolGatePrompt, type ToolExecutor } from "../agents/tools.ts";
+import { InlinePlanner, ModelPlanner, type PlanStep } from "../agents/planner.ts";
+import { AgentRuntime, agentStateFromRecords } from "../agents/runtime.ts";
+import { agentMetricsFromRecords } from "../agents/metrics.ts";
+import { LocalResearchPort } from "../agents/research-port.ts";
+import { agentGrants } from "../agents/grants.ts";
+import { WorkflowEngine, workflowStateFromRecords, assertWorkflowDag, type WorkflowDag } from "../workflow/index.ts";
 
 export interface CommandContext {
   io: CliIo;
@@ -371,13 +378,273 @@ async function runModel(ctx: CommandContext): Promise<number> {
   }
 }
 
+/* ───────────────────────────  run agent / workflow  ─────────────────────────── */
+
+/** Shared agent-run wiring: gateway over the sanctioned transport, declared
+ *  tools, builtin executors, results content-addressed in the blob CAS. */
+function agentServices(config: import("../config/config.ts").VaerionConfig, clock: SystemClock, idGen: SystemIdGen, ws: { blobsDir: string }) {
+  const gateway = new GatewayService({
+    clock,
+    rng: new SystemRng(),
+    idGen,
+    transport: fetchTransport,
+    secrets: defaultSecretPort(),
+  });
+  const registry = ToolRegistry.fromConfig(config.tools ?? []);
+  const executors = new Map<string, ToolExecutor>([
+    ["echo", echoTool],
+    ["clock.read", clockReadTool],
+  ]);
+  const tools = new ToolInvocationService({ clock, idGen, registry, executors, blobStore: new BlobStore(ws.blobsDir) });
+  return { gateway, registry, tools };
+}
+
+/** `vae run agent` — the supervised agent loop over journaled decisions. */
+async function runAgent(ctx: CommandContext): Promise<number> {
+  const goal = typeof ctx.flags.goal === "string" && ctx.flags.goal.length > 0 ? String(ctx.flags.goal) : null;
+  if (goal === null) {
+    throw new VaerionError("E1600", "missing required flag --goal (the agent's stated objective)");
+  }
+  const plannerKind = typeof ctx.flags.planner === "string" && ctx.flags.planner === "model" ? "model" : "inline";
+  const stepsFlag = typeof ctx.flags.steps === "string" ? parseInt(String(ctx.flags.steps), 10) : NaN;
+  const inlineStepsRaw = typeof ctx.flags["plan-json"] === "string" ? String(ctx.flags["plan-json"]) : null;
+
+  const ws = workspaceAt(ctx.cwd);
+  await ensureWorkspaceDirs(ws);
+  const { config, fingerprint: configFingerprint, adhoc } = await loadOrAdhocConfig(ws);
+  const renderer = r(ctx);
+  if (adhoc && ctx.mode === "plain") renderer.result({ note: "no vaerion.yaml found — using ad-hoc config (Fix: run `vae init`)" });
+
+  const clock = new SystemClock();
+  const idGen = new SystemIdGen();
+  const runId = crn("run", idGen.next());
+  const traceId = `t_agent_${idGen.next().slice(-10).toLowerCase()}`;
+  // The agent principal acts inside the config ceiling; tool.call and
+  // model.invoke grants come ONLY from declared policy rules (fail-closed).
+  const { gateway, registry, tools } = agentServices(config, clock, idGen, ws);
+  const policy = policyFromConfig(config);
+  const principal = { kind: "agent" as const, id: `agent:${runId.slice(-8).toLowerCase()}` };
+  // The agent acts inside the ceiling: derived grants live INSIDE declared
+  // ceilings (graphFromConfig enforces coverage); declare nothing, grant nothing.
+  const graph = graphFromConfig(config, `graph_${configFingerprint.slice(0, 12)}`, agentGrants(config, policy, principal));
+  const harness = await RunHarness.create({ workspaceDir: ws.root, runId, traceId, configFingerprint, clock, idGen, permissionGraph: graph });
+
+  // Declared research capabilities power `context` steps through the ONE
+  // context path (deterministic retrieval; untrusted content fenced).
+  const capabilities = new Map<string, ResearchCapabilityDeclaration>();
+  for (const cap of config.research?.capabilities ?? []) {
+    capabilities.set(
+      cap.name,
+      declareResearchCapability({
+        name: cap.name,
+        principal: principal.id,
+        sources: cap.sources.map((s) => ({ kind: "local" as const, path: s.path })),
+        rationale: "declared in vaerion.yaml research.capabilities",
+        declaredAt: clock.nowIso(),
+        maxItems: cap.maxItems ?? 16,
+      }),
+    );
+  }
+  const research = capabilities.size > 0
+    ? new LocalResearchPort({ workspaceDir: ws.root, host: harness, clock, idGen, blobStore: new BlobStore(ws.blobsDir), capabilities, actor: { kind: "research", id: principal.id } })
+    : null;
+
+  const maxSteps = Number.isInteger(stepsFlag) && stepsFlag > 0 ? stepsFlag : (config.agents?.maxSteps ?? 24);
+  const planSteps: PlanStep[] = [];
+  if (plannerKind === "inline") {
+    if (inlineStepsRaw === null) {
+      throw new VaerionError("E1600", 'inline planning requires --plan-json \u2039JSON array of steps\u203a (e.g. [{"kind":"note","text":"..."}]); use --planner model for model-backed planning');
+    }
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(inlineStepsRaw) as unknown;
+    } catch {
+      throw new VaerionError("E1800", "--plan-json is not valid JSON");
+    }
+    if (!Array.isArray(parsed)) throw new VaerionError("E1800", "--plan-json must be a JSON array of plan steps");
+    planSteps.push(...(parsed as PlanStep[]));
+  }
+
+  const planner =
+    plannerKind === "model"
+      ? new ModelPlanner({
+          host: harness,
+          gateway,
+          model: config.agents?.plannerModel ?? "mockbrain/mock-1",
+          principal,
+          policy,
+          requestId: () => idGen.next(),
+          budget: (): BudgetGuard => {
+            const b = config.gateway?.budgets;
+            return { tokensUsed: 0, microUsdUsed: 0, tokensPerRun: b?.tokensPerRun, microUsdPerRun: b?.microUsdPerRun };
+          },
+        })
+      : new InlinePlanner({ goal, steps: planSteps });
+
+  const runtime = new AgentRuntime({ harness, clock, idGen, maxSteps, gateway, tools, research, actor: principal });
+  const budget: BudgetGuard = { tokensUsed: 0, microUsdUsed: 0, tokensPerRun: config.gateway?.budgets?.tokensPerRun, microUsdPerRun: config.gateway?.budgets?.microUsdPerRun };
+
+  try {
+    const result = await runtime.run({ goal, principal, policy, planner, budget });
+    if (result.outcome === "awaiting_gate" && result.gate !== null) {
+      renderer.result({
+        command: "run",
+        kind: "agent",
+        run_id: runId,
+        trace_id: traceId,
+        awaiting: true,
+        outcome: result.outcome,
+        steps: result.steps,
+        gate: { gate_id: result.gate.gate_id, state: result.gate.state, question: result.gate.question, options: result.gate.options, decision_id: result.gate.decision_id ?? null },
+        hint: `review with: vae resume ${runId} · resolve with: vae resume ${runId} --answer '{"approved":true}'`,
+      });
+      await harness.release();
+      return ExitCode.ok;
+    }
+    const closed = await harness.close(`agent run ${runId}: ${result.outcome} after ${result.steps} step(s) (${result.failures} failure(s), ${result.tokensUsed} tokens, ${result.microUsdUsed} µUSD)`);
+    const metrics = agentMetricsFromRecords((await readJournal(RunHarness.journalPathFor(ws.root, runId))).records);
+    renderer.result({
+      command: "run",
+      kind: "agent",
+      run_id: runId,
+      trace_id: traceId,
+      outcome: result.outcome,
+      goal,
+      planner: result.plannerKind,
+      steps: result.steps,
+      failures: result.failures,
+      tokens_used: result.tokensUsed,
+      micro_usd_used: result.microUsdUsed,
+      metrics,
+      receipt: closed.receipt,
+      journal_verified: closed.verify.ok,
+    });
+    return closed.verify.ok ? ExitCode.ok : ExitCode.partial;
+  } catch (err) {
+    const code = (err as { code?: string }).code;
+    if (code === "E1300" || code === "E1301") {
+      await harness.close(`agent run ${runId} denied by broker (${code})`).catch(() => undefined);
+    } else {
+      await harness.close(`agent run ${runId} failed: ${(err as Error).message.slice(0, 120)}`).catch(() => undefined);
+    }
+    throw err;
+  }
+}
+
+/** `vae run workflow --dag FILE [--resume RUN_ID] — deterministic journal-backed DAG execution. */
+async function runWorkflow(ctx: CommandContext): Promise<number> {
+  const dagPath = typeof ctx.flags.dag === "string" && ctx.flags.dag.length > 0 ? String(ctx.flags.dag) : null;
+  if (dagPath === null) {
+    throw new VaerionError("E1600", "missing required flag --dag (path to a workflow DAG JSON file)");
+  }
+  const { readFile: rf } = await import("node:fs/promises");
+  const raw = await rf(dagPath, "utf8").catch(() => {
+    throw new VaerionError("E1600", `--dag file not readable: ${dagPath}`);
+  });
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw) as unknown;
+  } catch {
+    throw new VaerionError("E1803", "--dag file is not valid JSON");
+  }
+  const dag = parsed as WorkflowDag;
+  assertWorkflowDag(dag);
+
+  const ws = workspaceAt(ctx.cwd);
+  await ensureWorkspaceDirs(ws);
+  const { config, fingerprint: configFingerprint, adhoc } = await loadOrAdhocConfig(ws);
+  const renderer = r(ctx);
+  if (adhoc && ctx.mode === "plain") renderer.result({ note: "no vaerion.yaml found — using ad-hoc config (Fix: run `vae init`)" });
+
+  const clock = new SystemClock();
+  const idGen = new SystemIdGen();
+  const resumeRunId = typeof ctx.flags.resume === "string" && ctx.flags.resume.length > 0 ? String(ctx.flags.resume) : null;
+  const principal = { kind: "agent" as const, id: "agent:workflow" };
+  const policy = policyFromConfig(config);
+  let openHarness: RunHarness | null = null;
+
+  try {
+    if (resumeRunId !== null) {
+      // Autonomous recovery: verify the chain, fold the state, continue.
+      const resumed = await WorkflowEngine.resume({
+        workspaceDir: ws.root,
+        runId: resumeRunId,
+        configFingerprint,
+        clock,
+        idGen,
+        engine: { clock, idGen, blobRoot: ws.blobsDir, gateway: null, tools: null, research: null, actor: { kind: "system", id: "workflow" } },
+      });
+      openHarness = resumed.harness;
+      const result = await resumed.engine.run({ dag, principal, policy, budget: { tokensUsed: 0, microUsdUsed: 0 } }, { resumeState: resumed.state });
+      const closed = await resumed.harness.close(`workflow ${dag.id} resumed: ${result.outcome} (${result.completedNodes.length}/${dag.nodes.length} nodes)`);
+      renderer.result({
+        command: "run",
+        kind: "workflow",
+        run_id: resumeRunId,
+        trace_id: resumed.harness.traceId(),
+        workflow: dag.id,
+        resumed: true,
+        outcome: result.outcome,
+        completed_nodes: result.completedNodes,
+        failed_nodes: result.failedNodes,
+        outputs: result.outputs,
+        receipt: closed.receipt,
+        journal_verified: closed.verify.ok,
+      });
+      return result.failedNodes.length > 0 ? ExitCode.partial : closed.verify.ok ? ExitCode.ok : ExitCode.partial;
+    }
+
+    const runId = crn("run", idGen.next());
+    const traceId = `t_wf_${idGen.next().slice(-10).toLowerCase()}`;
+    const graph = graphFromConfig(config, `graph_${configFingerprint.slice(0, 12)}`, agentGrants(config, policy, principal));
+    const harness = await RunHarness.create({ workspaceDir: ws.root, runId, traceId, configFingerprint, clock, idGen, permissionGraph: graph });
+    openHarness = harness;
+    const { gateway, tools } = agentServices(config, clock, idGen, ws);
+    const engine = new WorkflowEngine({ harness, clock, idGen, blobRoot: ws.blobsDir, gateway, tools, research: null, actor: { kind: "system", id: "workflow" } });
+    const result = await engine.run({ dag, principal, policy, budget: { tokensUsed: 0, microUsdUsed: 0 } });
+    const closed = await harness.close(`workflow ${dag.id}: ${result.outcome} (${result.completedNodes.length}/${dag.nodes.length} nodes, ${result.failedNodes.length} failed)`);
+    renderer.result({
+      command: "run",
+      kind: "workflow",
+      run_id: runId,
+      trace_id: traceId,
+      workflow: dag.id,
+      outcome: result.outcome,
+      completed_nodes: result.completedNodes,
+      failed_nodes: result.failedNodes,
+      outputs: result.outputs,
+      receipt: closed.receipt,
+      journal_verified: closed.verify.ok,
+    });
+    return result.failedNodes.length > 0 ? ExitCode.partial : closed.verify.ok ? ExitCode.ok : ExitCode.partial;
+  } catch (err) {
+    if (err instanceof GatewayGatePrompt || err instanceof ToolGatePrompt) {
+      // A gate keeps the journal OPEN (the gate must survive process death):
+      // release the writer lock, never seal an awaiting run.
+      await openHarness?.release().catch(() => undefined);
+      renderer.result({
+        command: "run",
+        kind: "workflow",
+        awaiting: true,
+        gate: { gate_id: err.gate.gate_id, state: err.gate.state, question: err.gate.question, options: err.gate.options, decision_id: err.gate.decision_id ?? null },
+        hint: "the workflow paused on a durable gate; resolve with `vae resume RUN_ID --answer JSON` then continue with `vae run workflow --dag FILE --resume RUN_ID`",
+      });
+      return ExitCode.ok;
+    }
+    await openHarness?.close(`workflow run failed: ${(err as Error).message.slice(0, 120)}`).catch(() => undefined);
+    throw err;
+  }
+}
+
 export async function cmdRun(ctx: CommandContext): Promise<number> {
   cwdHolder = ctx.cwd;
   const kind = ctx.flags._positional1;
-  if (kind !== "research" && kind !== "demo" && kind !== "model") {
-    throw new VaerionError("E1600", "unknown run kind (supported: research, demo, model)", { got: String(kind) });
+  if (kind !== "research" && kind !== "demo" && kind !== "model" && kind !== "agent" && kind !== "workflow") {
+    throw new VaerionError("E1600", "unknown run kind (supported: research, demo, model, agent, workflow)", { got: String(kind) });
   }
   if (kind === "model") return runModel(ctx);
+  if (kind === "agent") return runAgent(ctx);
+  if (kind === "workflow") return runWorkflow(ctx);
   const ws = workspaceAt(ctx.cwd);
   const sources =
     kind === "demo"
@@ -611,7 +878,77 @@ export async function cmdResume(ctx: CommandContext): Promise<number> {
       }
 
       await harness.resolveGate(gate, answer);
-      const closed = await harness.close(`gate ${gate.gate_id} resolved by human`);
+      if (answer.approved === false) {
+        // A denial ends the run: the human refused; the journal records why.
+        const closed = await harness.close(`gate ${gate.gate_id} denied by human`);
+        renderer.result({
+          command: "resume",
+          run_id: runId,
+          gate_resolved: { gate_id: gate.gate_id, question: gate.question, answer },
+          outcome: "denied",
+          receipt: closed.receipt,
+          journal_verified: closed.verify.ok,
+        });
+        return ExitCode.brokerDenied;
+      }
+      // Approval CONTINUES agent/workflow runs (MS-4): the approved gate is
+      // durable elevation authority; the folded state decides what continues.
+      const agentState = agentStateFromRecords(runId, "t", read.records);
+      const workflowState = workflowStateFromRecords("?", read.records);
+      const { config: resumeConfig } = await loadOrAdhocConfig(ws);
+      const resumePolicy = policyFromConfig(resumeConfig);
+      const resumeClock = new SystemClock();
+      const resumeIdGen = new SystemIdGen();
+      if (agentState.started) {
+        const { gateway, tools } = agentServices(resumeConfig, resumeClock, resumeIdGen, ws);
+        const runtime = new AgentRuntime({
+          harness,
+          clock: resumeClock,
+          idGen: resumeIdGen,
+          maxSteps: resumeConfig.agents?.maxSteps ?? 24,
+          gateway,
+          tools,
+          research: null,
+          actor: { kind: "agent", id: agentState.history.length > 0 ? "agent:resumed" : "agent" },
+        });
+        const goal = agentState.goal ?? "(resumed agent run)";
+        const principal = { kind: "agent" as const, id: "agent:resumed" };
+        const planner = new InlinePlanner({ goal, steps: [] });
+        const result = await runtime.run(
+          {
+            goal,
+            principal,
+            policy: resumePolicy,
+            planner,
+            budget: { tokensUsed: 0, microUsdUsed: 0, tokensPerRun: resumeConfig.gateway?.budgets?.tokensPerRun, microUsdPerRun: resumeConfig.gateway?.budgets?.microUsdPerRun },
+          },
+          agentState,
+        );
+        const closed = await harness.close(`agent run ${runId} resumed: ${result.outcome} after ${result.steps} step(s)`);
+        renderer.result({
+          command: "resume",
+          run_id: runId,
+          gate_resolved: { gate_id: gate.gate_id, question: gate.question, answer },
+          continued: "agent",
+          outcome: result.outcome,
+          steps: result.steps,
+          failures: result.failures,
+          receipt: closed.receipt,
+          journal_verified: closed.verify.ok,
+        });
+        return closed.verify.ok ? ExitCode.ok : ExitCode.partial;
+      }
+      if (workflowState.started) {
+        renderer.result({
+          command: "resume",
+          run_id: runId,
+          gate_resolved: { gate_id: gate.gate_id, question: gate.question, answer },
+          note: "workflow gate resolved — continue with: vae run workflow --dag FILE --resume " + runId,
+        });
+        await harness.release();
+        return ExitCode.ok;
+      }
+      const closed = await harness.close(`gate ${gate.gate_id} resolved by human (no continuation)`);
       const after = await readJournal(RunHarness.journalPathFor(ws.root, runId));
       const stateAfter = replayRecords<RunState>({ records: after.records, reducer: runStateReducer, initial: initialRunState(runId, "t") }).state;
       renderer.result({
@@ -622,7 +959,7 @@ export async function cmdResume(ctx: CommandContext): Promise<number> {
         receipt: closed.receipt,
         journal_verified: closed.verify.ok,
       });
-      return answer.approved === false ? ExitCode.brokerDenied : closed.verify.ok ? ExitCode.ok : ExitCode.partial;
+      return closed.verify.ok ? ExitCode.ok : ExitCode.partial;
     }
 
     renderer.result({
@@ -682,6 +1019,18 @@ export async function cmdExplain(ctx: CommandContext): Promise<number> {
     }
   }
 
+  // Agent/workflow metrics surface (MS-4): steps, spend, tools — folded.
+  const agentState = agentStateFromRecords(target, "t", read.records);
+  if (agentState.started) {
+    const metrics = agentMetricsFromRecords(read.records);
+    narrative.push(`agent run: outcome=${agentState.outcome ?? "in progress"} · steps=${agentState.completedSteps.length} · failures=${agentState.failures.length} · planner=${agentState.plannerKind ?? "?"}`);
+    for (const step of agentState.history) {
+      narrative.push(`  step ${step.round}:${step.index} ${step.ok ? "ok" : "FAILED(" + (step.error_code ?? "?") + ")"} ${step.kind} — ${step.summary.slice(0, 80)}`);
+    }
+    if (metrics.tools.requested > 0) narrative.push(`  tools: ${metrics.tools.completed} completed · ${metrics.tools.denied} denied · ${metrics.tools.failed} failed`);
+    if (metrics.context.packs > 0) narrative.push(`  context packs: ${metrics.context.packs} · notes: ${metrics.context.notes} · folds: ${metrics.context.folds}`);
+  }
+
   r(ctx).result({
     command: "explain",
     run_id: target,
@@ -705,6 +1054,17 @@ export async function cmdExplain(ctx: CommandContext): Promise<number> {
       unpriced: metering.unpriced,
       by_model: metering.byModel,
     },
+    agent: agentState.started
+      ? {
+          outcome: agentState.outcome,
+          steps: agentState.completedSteps.length,
+          failures: agentState.failures.length,
+          planner: agentState.plannerKind,
+          tokens_used: agentState.tokensUsed,
+          micro_usd_used: agentState.microUsdUsed,
+          metrics: agentMetricsFromRecords(read.records),
+        }
+      : null,
     narrative,
   });
   return verify.ok ? ExitCode.ok : ExitCode.partial;
@@ -912,6 +1272,20 @@ export async function cmdDoctor(ctx: CommandContext): Promise<number> {
         const b = gwConfig.gateway.budgets;
         checks.push({ check: "gateway-budgets", ok: true, detail: `tokensPerRun=${b.tokensPerRun ?? "unlimited"} · microUsdPerRun=${b.microUsdPerRun ?? "unlimited"}` });
       }
+      // 8. Agents picture (MS-4): declared tools + agent loop ceiling.
+      const tools = gwConfig.tools ?? [];
+      checks.push({
+        check: "agents-tools",
+        ok: true,
+        detail: tools.length === 0
+          ? "no tools declared (tool.call requests are refused fail-closed — declare tools: in vaerion.yaml)"
+          : `${tools.length} declared: ${tools.map((t) => `${t.name}(${t.scope ?? t.name})`).join(", ")} — grants require explicit policy rules`,
+      });
+      checks.push({
+        check: "agents-loop",
+        ok: true,
+        detail: `maxSteps=${gwConfig.agents?.maxSteps ?? "24 (default)"} · plannerModel=${gwConfig.agents?.plannerModel ?? "mockbrain/mock-1 (default)"}`,
+      });
     } catch {
       // config check already reported the failure above; never double-fail here.
     }
@@ -940,7 +1314,7 @@ export async function cmdDev(ctx: CommandContext): Promise<number> {
     layers: {
       L0: ["kernel(errors,ids,clock,canonical,redact,hash)", "config"],
       L1: ["spine", "journal", "store(blob-cas)", "receipts", "broker/contracts", "gateway"],
-      L2: ["runtime(run)", "research"],
+      L2: ["runtime(run)", "research", "agents", "workflow", "evals"],
       L4: ["cli"],
     },
     daily_seven: ["init", "run", "resume", "explain", "journal", "doctor", "dev"],
@@ -952,7 +1326,7 @@ export async function cmdDev(ctx: CommandContext): Promise<number> {
     workspace: { root: ws.root, runs: runs.length },
     spec: "spec/ (single source of truth)",
     constitution: "docs/constitution/VAERION_CONSTITUTION_v1.0.md",
-    next_milestone: "MS-4 Intelligence + Agents (agent executor over journaled decisions; workflow DAGs; cassette evals)",
+    next_milestone: "MS-5 Surfaces (daemon per ADR-0010; HTTP/SSE transport; SDK parity over the wire; extension kit)",
   });
   return ExitCode.ok;
 }

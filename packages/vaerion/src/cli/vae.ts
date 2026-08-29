@@ -30,6 +30,19 @@ Daily Seven (the complete command surface):
                              invoke a model through the gateway single gate:
                              broker decision → adapter → sanctioned transport →
                              metered on the spine
+  run agent --goal TEXT [--planner inline|model] [--steps N]
+            [--plan-json JSON]
+                             the supervised agent loop: every step (model,
+                             tool, note, context) crosses its constitutional
+                             path — the gateway single gate, the broker tool
+                             pipeline, the reasoning scratchpad, the One
+                             Context Path — journaled, retried bounded,
+                             resumable after crashes and human gates
+  run workflow --dag FILE [--resume RUN_ID]
+                             deterministic DAG execution on the journal:
+                             nodes run in topological order (lexicographic
+                             tie-break), outputs are content-addressed,
+                             interrupted runs resume automatically
   resume RUN_ID [--answer JSON]
                              restore a run; resolve a pending human gate
   explain RUN_ID             reconstruct the run's narrative from its journal
@@ -80,7 +93,21 @@ vae run model --model P/M [--prompt TEXT] [--system TEXT] [--seed N]
   usage + integer micro-USD cost metered on the spine → receipt.
   mockbrain/* models are the local seeded virtual provider (no network,
   byte-identical outputs for the same seed). A prompt policy pauses the run
-  with a durable gate; a deny exits 3; budget overrun exits with E1703.`,
+  with a durable gate; a deny exits 3; budget overrun exits with E1703.
+
+  agent runs the supervised agent loop (MS-4). Every step is journaled
+  (agent.step.recorded | failed, with round/index coordinates). --planner
+  inline requires --plan-json (a declared JSON step array — the hermetic
+  determinism device); --planner model plans through the gateway single
+  gate (agents.plannerModel, default mockbrain/mock-1). Tools must be
+  declared in vaerion.yaml AND granted by policy rules; undeclared tool
+  calls are refused fail-closed (E1801). Broker refusals are fatal; the
+  step ceiling stops loudly (E1804); gates pause for 'vae resume'.
+
+  workflow executes a DAG: {id, nodes:[{id, deps, step, maxAttempts?}]}
+  validated fail-closed (E1803); deterministic topological scheduling;
+  node outputs content-addressed (blob CAS) + journaled; --resume RUN_ID
+  continues an interrupted run from its journal fold (crash-safe).`,
   resume: `vae resume RUN_ID [--answer JSON]
 
   Restore a run deterministically from its journal. If a durable human gate
@@ -88,7 +115,9 @@ vae run model --model P/M [--prompt TEXT] [--system TEXT] [--seed N]
   (question, options, the linked decision, and a review diff when present).
   Then resolve with --answer JSON (default when omitted: {"approved":true}).
   Approval of a broker prompt records an elevation (journaled + audited).
-  Exit 3 when the answer denies the gate.`,
+  AGENT runs CONTINUE after approval: the approved gate is durable elevation
+  authority and the loop resumes from its journaled steps. A denial ends
+  the run (exit 3). Exit 3 when the answer denies the gate.`,
   explain: `vae explain RUN_ID
 
   Reconstruct the run's narrative (decisions, gates, events, receipt) from
@@ -143,7 +172,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
       const value = eq === -1 ? undefined : a.slice(eq + 1);
       if (value !== undefined) {
         parsed.flags[name] = value;
-      } else if (i + 1 < argv.length && !(argv[i + 1] as string).startsWith("--") && ["cwd", "sources", "query", "max-docs", "answer", "out", "name", "profile", "model", "prompt", "system", "op", "seed", "max-tokens", "intent", "input-json", "docs-json"].includes(name)) {
+      } else if (i + 1 < argv.length && !(argv[i + 1] as string).startsWith("--") && ["cwd", "sources", "query", "max-docs", "answer", "out", "name", "profile", "model", "prompt", "system", "op", "seed", "max-tokens", "intent", "input-json", "docs-json", "goal", "planner", "steps", "plan-json", "dag", "resume"].includes(name)) {
         parsed.flags[name] = argv[i + 1] as string;
         i++;
       } else {

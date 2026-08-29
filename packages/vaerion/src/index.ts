@@ -70,6 +70,15 @@ export { GatewayService, GatewayGatePrompt, type GatewayHost, type GatewayInvoke
 // runtime (L2)
 export { RunHarness, initialRunState, runStateReducer, readAuditHead, type RunState, type RunHarnessOptions } from "./runtime/run.ts";
 
+// agents (L2 — MS-4)
+export * from "./agents/index.ts";
+
+// workflow (L2 — MS-4)
+export * from "./workflow/index.ts";
+
+// evals (L2 — MS-4)
+export * from "./evals/index.ts";
+
 // config (L0)
 export { loadConfig, validateConfig, defaultPolicyFromConfig, policyFromConfig, CONFIG_SCHEMA_VERSION, type VaerionConfig } from "./config/config.ts";
 

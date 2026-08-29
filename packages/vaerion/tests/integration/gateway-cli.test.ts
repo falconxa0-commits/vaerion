@@ -255,7 +255,7 @@ describe("explain / doctor / dev gateway surfaces", () => {
     const devPayload = JSON.parse(out[out.length - 1]!) as Record<string, unknown>;
     const gateway = devPayload.gateway as Record<string, unknown>;
     expect((gateway.matrix as Array<Record<string, unknown>>).length).toBe(4);
-    expect(String(devPayload.next_milestone)).toContain("MS-4");
+    expect(String(devPayload.next_milestone)).toContain("MS-5");
   });
 });
 

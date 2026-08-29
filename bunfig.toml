@@ -6,7 +6,7 @@
 
 [test]
 coverage = true
-# Ratcheted at MS-3 close (measured 83.37% lines / 88.96% branches; prior
+# Ratcheted at MS-4 close (measured 84.62% lines / 89.45% branches; prior
 # floor 0.78 set at MS-2). Floors only move up (OBJ-Q6).
-coverageThreshold = { lines = 0.80, functions = 0.72, statements = 0.80, branches = 0.85 }
+coverageThreshold = { lines = 0.82, functions = 0.74, statements = 0.82, branches = 0.87 }
 coverageSkipTestFiles = true

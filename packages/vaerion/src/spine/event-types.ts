@@ -40,6 +40,20 @@ export const EVENT_TYPES = [
   "tool.call.requested",
   "tool.call.completed",
   "tool.call.denied",
+  // agents (MS-4 — the supervised agent loop over journaled decisions)
+  "agent.run.started",
+  "agent.step.recorded",
+  "agent.step.failed",
+  "agent.run.completed",
+  // workflow DAG engine (MS-4 — deterministic, resumable, journal-backed)
+  "workflow.started",
+  "workflow.node.started",
+  "workflow.node.completed",
+  "workflow.node.failed",
+  "workflow.completed",
+  // reasoning sessions (MS-4 — persistent scratchpads with deterministic folding)
+  "reasoning.note.recorded",
+  "reasoning.folded",
   // store
   "store.blob.put",
 ] as const;

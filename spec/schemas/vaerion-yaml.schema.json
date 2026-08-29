@@ -285,6 +285,50 @@
         }
       }
     },
+    "agents": {
+      "description": "Agent loop declaration (MS-4). The supervisor ceiling bounds journaled agent steps per run; exceeded ceilings stop the run loudly (E1804). The planner model is invoked through the gateway single gate and its ceiling still applies.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maxSteps": {
+          "description": "Ceiling on journaled agent steps per run (default 24).",
+          "type": "integer",
+          "minimum": 1
+        },
+        "plannerModel": {
+          "description": "Canonical provider/model-id used by the LLM planner through the gateway single gate.",
+          "type": "string",
+          "minLength": 3
+        }
+      }
+    },
+    "tools": {
+      "description": "Declared tools (MS-4). Only declared names can be authorized for tool.exec decisions; undeclared tools are refused fail-closed (E1801). Grants still require explicit broker policy rules — declaring a tool grants nothing by itself.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "description": "Tool name; lowercase identifier matched exactly at invocation time.",
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9._-]{0,62}$"
+          },
+          "scope": {
+            "description": "Broker scope for the tool.exec decision; defaults to the tool name.",
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "description": "Human-readable description of what the tool does.",
+            "type": "string"
+          }
+        }
+      }
+    },
     "telemetry": {
       "description": "Zero telemetry is structural law: no phone-home, diagnostics stay on the machine.",
       "type": "object",
