@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vaerion.dev/spec/schemas/receipt.schema.json",
+  "title": "Vaerion run receipt (v1)",
+  "description": "A run is not finished until it has a receipt (guarantee 4 of the Five Guarantees): a verifiable, journaled summary of what happened. The receipt is computed FROM the journal as a fold over its records, so it can never disagree with it — construction is a fold, not an assertion. See ADR-0006.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["run_id", "trace_id", "engine_version", "config_fingerprint", "opened_at", "closed_at", "counts", "blob_refs", "journal", "summary"],
+  "properties": {
+    "run_id": {
+      "description": "Run this receipt closes.",
+      "type": "string",
+      "minLength": 1
+    },
+    "trace_id": {
+      "description": "Trace of the run, taken from its first event envelope.",
+      "type": "string",
+      "minLength": 1
+    },
+    "engine_version": {
+      "description": "Engine version that executed the run (header value when present).",
+      "type": "string",
+      "minLength": 1
+    },
+    "config_fingerprint": {
+      "description": "blake3 fingerprint of the resolved configuration (canonical JSON) from the journal header.",
+      "type": "string",
+      "minLength": 1
+    },
+    "opened_at": {
+      "description": "Run opening timestamp (RFC3339) from the header record, or null when no header was recorded.",
+      "type": ["string", "null"]
+    },
+    "closed_at": {
+      "description": "Run closing timestamp (RFC3339).",
+      "type": "string",
+      "minLength": 1
+    },
+    "counts": {
+      "description": "Record counts folded from the journal.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["records", "events", "decisions_allow", "decisions_deny", "decisions_prompt", "gates_opened", "gates_resolved", "snapshots", "recovery_notes"],
+      "properties": {
+        "records": {
+          "description": "Total journal records.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "events": {
+          "description": "evt records (spine envelopes).",
+          "type": "integer",
+          "minimum": 0
+        },
+        "decisions_allow": {
+          "description": "Journaled broker decisions that allowed.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "decisions_deny": {
+          "description": "Journaled broker decisions that denied (including fail-closed).",
+          "type": "integer",
+          "minimum": 0
+        },
+        "decisions_prompt": {
+          "description": "Journaled broker decisions that opened a prompt gate.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "gates_opened": {
+          "description": "Durable human gates opened.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "gates_resolved": {
+          "description": "Durable human gates resolved.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "snapshots": {
+          "description": "Checkpoint snapshots taken.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "recovery_notes": {
+          "description": "Recovery meta notes (auditable recovery events).",
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "blob_refs": {
+      "description": "Distinct blake3 blob references mentioned in envelope payloads and snapshot states of the run.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["alg", "hash", "size"],
+        "properties": {
+          "alg": { "const": "blake3" },
+          "hash": {
+            "description": "64-character lowercase blake3 hex digest.",
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "journal": {
+      "description": "Journal identity at closing time.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["records", "head_hash"],
+      "properties": {
+        "records": {
+          "description": "Number of records in the journal at closing (equals counts.records).",
+          "type": "integer",
+          "minimum": 0
+        },
+        "head_hash": {
+          "description": "blake3 hash of the last record in the chain — the head a verifier replays to.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "summary": {
+      "description": "Human summary of what the run did (bounded length).",
+      "type": "string"
+    }
+  }
+}

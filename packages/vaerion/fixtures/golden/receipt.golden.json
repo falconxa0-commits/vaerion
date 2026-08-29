@@ -1,0 +1,17 @@
+{
+  "counts": {
+    "records": 5,
+    "events": 4,
+    "decisions_allow": 0,
+    "decisions_deny": 0,
+    "decisions_prompt": 0,
+    "gates_opened": 0,
+    "gates_resolved": 0,
+    "snapshots": 0,
+    "recovery_notes": 0
+  },
+  "trace_id": "t_golden",
+  "engine_version": "0.1.0-ms1",
+  "config_fingerprint": "cfg_golden",
+  "summary": "golden run complete"
+}

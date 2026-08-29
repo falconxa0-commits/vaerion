@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vaerion.dev/spec/schemas/envelope.schema.json",
+  "title": "Vaerion event envelope (v1)",
+  "description": "Canonical envelope of the Vaerion event spine (ADR-0002). Every meaningful action is a versioned, attributed envelope on one ordered spine. This is the journal-read form: seq >= 1, allocated by the run's single journal writer (gapless, monotonic, per-run). Emission-path constraints are stricter than this schema: `type` must be registered in spec/events/registry.json before it can be emitted; at read time unknown types are forwarded untouched (forward-compat duty).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["v", "type", "seq", "ts", "trace_id", "span_id", "actor", "cause", "payload"],
+  "properties": {
+    "v": {
+      "description": "Envelope version. Additive-only evolution within v1 (ADR-0002).",
+      "const": 1
+    },
+    "type": {
+      "description": "Event type. Must be registered in spec/events/registry.json at emit time (no ambient events); unknown registered-later types are forwarded untouched by intermediaries at read time.",
+      "type": "string",
+      "minLength": 1
+    },
+    "seq": {
+      "description": "Per-run sequence number. Gapless, monotonic, 1-based; allocated exclusively by the run's single journal writer. Call sites never choose seq (E1102).",
+      "type": "integer",
+      "minimum": 1
+    },
+    "ts": {
+      "description": "Event time, RFC3339 UTC with millisecond precision.",
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+    },
+    "trace_id": {
+      "description": "Trace identifier; groups all envelopes belonging to one causal trace.",
+      "type": "string",
+      "minLength": 1
+    },
+    "span_id": {
+      "description": "Span identifier; identifies the producing step within the trace.",
+      "type": "string",
+      "minLength": 1
+    },
+    "actor": {
+      "description": "Who caused this event. Never optional (constitution D-D): nothing happens without a who.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": {
+          "description": "Principal kind of the acting entity.",
+          "enum": ["human", "agent", "tool", "extension", "research", "system"]
+        },
+        "id": {
+          "description": "CRN or stable identifier of the acting principal.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "cause": {
+      "description": "Why this event exists — the causal pointer (constitution D-D). Journaled decisions and gates are themselves causes.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "ref"],
+      "properties": {
+        "kind": {
+          "description": "Cause kind: a causing envelope, a journaled decision, a gate, an external trigger, or the run origin.",
+          "enum": ["envelope", "decision", "gate", "external", "origin"]
+        },
+        "ref": {
+          "description": "Sequence number of the causing envelope, decision id, gate id, or null for the run origin.",
+          "type": ["string", "null"],
+          "minLength": 1
+        }
+      }
+    },
+    "payload": {
+      "description": "Event-specific payload. Structurally an object; per-type payload schemas are carried by the event registry as they are published. Payloads must be canonically serializable (no floats; E1901) and redacted before journaling where privileged.",
+      "type": "object"
+    }
+  }
+}

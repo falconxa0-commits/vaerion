@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vaerion.dev/spec/schemas/vaerion-yaml.schema.json",
+  "title": "Vaerion project configuration (vaerion.yaml) — schema 0.1",
+  "description": "The human-authored head of the source-of-truth chain (ADR-0007): vaerion.yaml -> vaerion.lock -> spec/. Unknown keys are rejected at load time (drift guard, E1201); the resolved configuration is fingerprinted with blake3 over its canonical JSON into every run header. Zero telemetry is structural: telemetry.enabled may only be false (constitution P10/D-K). Permissions are cumulative ceilings — grants never widen beyond them. Manifests use the VaerYaml strict subset: anchors, aliases, multi-document streams, tags, and complex mapping keys are banned.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "project", "telemetry"],
+  "properties": {
+    "schemaVersion": {
+      "description": "Configuration schema version; must equal a supported version.",
+      "const": "0.1"
+    },
+    "project": {
+      "description": "Project identity.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "description": "Project name; lowercase kebab identifier used in policy ids and bundles.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{1,62}$"
+        },
+        "description": {
+          "description": "Human-readable project description.",
+          "type": "string"
+        }
+      }
+    },
+    "permissions": {
+      "description": "Cumulative permission ceilings. Omitted sections deny everything of that kind by default (fail-closed); declared ceilings still evaluate through the broker, which may deny or prompt.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "net": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "allowHosts": {
+              "description": "Hosts (host or host:port) that network capabilities may target. Network access is a broker-mediated capability, never ambient (E1402).",
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "exec": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "allowCommands": {
+              "description": "Command ceilings (glob-ish patterns) that exec capabilities may request; grants only narrow these.",
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "research": {
+      "description": "Declared research capabilities (constitution D-O). Sources are declared before use; undeclared network is forbidden.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "sources", "fencing"],
+            "properties": {
+              "name": {
+                "description": "Capability name; referenced by evidence records and broker policy.",
+                "type": "string",
+                "minLength": 1
+              },
+              "sources": {
+                "description": "Declared sources. v0.1 admits local sources only — undeclared network access is forbidden by law (E1402).",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["kind", "path"],
+                  "properties": {
+                    "kind": {
+                      "description": "Source kind; local only in v0.1.",
+                      "const": "local"
+                    },
+                    "path": {
+                      "description": "Filesystem path of the source.",
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              },
+              "fencing": {
+                "description": "Fencing applied to content from this capability's sources; untrusted content never enters trusted channels (E1401).",
+                "enum": ["untrusted", "trusted"]
+              },
+              "maxItems": {
+                "description": "Optional bound on items ingested per index/update cycle.",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
+    "telemetry": {
+      "description": "Zero telemetry is structural law: no phone-home, diagnostics stay on the machine.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled"],
+      "properties": {
+        "enabled": {
+          "description": "May only be false. Any other value is a configuration error (E1202).",
+          "const": false
+        }
+      }
+    }
+  }
+}

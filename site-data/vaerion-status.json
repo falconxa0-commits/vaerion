@@ -1,0 +1,171 @@
+{
+  "generatedAt": "2026-08-29T06:08:13.028Z",
+  "engineVersion": "0.1.0-ms1",
+  "substrate": "TypeScript on Bun (ADR-0018, Proposed — pending Founder ratification)",
+  "verification": {
+    "generatedAt": "2026-08-29T06:07:19.747Z",
+    "ok": true,
+    "gates": [
+      {
+        "gate": "typecheck-engine",
+        "ok": true,
+        "durationMs": 2135
+      },
+      {
+        "gate": "typecheck-sdk",
+        "ok": true,
+        "durationMs": 2038
+      },
+      {
+        "gate": "tests",
+        "ok": true,
+        "durationMs": 298
+      },
+      {
+        "gate": "layerlint",
+        "ok": true,
+        "durationMs": 29
+      },
+      {
+        "gate": "constitutional-check",
+        "ok": true,
+        "durationMs": 248
+      },
+      {
+        "gate": "repo-lint",
+        "ok": true,
+        "durationMs": 6300
+      }
+    ]
+  },
+  "tests": {
+    "suites": 7,
+    "assertedExpectations": 795,
+    "totalTests": 83,
+    "note": "counts from the latest full run of `bun test tests/`"
+  },
+  "code": {
+    "engine": {
+      "files": 51,
+      "lines": 5677
+    },
+    "engineTests": {
+      "files": 7,
+      "lines": 1724
+    },
+    "sdk": {
+      "files": 1,
+      "lines": 165
+    },
+    "tools": {
+      "files": 4,
+      "lines": 462
+    }
+  },
+  "contracts": {
+    "specFiles": [
+      "spec/events/registry.json",
+      "spec/schemas/envelope.schema.json",
+      "spec/schemas/vaerion-yaml.schema.json",
+      "spec/schemas/evidence-record.schema.json",
+      "spec/schemas/broker-decision.schema.json",
+      "spec/schemas/receipt.schema.json",
+      "spec/schemas/capability-declaration.schema.json",
+      "spec/schemas/gate.schema.json",
+      "spec/schemas/journal-record.schema.json",
+      "spec/CHANGELOG-SPEC.md",
+      "spec/errors.yaml",
+      "spec/README.md"
+    ],
+    "adrCount": 18,
+    "adrFiles": [
+      "docs/adr/0005-tiered-intelligence-progressive-enhancement.md",
+      "docs/adr/0018-engine-substrate-typescript-bun.md",
+      "docs/adr/0017-reserved-cloud-seams.md",
+      "docs/adr/0004-centralized-permission-broker.md",
+      "docs/adr/0007-strict-subset-yaml-vaeryaml-manifests.md",
+      "docs/adr/0012-cassette-mockbrain-hermetic-evals.md",
+      "docs/adr/0015-per-platform-exec-sandbox-matrix.md",
+      "docs/adr/0002-versioned-event-spine-envelope.md",
+      "docs/adr/0010-loopback-daemon-pairing-token.md",
+      "docs/adr/0009-wasi-p2-components-capability-broker.md",
+      "docs/adr/0006-event-sourced-run-journals-checkpoint-chaining.md",
+      "docs/adr/0011-tokio-axum-tower-stack.md",
+      "docs/adr/0008-sqlite-wal-fts5-vec-local-store.md",
+      "docs/adr/0014-stable-diagnostics-catalog-ecodes.md",
+      "docs/adr/0013-os-keychain-first-secrets-env-fallback.md",
+      "docs/adr/0016-reproducible-vxn-bundles.md",
+      "docs/adr/0001-monorepo-single-version-policy.md",
+      "docs/adr/0003-contract-first-specs-drive-sdk-generation.md"
+    ]
+  },
+  "milestones": [
+    {
+      "id": "MS-0",
+      "name": "Skeleton and Law-in-Repo",
+      "status": "complete",
+      "progress": 100,
+      "evidence": "Constitution materialized; spec/ contracts; repository skeleton; verification infrastructure; zero placeholders."
+    },
+    {
+      "id": "MS-1",
+      "name": "Runtime Spine",
+      "status": "complete",
+      "progress": 100,
+      "evidence": "Event Spine; NDJSON+blake3 journal (verify/replay/recovery/export); blob CAS; receipts; broker contracts frozen; research subsystem; chaos suite green."
+    },
+    {
+      "id": "MS-2",
+      "name": "Permission Broker",
+      "status": "in_progress",
+      "progress": 35,
+      "evidence": "Contracts frozen (policy/decision/gate/graph/review-diff/audit); evaluatePolicy + audit writer implemented; remaining: broker engine integration, refusal-log surface, elevation flows."
+    },
+    {
+      "id": "MS-3",
+      "name": "Model Gateway",
+      "status": "pending",
+      "progress": 0,
+      "evidence": "Gateway contracts referenced; adapters not started."
+    },
+    {
+      "id": "MS-4",
+      "name": "Intelligence + Agents",
+      "status": "pending",
+      "progress": 5,
+      "evidence": "Research local index + context packs prefigure intel/context; agent executor not started."
+    },
+    {
+      "id": "MS-5",
+      "name": "Surfaces",
+      "status": "pending",
+      "progress": 10,
+      "evidence": "CLI Daily Seven operational; SDK in-process client; daemon + SDK-parity-over-HTTP pending."
+    },
+    {
+      "id": "MS-6",
+      "name": "Packaging + Hardening",
+      "status": "pending",
+      "progress": 0,
+      "evidence": "Pack/verify flows not started."
+    },
+    {
+      "id": "GA",
+      "name": "General Availability",
+      "status": "pending",
+      "progress": 0,
+      "evidence": "Post-hardening."
+    }
+  ],
+  "overallProgress": 31,
+  "risks": [
+    "Substrate: TypeScript-on-Bun reference implementation awaits Founder ADR-0018 ratification before MS-3 shipping milestones.",
+    "Broker engine (MS-2) must integrate the frozen contracts without widening policy evaluation semantics.",
+    "Journal per-record fsync trades durability for throughput; batching decision needed before MS-4 scale testing."
+  ],
+  "nextWork": [
+    "MS-2: implement the Permission Broker engine against the frozen contracts (fail-closed evaluator, durable gates in runs, refusal log surface, permission-graph enforcement).",
+    "MS-2: wire broker events into a human review surface (CLI prompt loop + review diffs).",
+    "Ratify or amend ADR-0018 (substrate) and re-baseline the roadmap accordingly."
+  ]
+}

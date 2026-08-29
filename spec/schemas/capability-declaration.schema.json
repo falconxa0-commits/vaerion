@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vaerion.dev/spec/schemas/capability-declaration.schema.json",
+  "title": "Vaerion capability declaration (v1)",
+  "description": "A capability is DECLARED before it can be requested (ADR-0004; no ambient powers). Declarations come from vaerion.yaml (humans) or extension capability manifests. A declaration states what a principal is ALLOWED TO ASK FOR — never a guarantee of yes: the broker evaluates every request and fails closed. Grants are ceilings that only ever narrow (monotonic narrowing).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["principal", "capabilities", "rationale"],
+  "properties": {
+    "principal": {
+      "description": "Identifier of the principal this declaration belongs to (CRN or stable id, e.g. crn_ext_<ulid> or an agent grant block name).",
+      "type": "string",
+      "minLength": 1
+    },
+    "capabilities": {
+      "description": "Declared capability definitions. Each is a ceiling the principal may request within; the broker may still deny or prompt.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["domain", "scopes"],
+        "properties": {
+          "domain": {
+            "description": "Capability domain. v1 vocabulary: fs.read, fs.write, net.connect, exec.run, model.invoke, secret.read, tool.call, intel.query, research.index, research.fetch, journal.append, journal.read.",
+            "type": "string",
+            "minLength": 1
+          },
+          "scopes": {
+            "description": "Glob-ish scopes within the domain. `*` alone matches all; otherwise prefix/path/host patterns (`prefix/**` matches any depth, `prefix/*` matches one segment). Must be non-empty: a capability with no scopes grants nothing.",
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "rationale": {
+      "description": "Human-visible rationale for the declaration; surfaces in audit and review.",
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

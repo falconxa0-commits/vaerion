@@ -1,0 +1,211 @@
+/**
+ * Vaerion CLI — `vae` entrypoint (L4 porcelain).
+ *
+ * Guarantee #1: `--help` is parsed BEFORE any command executes and before any
+ * config, workspace, or filesystem access. Help always teaches.
+ * Guarantee #2: `--json` switches every command to stable NDJSON.
+ * Guarantee #3: `--dry-run` is threaded into every mutating command.
+ * Guarantee #5: exit codes are honest (0/1/2/3/4/5).
+ */
+
+import { ExitCode, type CliIo } from "./io.ts";
+import { cmdDev, cmdExplain, cmdInit, cmdJournal, cmdDoctor, cmdResume, cmdRun, type CommandContext } from "./commands.ts";
+import { VaerionError } from "../kernel/errors.ts";
+import { isVaerionError } from "./workspace.ts";
+
+export const VERSION = "0.1.0-ms1";
+
+const MAIN_HELP = `vae — Vaerion engine command line (v${VERSION})
+
+Usage: vae [global flags] <command> [args] [flags]
+
+Daily Seven (the complete command surface):
+  init                       scaffold vaerion.yaml + .vaerion/ workspace
+  run research --sources P[,P] --query Q [--max-docs N]
+  run demo [--sources P,P] [--query Q]
+                             index declared local sources; journal everything;
+                             close with a receipt
+  resume RUN_ID [--answer JSON]
+                             restore a run; resolve a pending human gate
+  explain RUN_ID             reconstruct the run's narrative from its journal
+  journal ls | show RUN | verify RUN | recover RUN | export RUN [--out P]
+                             append-only journal operations
+  doctor                     verify config, journals, blobs, audit chain (no phone-home)
+  dev                        engine status: version, layers, milestone position
+
+Global flags:
+  --json                     stable NDJSON output (machine mode, guaranteed)
+  --plain                    human-readable output (default)
+  --dry-run                  zero side effects — plan only, nothing written
+  --cwd DIR                  operate on DIR as the workspace (default: .)
+  --help                     show this help and exit (never executes)
+
+Exit codes: 0 ok · 1 internal · 2 usage · 3 broker-denied · 4 provider-down · 5 partial-with-repair-hint
+
+Learn more: docs/constitution/VAERION_CONSTITUTION_v1.0.md · spec/ (contracts)
+`;
+
+const COMMAND_HELP: Record<string, string> = {
+  init: `vae init [--name NAME] [--dry-run]
+  Scaffold vaerion.yaml (strict schema 0.1) and the .vaerion/ workspace.
+  Refuses to overwrite an existing vaerion.yaml. --dry-run prints the plan.`,
+  run: `vae run research --sources P[,P] --query Q [--max-docs N] [--dry-run]
+vae run demo [--sources P,P] [--query Q]
+
+  Executes a local research run through the full constitutional pipeline:
+  declared capability → broker decision (journaled) → fingerprint → fence →
+  blob CAS → evidence → local index → query → citations → context pack →
+  snapshot → receipt. Every step is attributed and hash-chained.
+
+  demo defaults to ./docs/constitution + ./docs/adr with a fixed query.
+  Exit 3 if the broker denies; 5 if the journal fails final verification.`,
+  resume: `vae resume RUN_ID [--answer JSON]
+
+  Restore a run deterministically from its journal. If a durable human gate
+  is pending, apply --answer (default {"approved":true}) and close the run
+  with a receipt. Exit 3 when the answer denies the gate.`,
+  explain: `vae explain RUN_ID
+
+  Reconstruct the run's narrative (decisions, gates, events, receipt) from
+  its hash-chained journal. Exit 5 if the journal fails verification.`,
+  journal: `vae journal ls
+vae journal show RUN_ID
+vae journal verify RUN_ID
+vae journal recover RUN_ID [--dry-run]
+vae journal export RUN_ID [--out PATH] [--dry-run]
+
+  Append-only journal operations. recover truncates ONLY a torn crash tail
+  and re-seals the chain with an auditable note. export produces a redacted,
+  independently verifiable derivation.`,
+  doctor: `vae doctor
+
+  Verifies config validity, every journal's hash chain, every referenced
+  blob in the CAS, and audit-ledger continuity. Performs NO network access —
+  zero telemetry is constitutional. Exit 5 with Fix: hints on failures.`,
+  dev: `vae dev
+
+  Engine status: version, substrate (ADR-0018), layer map, workspace state,
+  milestone position. Read-only.`,
+};
+
+interface ParsedArgs {
+  command: string | null;
+  positional: string[];
+  flags: Record<string, string | boolean>;
+}
+
+export function parseArgs(argv: string[]): ParsedArgs {
+  const parsed: ParsedArgs = { command: null, positional: [], flags: {} };
+  const positional: string[] = [];
+  let i = 0;
+  let commandSet = false;
+  while (i < argv.length) {
+    const a = argv[i] as string;
+    if (a === "--help" || a === "-h") {
+      parsed.flags.help = true;
+      i++;
+      continue;
+    }
+    if (a.startsWith("--")) {
+      const eq = a.indexOf("=");
+      const name = eq === -1 ? a.slice(2) : a.slice(2, eq);
+      const value = eq === -1 ? undefined : a.slice(eq + 1);
+      if (value !== undefined) {
+        parsed.flags[name] = value;
+      } else if (i + 1 < argv.length && !(argv[i + 1] as string).startsWith("--") && ["cwd", "sources", "query", "max-docs", "answer", "out", "name", "profile"].includes(name)) {
+        parsed.flags[name] = argv[i + 1] as string;
+        i++;
+      } else {
+        parsed.flags[name] = true;
+      }
+      i++;
+      continue;
+    }
+    if (!commandSet) {
+      parsed.command = a;
+      commandSet = true;
+    } else {
+      positional.push(a);
+    }
+    i++;
+  }
+  parsed.positional = positional;
+  return parsed;
+}
+
+export interface CliResult {
+  code: number;
+}
+
+/** In-process CLI entry (used by tests and the bin shim alike). */
+export async function runCli(argv: string[], io: CliIo, cwd: string): Promise<CliResult> {
+  const parsed = parseArgs(argv);
+
+  // Guarantee #1 — help first, always, before any side effect.
+  if (parsed.flags.help === true) {
+    const topic = parsed.command;
+    io.out(topic && COMMAND_HELP[topic] ? COMMAND_HELP[topic] : MAIN_HELP);
+    return { code: ExitCode.ok };
+  }
+
+  if (!parsed.command) {
+    io.err("E1600 no command given. Fix: run `vae --help` (help always teaches).");
+    return { code: ExitCode.usage };
+  }
+
+  const mode = parsed.flags.json === true ? "json" : "plain";
+  const dryRun = parsed.flags["dry-run"] === true;
+  const cwdFlag = typeof parsed.flags.cwd === "string" ? (parsed.flags.cwd as string) : cwd;
+  const ctx: CommandContext = {
+    io,
+    mode,
+    dryRun,
+    cwd: cwdFlag,
+    flags: {
+      ...parsed.flags,
+      _positional1: parsed.positional[0] ?? "",
+      _positional2: parsed.positional[1] ?? "",
+    },
+  };
+
+  try {
+    let code: number;
+    switch (parsed.command) {
+      case "init": code = await cmdInit(ctx); break;
+      case "run": code = await cmdRun(ctx); break;
+      case "resume": code = await cmdResume(ctx); break;
+      case "explain": code = await cmdExplain(ctx); break;
+      case "journal": code = await cmdJournal(ctx); break;
+      case "doctor": code = await cmdDoctor(ctx); break;
+      case "dev": code = await cmdDev(ctx); break;
+      case "version": io.out(`vae ${VERSION}`); code = ExitCode.ok; break;
+      default:
+        io.err(`E1600 unknown command: ${parsed.command}. Fix: run \`vae --help\` for the Daily Seven.`);
+        return { code: ExitCode.usage };
+    }
+    return { code };
+  } catch (err) {
+    if (isVaerionError(err)) {
+      const renderer = new (await import("./render.ts")).Renderer(io, mode);
+      renderer.error(err);
+      const code = err.code === "E1600" ? ExitCode.usage : err.code === "E1300" || err.code === "E1301" || err.code === "E1302" ? ExitCode.brokerDenied : err.code === "E1601" ? ExitCode.providerDown : ExitCode.internal;
+      return { code };
+    }
+    const msg = err instanceof Error ? err.message : String(err);
+    io.err(`E1900 ${msg}`);
+    return { code: ExitCode.internal };
+  }
+}
+
+/* bin shim: `bun run packages/vaerion/src/cli/vae.ts ...` */
+if (import.meta.main) {
+  const io: CliIo = {
+    out: (line) => console.log(line),
+    err: (line) => console.error(line),
+  };
+  const result = await runCli(process.argv.slice(2), io, process.cwd());
+  process.exit(result.code);
+}
+
+// Re-export for programmatic consumers (SDK reuses runCli).
+export { runCli as cli, MAIN_HELP };

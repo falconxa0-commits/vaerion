@@ -1,0 +1,19 @@
+{
+  "name": "@vaerion/sdk",
+  "version": "0.1.0-ms1",
+  "private": true,
+  "description": "Vaerion TypeScript SDK — programmatic access to the engine via the same contracts the CLI honors (machine parity).",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@vaerion/engine": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.0",
+    "typescript": "^5"
+  }
+}

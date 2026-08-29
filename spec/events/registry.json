@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "envelope_version": 1,
+  "events": [
+    {
+      "type": "run.opened",
+      "description": "A run was opened and its journal chain began; the header meta record follows."
+    },
+    {
+      "type": "run.state.changed",
+      "description": "The run's lifecycle state changed (for example open, running, or closed)."
+    },
+    {
+      "type": "run.snapshot.taken",
+      "description": "A checkpoint snapshot of run state was recorded as a restore accelerator, never as truth."
+    },
+    {
+      "type": "run.restored",
+      "description": "Run state was restored from its journal, by full replay or snapshot-assisted restore."
+    },
+    {
+      "type": "run.closed",
+      "description": "The run finished; its journal is sealed and a receipt is issued."
+    },
+    {
+      "type": "journal.record.appended",
+      "description": "A record was appended to the run journal by the single journal writer."
+    },
+    {
+      "type": "journal.recovered",
+      "description": "The journal was recovered: a torn tail was truncated and the chain re-sealed, as an auditable event."
+    },
+    {
+      "type": "journal.verified",
+      "description": "The journal hash chain was verified end-to-end without finding a break."
+    },
+    {
+      "type": "receipt.issued",
+      "description": "The run's closing receipt was computed from its journal and sealed into it."
+    },
+    {
+      "type": "broker.decision.recorded",
+      "description": "A broker decision (allow, deny, or prompt) was journaled; decide precedes act."
+    },
+    {
+      "type": "broker.gate.opened",
+      "description": "A durable human gate was opened and the run paused awaiting human authority."
+    },
+    {
+      "type": "broker.gate.resolved",
+      "description": "A human resolved a durable gate; the answer is journaled and authoritative."
+    },
+    {
+      "type": "broker.audit.appended",
+      "description": "A broker evaluation, allow or deny, was appended to the hash-chained audit ledger."
+    },
+    {
+      "type": "research.capability.declared",
+      "description": "A research capability (name, declared sources, fencing) was declared before use."
+    },
+    {
+      "type": "research.index.updated",
+      "description": "The research index was updated from declared local sources."
+    },
+    {
+      "type": "research.source.fetched",
+      "description": "Content was retrieved from a declared source and stored in the blob store under its blake3 digest."
+    },
+    {
+      "type": "research.evidence.recorded",
+      "description": "An evidence record was built from a fenced block with mandatory provenance and a blob_ref."
+    },
+    {
+      "type": "research.context.prepared",
+      "description": "A research context was assembled from provenance-carrying, fenced content."
+    },
+    {
+      "type": "tool.call.requested",
+      "description": "A tool invocation was requested and submitted for broker evaluation."
+    },
+    {
+      "type": "tool.call.completed",
+      "description": "A broker-approved tool invocation completed and returned its result."
+    },
+    {
+      "type": "tool.call.denied",
+      "description": "A tool invocation was refused by the broker and the denial was journaled."
+    },
+    {
+      "type": "store.blob.put",
+      "description": "Content was stored in the blake3 content-addressed blob store; the payload carries the blob_ref."
+    }
+  ]
+}

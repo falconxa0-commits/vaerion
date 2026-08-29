@@ -1,0 +1,7 @@
+{
+  "msg": "deploy with [REDACTED len=40] done",
+  "api_key": "[REDACTED len=18]",
+  "nested": {
+    "authorization": "[REDACTED len=29]"
+  }
+}

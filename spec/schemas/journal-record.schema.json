@@ -1,0 +1,385 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vaerion.dev/spec/schemas/journal-record.schema.json",
+  "title": "Vaerion journal record (v1)",
+  "description": "One record of an append-only, hash-chained NDJSON run journal (ADR-0006, constitution D-I). Every record carries the chain fields k (kind), i (1-based chain index), prev (previous record's blake3 hash; genesis is 64 zeros), and hash = blake3(canonical JSON of the record without the hash field). Record kinds: meta (header/recovery/export notes), evt (one spine envelope), decision (journaled broker decision), gate (durable human gate), snapshot (checkpoint state bag, accelerator never truth), receipt (the run's closing receipt).",
+  "type": "object",
+  "oneOf": [
+    { "$ref": "#/$defs/metaRecord" },
+    { "$ref": "#/$defs/evtRecord" },
+    { "$ref": "#/$defs/decisionRecord" },
+    { "$ref": "#/$defs/gateRecordWrap" },
+    { "$ref": "#/$defs/snapshotRecord" },
+    { "$ref": "#/$defs/receiptRecord" }
+  ],
+  "$defs": {
+    "hashHex": {
+      "description": "64-character lowercase blake3 hex digest.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "chainBase": {
+      "description": "Fields shared by every record in the chain.",
+      "type": "object",
+      "required": ["k", "i", "prev", "hash"],
+      "properties": {
+        "k": {
+          "description": "Record kind discriminator.",
+          "enum": ["meta", "evt", "decision", "gate", "snapshot", "receipt"]
+        },
+        "i": {
+          "description": "1-based chain index.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "prev": { "$ref": "#/$defs/hashHex" },
+        "hash": { "$ref": "#/$defs/hashHex" }
+      }
+    },
+    "envelope": {
+      "description": "Spine envelope v1; normative schema at spec/schemas/envelope.schema.json.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["v", "type", "seq", "ts", "trace_id", "span_id", "actor", "cause", "payload"],
+      "properties": {
+        "v": { "const": 1 },
+        "type": { "type": "string", "minLength": 1 },
+        "seq": {
+          "description": "Per-run gapless monotonic sequence allocated by the journal writer; journaled envelopes always carry seq >= 1.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "ts": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+        },
+        "trace_id": { "type": "string", "minLength": 1 },
+        "span_id": { "type": "string", "minLength": 1 },
+        "actor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id"],
+          "properties": {
+            "kind": { "enum": ["human", "agent", "tool", "extension", "research", "system"] },
+            "id": { "type": "string", "minLength": 1 }
+          }
+        },
+        "cause": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "ref"],
+          "properties": {
+            "kind": { "enum": ["envelope", "decision", "gate", "external", "origin"] },
+            "ref": { "type": ["string", "null"] }
+          }
+        },
+        "payload": { "type": "object" }
+      }
+    },
+    "principal": {
+      "description": "Broker principal (who acts). See spec/schemas/broker-decision.schema.json.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": { "enum": ["human", "agent", "tool", "extension", "research", "system"] },
+        "id": { "type": "string", "minLength": 1 },
+        "runId": {
+          "description": "Owning run for agent/research principals (transient trust).",
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "description": "Pinned artifact digest for extension principals.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "blake3Ref": {
+      "description": "Content-addressed blob reference; bytes live in the blob store, never in the record (constitution D-E).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["alg", "hash", "size"],
+      "properties": {
+        "alg": { "const": "blake3" },
+        "hash": { "$ref": "#/$defs/hashHex" },
+        "size": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "brokerDecisionBody": {
+      "description": "Decision body: allow by policy, deny with a reason code (E1300 denied, E1301 fail-closed), or prompt naming a durable gate. Fail-closed law (constitution D-A): un-evaluable requests deny with E1301.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "policy"],
+          "properties": {
+            "kind": { "const": "allow" },
+            "policy": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "reason_code", "reason", "policy"],
+          "properties": {
+            "kind": { "const": "deny" },
+            "reason_code": { "enum": ["E1300", "E1301"] },
+            "reason": { "type": "string", "minLength": 1 },
+            "policy": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "gate_id", "reason", "policy"],
+          "properties": {
+            "kind": { "const": "prompt" },
+            "gate_id": { "type": "string", "minLength": 1 },
+            "reason": { "type": "string", "minLength": 1 },
+            "policy": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "brokerDecisionRecord": {
+      "description": "Journaled broker decision record; action payloads are redacted before journaling (decide -> journal -> act, E1304 otherwise).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision_id", "request_id", "run_id", "trace_id", "principal", "domain", "scope", "intent", "decision", "decided_at"],
+      "properties": {
+        "decision_id": { "type": "string", "minLength": 1 },
+        "request_id": { "type": "string", "minLength": 1 },
+        "run_id": { "type": "string", "minLength": 1 },
+        "trace_id": { "type": "string", "minLength": 1 },
+        "principal": { "$ref": "#/$defs/principal" },
+        "domain": {
+          "description": "Capability domain requested (e.g. fs.read, net.connect, exec.run, model.invoke, secret.read, tool.call, intel.query, research.index, research.fetch, journal.append, journal.read).",
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "description": "Requested scope within the domain (path, host, tool name pattern).",
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "description": "Stated reason the action is needed; empty intent is not evaluable.",
+          "type": "string",
+          "minLength": 1
+        },
+        "decision": { "$ref": "#/$defs/brokerDecisionBody" },
+        "resolved_by": {
+          "description": "Authority that resolved a prompt decision.",
+          "enum": ["human", "policy"]
+        },
+        "resolved_answer": {
+          "description": "Human-authority input when decision.kind is prompt and resolved.",
+          "type": "object"
+        },
+        "decided_at": { "type": "string", "minLength": 1 }
+      }
+    },
+    "gateRecord": {
+      "description": "Durable human gate (constitution D-H / invariant 9): survives process death; resolution is journaled and idempotent (double resolution is E1303). See spec/schemas/gate.schema.json.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gate_id", "run_id", "trace_id", "state", "question", "options", "opened_at"],
+      "properties": {
+        "gate_id": { "type": "string", "minLength": 1 },
+        "run_id": { "type": "string", "minLength": 1 },
+        "trace_id": { "type": "string", "minLength": 1 },
+        "state": { "enum": ["open", "resolved", "cancelled"] },
+        "question": {
+          "description": "What the human is being asked.",
+          "type": "string",
+          "minLength": 1
+        },
+        "options": {
+          "description": "Structured answer options for SDK/API rendering.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "label"],
+            "properties": {
+              "id": { "type": "string" },
+              "label": { "type": "string" }
+            }
+          }
+        },
+        "answer": {
+          "description": "Resolution payload (journaled, redacted); required when state is resolved.",
+          "type": "object"
+        },
+        "resolved_by": {
+          "description": "Gates are resolved by human authority only.",
+          "const": "human"
+        },
+        "opened_at": { "type": "string", "minLength": 1 },
+        "resolved_at": {
+          "description": "Resolution timestamp; required when state is resolved.",
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "state": { "const": "resolved" } },
+            "required": ["state"]
+          },
+          "then": {
+            "required": ["resolved_at", "answer"]
+          }
+        }
+      ]
+    },
+    "runReceipt": {
+      "description": "Run receipt computed as a fold over the journal; a receipt can never disagree with its journal. See spec/schemas/receipt.schema.json.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_id", "trace_id", "engine_version", "config_fingerprint", "opened_at", "closed_at", "counts", "blob_refs", "journal", "summary"],
+      "properties": {
+        "run_id": { "type": "string", "minLength": 1 },
+        "trace_id": { "type": "string", "minLength": 1 },
+        "engine_version": { "type": "string", "minLength": 1 },
+        "config_fingerprint": { "type": "string", "minLength": 1 },
+        "opened_at": { "type": ["string", "null"] },
+        "closed_at": { "type": "string", "minLength": 1 },
+        "counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["records", "events", "decisions_allow", "decisions_deny", "decisions_prompt", "gates_opened", "gates_resolved", "snapshots", "recovery_notes"],
+          "properties": {
+            "records": { "type": "integer", "minimum": 0 },
+            "events": { "type": "integer", "minimum": 0 },
+            "decisions_allow": { "type": "integer", "minimum": 0 },
+            "decisions_deny": { "type": "integer", "minimum": 0 },
+            "decisions_prompt": { "type": "integer", "minimum": 0 },
+            "gates_opened": { "type": "integer", "minimum": 0 },
+            "gates_resolved": { "type": "integer", "minimum": 0 },
+            "snapshots": { "type": "integer", "minimum": 0 },
+            "recovery_notes": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "blob_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/blake3Ref" }
+        },
+        "journal": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["records", "head_hash"],
+          "properties": {
+            "records": { "type": "integer", "minimum": 0 },
+            "head_hash": { "$ref": "#/$defs/hashHex" }
+          }
+        },
+        "summary": {
+          "description": "Human summary of what the run did (bounded length).",
+          "type": "string"
+        }
+      }
+    },
+    "metaRecord": {
+      "description": "Journal header, recovery, and export-derivation notes. Recovery notes are auditable events (no silent truncation, P9).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["k", "i", "prev", "hash", "note", "run_id"],
+      "properties": {
+        "k": { "const": "meta" },
+        "i": { "type": "integer", "minimum": 1 },
+        "prev": { "$ref": "#/$defs/hashHex" },
+        "hash": { "$ref": "#/$defs/hashHex" },
+        "note": { "enum": ["header", "recovery", "export"] },
+        "run_id": { "type": "string", "minLength": 1 },
+        "opened_at": { "type": "string" },
+        "engine_version": { "type": "string" },
+        "config_fingerprint": {
+          "description": "blake3 of the canonical JSON of the resolved configuration.",
+          "type": "string"
+        },
+        "detail": {
+          "description": "Recovery/export details.",
+          "type": "object"
+        }
+      }
+    },
+    "evtRecord": {
+      "description": "One spine envelope; the journal writer allocates its seq.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["k", "i", "prev", "hash", "env"],
+      "properties": {
+        "k": { "const": "evt" },
+        "i": { "type": "integer", "minimum": 1 },
+        "prev": { "$ref": "#/$defs/hashHex" },
+        "hash": { "$ref": "#/$defs/hashHex" },
+        "env": { "$ref": "#/$defs/envelope" }
+      }
+    },
+    "decisionRecord": {
+      "description": "A journaled broker decision (decide -> journal -> act).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["k", "i", "prev", "hash", "decision"],
+      "properties": {
+        "k": { "const": "decision" },
+        "i": { "type": "integer", "minimum": 1 },
+        "prev": { "$ref": "#/$defs/hashHex" },
+        "hash": { "$ref": "#/$defs/hashHex" },
+        "decision": { "$ref": "#/$defs/brokerDecisionRecord" }
+      }
+    },
+    "gateRecordWrap": {
+      "description": "A durable human gate record (open, resolution, or cancellation).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["k", "i", "prev", "hash", "gate"],
+      "properties": {
+        "k": { "const": "gate" },
+        "i": { "type": "integer", "minimum": 1 },
+        "prev": { "$ref": "#/$defs/hashHex" },
+        "hash": { "$ref": "#/$defs/hashHex" },
+        "gate": { "$ref": "#/$defs/gateRecord" }
+      }
+    },
+    "snapshotRecord": {
+      "description": "Checkpoint state bag; an accelerator for restore, never truth (E1501 when it disagrees with the journal).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["k", "i", "prev", "hash", "seq_at", "label", "state"],
+      "properties": {
+        "k": { "const": "snapshot" },
+        "i": { "type": "integer", "minimum": 1 },
+        "prev": { "$ref": "#/$defs/hashHex" },
+        "hash": { "$ref": "#/$defs/hashHex" },
+        "seq_at": {
+          "description": "Envelope seq the snapshot corresponds to (0 when taken before the first envelope).",
+          "type": "integer",
+          "minimum": 0
+        },
+        "label": { "type": "string" },
+        "state": {
+          "description": "The checkpointed state bag.",
+          "type": "object"
+        }
+      }
+    },
+    "receiptRecord": {
+      "description": "The run's closing receipt, sealed into its own journal.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["k", "i", "prev", "hash", "receipt"],
+      "properties": {
+        "k": { "const": "receipt" },
+        "i": { "type": "integer", "minimum": 1 },
+        "prev": { "$ref": "#/$defs/hashHex" },
+        "hash": { "$ref": "#/$defs/hashHex" },
+        "receipt": { "$ref": "#/$defs/runReceipt" }
+      }
+    }
+  }
+}

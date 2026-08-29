@@ -1,0 +1,1 @@
+{"actor":{"id":"tool_gold","kind":"tool"},"cause":{"kind":"envelope","ref":"1"},"payload":{"bytes_delta":128,"tool":"fs.write"},"seq":41,"span_id":"s_gold0001","trace_id":"t_golden","ts":"2025-01-01T00:00:00.000Z","type":"tool.call.completed","v":1}

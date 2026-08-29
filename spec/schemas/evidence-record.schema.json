@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vaerion.dev/spec/schemas/evidence-record.schema.json",
+  "title": "Vaerion research evidence record (v1)",
+  "description": "Evidence for research-derived content (constitution D-O: research is declared, broker-mediated, journaled; external content is untrusted and fenced; provenance is mandatory). Document BYTES live in the content-addressed blob store; the record carries only the blob_ref plus a bounded fenced excerpt. An evidence record is always built FROM a fenced block — unfenced external content has no path into a record, and thus no path into the journal (E1401). Evidence without provenance is hearsay and must never exist.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["evidence_id", "run_id", "trace_id", "capability", "fencing", "source_id", "blob_ref", "excerpt", "provenance", "recorded_at"],
+  "properties": {
+    "evidence_id": {
+      "description": "ULID of this evidence record.",
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "description": "Run that produced the evidence.",
+      "type": "string",
+      "minLength": 1
+    },
+    "trace_id": {
+      "description": "Trace the evidence was produced within.",
+      "type": "string",
+      "minLength": 1
+    },
+    "capability": {
+      "description": "Declared research capability that produced the evidence (E1403 otherwise).",
+      "type": "string",
+      "minLength": 1
+    },
+    "fencing": {
+      "description": "Fencing level of the content. Untrusted content never enters trusted channels (E1401).",
+      "enum": ["untrusted", "trusted"]
+    },
+    "source_id": {
+      "description": "Identifier of the declared source within the capability.",
+      "type": "string",
+      "minLength": 1
+    },
+    "blob_ref": {
+      "description": "Content-addressed reference to the full document bytes in the blob store (constitution D-E: blob_ref, not bytes).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["alg", "hash", "size"],
+      "properties": {
+        "alg": {
+          "description": "Hash algorithm of the blob store; blake3 only.",
+          "const": "blake3"
+        },
+        "hash": {
+          "description": "64-character lowercase blake3 hex digest of the stored bytes.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "size": {
+          "description": "Byte size of the stored content.",
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "excerpt": {
+      "description": "Bounded fenced excerpt of the document content, as carried by the fenced block.",
+      "type": "string"
+    },
+    "provenance": {
+      "description": "Mandatory provenance: the exact source, content fingerprint, retrieval time, locator, and the transformation chain that produced the stored form (fencing is always the chain's base).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence_id", "source_id", "source_path", "fingerprint", "retrieved_at", "locator", "transformation_chain"],
+      "properties": {
+        "evidence_id": {
+          "description": "Must equal the enclosing evidence_id (coherence is verified, never assumed).",
+          "type": "string",
+          "minLength": 1
+        },
+        "source_id": {
+          "description": "Must equal the enclosing source_id.",
+          "type": "string",
+          "minLength": 1
+        },
+        "source_path": {
+          "description": "Path or URI of the source as declared in the capability.",
+          "type": "string",
+          "minLength": 1
+        },
+        "fingerprint": {
+          "description": "Content-derived identity of the document; reproducible from the bytes alone.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["alg", "content_hash", "size", "doc_id"],
+          "properties": {
+            "alg": { "const": "blake3" },
+            "content_hash": {
+              "description": "blake3 of the document bytes.",
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "size": {
+              "description": "UTF-8 byte length of the document.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "doc_id": {
+              "description": "Stable document identifier within the source.",
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "retrieved_at": {
+          "description": "Retrieval timestamp (RFC3339).",
+          "type": "string",
+          "minLength": 1
+        },
+        "locator": {
+          "description": "Locator of the content within the source (anchor, offset, line range, or equivalent).",
+          "type": "string",
+          "minLength": 1
+        },
+        "transformation_chain": {
+          "description": "Ordered transformations from retrieved bytes to stored form; non-empty. The base step is fencing (e.g. fence:untrusted).",
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "recorded_at": {
+      "description": "Timestamp the evidence record was built (RFC3339).",
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

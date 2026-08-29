@@ -1,0 +1,16 @@
+{
+  "name": "@vaerion/tools",
+  "version": "0.1.0-ms1",
+  "private": true,
+  "description": "Vaerion verification tooling — layerlint, constitutional checks, verification runner.",
+  "type": "module",
+  "scripts": {
+    "layerlint": "bun run ./layerlint.ts",
+    "constitutional": "bun run ./constitutional-check.ts",
+    "verify": "bun run ./verify.ts",
+    "status": "bun run ./status.ts"
+  },
+  "dependencies": {
+    "yaml": "^2.8.0"
+  }
+}

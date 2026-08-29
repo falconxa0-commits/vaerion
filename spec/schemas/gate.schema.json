@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vaerion.dev/spec/schemas/gate.schema.json",
+  "title": "Vaerion durable human gate record (v1)",
+  "description": "A gate is a pause point that SURVIVES process death (ADR-0004; constitution P4 / invariant 9: humans are the only approval authority). Open and resolution are journal records; resolution is idempotent — a second resolution is refused with E1303 and the first resolution stays authoritative. The answer payload is journaled redacted.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["gate_id", "run_id", "trace_id", "state", "question", "options", "opened_at"],
+  "properties": {
+    "gate_id": {
+      "description": "ULID of the gate; referenced by prompt decisions.",
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "description": "Run the gate pauses.",
+      "type": "string",
+      "minLength": 1
+    },
+    "trace_id": {
+      "description": "Trace the gate occurred within.",
+      "type": "string",
+      "minLength": 1
+    },
+    "state": {
+      "description": "open: awaiting human authority. resolved: a human answered (requires resolved_at and answer). cancelled: withdrawn before resolution.",
+      "enum": ["open", "resolved", "cancelled"]
+    },
+    "question": {
+      "description": "What the human is being asked.",
+      "type": "string",
+      "minLength": 1
+    },
+    "options": {
+      "description": "Structured answer options; the rendering contract for SDKs and the API.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label"],
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" }
+        }
+      }
+    },
+    "answer": {
+      "description": "Resolution payload (journaled, redacted). Required when state is resolved.",
+      "type": "object"
+    },
+    "resolved_by": {
+      "description": "Gates are resolved by human authority only; automation proposes, humans dispose.",
+      "const": "human"
+    },
+    "opened_at": {
+      "description": "Gate creation timestamp (RFC3339).",
+      "type": "string",
+      "minLength": 1
+    },
+    "resolved_at": {
+      "description": "Resolution timestamp (RFC3339). Required when state is resolved.",
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "state": { "const": "resolved" } },
+        "required": ["state"]
+      },
+      "then": {
+        "description": "A resolved gate must carry its resolution timestamp and the human's answer.",
+        "required": ["resolved_at", "answer"]
+      }
+    }
+  ]
+}

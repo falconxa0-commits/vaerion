@@ -1,0 +1,36 @@
+{
+  "generatedAt": "2026-08-29T06:13:49.765Z",
+  "ok": true,
+  "gates": [
+    {
+      "gate": "typecheck-engine",
+      "ok": true,
+      "durationMs": 2023
+    },
+    {
+      "gate": "typecheck-sdk",
+      "ok": true,
+      "durationMs": 1777
+    },
+    {
+      "gate": "tests",
+      "ok": true,
+      "durationMs": 281
+    },
+    {
+      "gate": "layerlint",
+      "ok": true,
+      "durationMs": 27
+    },
+    {
+      "gate": "constitutional-check",
+      "ok": true,
+      "durationMs": 205
+    },
+    {
+      "gate": "repo-lint",
+      "ok": true,
+      "durationMs": 6454
+    }
+  ]
+}
