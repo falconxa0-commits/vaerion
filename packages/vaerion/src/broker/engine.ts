@@ -182,6 +182,17 @@ export function graphFromConfig(config: VaerionConfig, graphId: string, extraGra
   for (const cap of config.research?.capabilities ?? []) {
     addGrant("human", "research.index", cap.sources.map((s) => s.path));
   }
+  // Gateway ceilings (MS-3): enabled providers declare their reachable
+  // models as `provider/model` scopes. Disabled providers grant nothing —
+  // the ceiling is the law, and an enabled-but-modelless provider simply
+  // contributes no scopes (fail-closed at the ceiling layer).
+  for (const [name, p] of Object.entries(config.gateway?.providers ?? {})) {
+    if (!p.enabled) continue;
+    addGrant("human", "model.invoke", (p.models ?? []).map((m) => `${name}/${m}`));
+  }
+  // Secret ceilings (ADR-0013): the human holds every declared secret name;
+  // non-human reads go through scoped grants matched by secretGrantFor.
+  addGrant("human", "secret.read", Object.keys(config.secrets ?? {}));
 
   // Extra grants (journaled run declarations) must live INSIDE declared ceilings.
   const humanCeilings = new Map<CapabilityDomain, CapabilityScope[]>();

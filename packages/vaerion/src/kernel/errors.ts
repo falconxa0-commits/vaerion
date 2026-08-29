@@ -49,6 +49,14 @@ export type ErrorCode =
   | "E1600" // usage_error
   | "E1601" // provider_unavailable
   | "E1602" // partial_with_repair_hint
+  // 17xx — model gateway
+  | "E1700" // gateway_model_unknown
+  | "E1701" // gateway_op_unsupported
+  | "E1702" // gateway_stream_invalid
+  | "E1703" // gateway_budget_exceeded
+  | "E1704" // gateway_secret_unresolved
+  | "E1705" // gateway_breaker_open
+  | "E1706" // gateway_transport_refused
   // 19xx — internal invariants (never user-caused; always a bug)
   | "E1900" // internal_unreachable
   | "E1901"; // canonical_json_rejected_value
@@ -96,6 +104,13 @@ export const ERROR_CATALOG: Readonly<Record<ErrorCode, ErrorDescriptor>> = {
   E1600: { code: "E1600", name: "usage_error", summary: "Command was invoked incorrectly.", fix: "Re-run with `--help`; help always teaches and never executes." },
   E1601: { code: "E1601", name: "provider_unavailable", summary: "A required provider is unreachable.", fix: "Check connectivity and provider status, then retry; run `vae doctor` for diagnostics." },
   E1602: { code: "E1602", name: "partial_with_repair_hint", summary: "Operation completed partially; a repair path exists.", fix: "Follow the repair hint in the output, then re-run the failed part." },
+  E1700: { code: "E1700", name: "gateway_model_unknown", summary: "The requested model is not resolvable to a provider adapter.", fix: "Use the canonical form provider/model-id (e.g. mockbrain/mock-1) and declare the model under gateway.providers in vaerion.yaml; `vae doctor` lists the capability matrix." },
+  E1701: { code: "E1701", name: "gateway_op_unsupported", summary: "The provider does not implement the requested operation.", fix: "Pick a provider whose declared capability matrix covers the op (chat/embed/rerank); the matrix is listed by `vae dev` and `vae doctor`." },
+  E1702: { code: "E1702", name: "gateway_stream_invalid", summary: "A provider stream violated the normalized stream contract.", fix: "Compare the response against the recorded cassette for this request; re-record the cassette if the provider drifted, and report the drift." },
+  E1703: { code: "E1703", name: "gateway_budget_exceeded", summary: "The run budget (tokens or micro-USD) was exceeded.", fix: "Raise gateway.budgets in vaerion.yaml deliberately or start a new run; spend already journaled is real and is never hidden." },
+  E1704: { code: "E1704", name: "gateway_secret_unresolved", summary: "A declared secret resolved to nothing at call time (keychain and environment both empty).", fix: "Store the value in the OS keychain (service \"vae\", account = the secret name) or export it as an environment variable, then retry; names live in config, values never do." },
+  E1705: { code: "E1705", name: "gateway_breaker_open", summary: "The provider's circuit breaker is open after repeated failures.", fix: "Wait for the cooldown and probe again with `vae doctor`; the failures that opened it are journaled and must be investigated, not papered over." },
+  E1706: { code: "E1706", name: "gateway_transport_refused", summary: "The transport refused the provider call (unreachable, DNS, aborted).", fix: "Check connectivity and provider status; the call was broker-authorized, so a repeated refusal is environmental. `vae doctor` reports the breaker state." },
   E1900: { code: "E1900", name: "internal_unreachable", summary: "An internal invariant was violated (engine bug).", fix: "File a bug with the trace id; this is never user-caused." },
   E1901: { code: "E1901", name: "canonical_json_rejected_value", summary: "Value cannot be canonically serialized (float/undefined/symbol).", fix: "Encode the value as an integer or string before journaling; hashed content must be byte-stable." },
 };

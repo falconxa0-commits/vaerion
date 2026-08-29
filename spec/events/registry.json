@@ -79,6 +79,14 @@
       "description": "A research context was assembled from provenance-carrying, fenced content."
     },
     {
+      "type": "gateway.invoke.recorded",
+      "description": "A model invocation completed through the gateway single gate; the payload carries usage, integer micro-USD cost, attempts, latency, the redacted assembled text, and the broker decision link."
+    },
+    {
+      "type": "gateway.invoke.failed",
+      "description": "A model invocation failed after its broker decision (secret unresolved, breaker open, transport refusal, budget stop); the payload carries the error code and the decision link."
+    },
+    {
       "type": "tool.call.requested",
       "description": "A tool invocation was requested and submitted for broker evaluation."
     },

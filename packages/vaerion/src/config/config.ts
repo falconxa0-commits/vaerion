@@ -13,8 +13,31 @@ import { blake3HexOf } from "../kernel/hash.ts";
 import { VaerionError } from "../kernel/errors.ts";
 import { canonicalJson } from "../kernel/canonical.ts";
 import type { PolicyContract, PolicyRule } from "../broker/contracts/decision.ts";
+import { scopeMatches } from "../broker/contracts/capability.ts";
 
 export const CONFIG_SCHEMA_VERSION = "0.1";
+
+/** Known gateway provider keys (fail-closed: unknown keys are config drift). */
+export const GATEWAY_PROVIDERS: ReadonlySet<string> = new Set(["anthropic", "openai", "ollama"]);
+
+export interface GatewayProviderConfig {
+  enabled: boolean;
+  /** Declared model ids reachable under this provider (ceiling scopes). */
+  models?: string[];
+}
+
+export interface GatewayConfig {
+  providers?: Record<string, GatewayProviderConfig>;
+  budgets?: {
+    tokensPerRun?: number;
+    /** Integer micro-USD per run (never floats — R-MG3 law). */
+    microUsdPerRun?: number;
+  };
+}
+
+export interface SecretsConfig {
+  [secretName: string]: { grant: string[] };
+}
 
 export interface VaerionConfig {
   schemaVersion: string;
@@ -40,14 +63,22 @@ export interface VaerionConfig {
   policy?: {
     rules?: PolicyRule[];
   };
+  /** Model Gateway declaration (MS-3) — providers, budgets. */
+  gateway?: GatewayConfig;
+  /** Secret NAMES with scoped grants (ADR-0013) — values never live here. */
+  secrets?: SecretsConfig;
   telemetry: { enabled: false };
 }
 
-const TOP_LEVEL_KEYS: ReadonlySet<string> = new Set(["schemaVersion", "project", "permissions", "research", "policy", "telemetry"]);
+const TOP_LEVEL_KEYS: ReadonlySet<string> = new Set(["schemaVersion", "project", "permissions", "research", "policy", "gateway", "secrets", "telemetry"]);
 const PROJECT_KEYS: ReadonlySet<string> = new Set(["name", "description"]);
 const PERMISSIONS_KEYS: ReadonlySet<string> = new Set(["net", "exec"]);
 const RESEARCH_KEYS: ReadonlySet<string> = new Set(["capabilities"]);
 const POLICY_KEYS: ReadonlySet<string> = new Set(["rules"]);
+const GATEWAY_KEYS: ReadonlySet<string> = new Set(["providers", "budgets"]);
+const GATEWAY_PROVIDER_KEYS: ReadonlySet<string> = new Set(["enabled", "models"]);
+const GATEWAY_BUDGET_KEYS: ReadonlySet<string> = new Set(["tokensPerRun", "microUsdPerRun"]);
+const SECRETS_ENTRY_KEYS: ReadonlySet<string> = new Set(["grant"]);
 const POLICY_RULE_KEYS: ReadonlySet<string> = new Set(["id", "principalKinds", "domain", "scope", "effect", "gateLabel", "rationale"]);
 const PRINCIPAL_KINDS: ReadonlySet<string> = new Set(["human", "agent", "tool", "extension", "research", "system"]);
 const POLICY_EFFECTS: ReadonlySet<string> = new Set(["allow", "deny", "prompt"]);
@@ -170,6 +201,77 @@ export function validateConfig(value: unknown): VaerionConfig {
     }
   }
 
+  const gateway = c.gateway as Record<string, unknown> | undefined;
+  if (gateway !== undefined) {
+    for (const key of Object.keys(gateway)) {
+      if (!GATEWAY_KEYS.has(key)) throw new VaerionError("E1201", `unknown gateway key: ${key}`, { key });
+    }
+    const providers = gateway.providers as Record<string, unknown> | undefined;
+    if (providers !== undefined) {
+      if (!providers || typeof providers !== "object" || Array.isArray(providers)) {
+        throw new VaerionError("E1202", "gateway.providers must be a mapping");
+      }
+      for (const name of Object.keys(providers)) {
+        if (!GATEWAY_PROVIDERS.has(name)) {
+          throw new VaerionError("E1201", `unknown gateway provider "${name}" (known: ${[...GATEWAY_PROVIDERS].join(", ")})`, { provider: name });
+        }
+        const p = providers[name] as Record<string, unknown> | null;
+        if (!p || typeof p !== "object" || Array.isArray(p)) {
+          throw new VaerionError("E1202", `gateway.providers.${name} must be a mapping`);
+        }
+        for (const k of Object.keys(p)) {
+          if (!GATEWAY_PROVIDER_KEYS.has(k)) throw new VaerionError("E1201", `unknown gateway.providers.${name}.${k}`, { key: `gateway.providers.${name}.${k}` });
+        }
+        if (typeof p.enabled !== "boolean") {
+          throw new VaerionError("E1202", `gateway.providers.${name}.enabled must be a boolean`);
+        }
+        if (p.models !== undefined) {
+          if (!Array.isArray(p.models) || p.models.some((m) => typeof m !== "string" || m.length === 0)) {
+            throw new VaerionError("E1202", `gateway.providers.${name}.models must be an array of non-empty strings`);
+          }
+        }
+      }
+    }
+    const budgets = gateway.budgets as Record<string, unknown> | undefined;
+    if (budgets !== undefined) {
+      if (!budgets || typeof budgets !== "object" || Array.isArray(budgets)) {
+        throw new VaerionError("E1202", "gateway.budgets must be a mapping");
+      }
+      for (const k of Object.keys(budgets)) {
+        if (!GATEWAY_BUDGET_KEYS.has(k)) throw new VaerionError("E1201", `unknown gateway.budgets.${k}`, { key: `gateway.budgets.${k}` });
+      }
+      for (const k of ["tokensPerRun", "microUsdPerRun"] as const) {
+        const v = budgets[k];
+        if (v !== undefined && (!Number.isInteger(v) || (v as number) < 0)) {
+          throw new VaerionError("E1202", `gateway.budgets.${k} must be a non-negative integer`);
+        }
+      }
+    }
+  }
+
+  const secrets = c.secrets as Record<string, unknown> | undefined;
+  if (secrets !== undefined) {
+    if (!secrets || typeof secrets !== "object" || Array.isArray(secrets)) {
+      throw new VaerionError("E1202", "secrets must be a mapping of name → {grant}");
+    }
+    for (const name of Object.keys(secrets)) {
+      if (!/^[A-Z][A-Z0-9_]*$/.test(name)) {
+        throw new VaerionError("E1202", `secret name "${name}" must match ^[A-Z][A-Z0-9_]*$ (names only — values never live in config)`);
+      }
+      const entry = secrets[name] as Record<string, unknown> | null;
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+        throw new VaerionError("E1202", `secrets.${name} must be a mapping`);
+      }
+      for (const k of Object.keys(entry)) {
+        if (!SECRETS_ENTRY_KEYS.has(k)) throw new VaerionError("E1201", `unknown secrets.${name}.${k}`, { key: `secrets.${name}.${k}` });
+      }
+      const grant = entry.grant;
+      if (!Array.isArray(grant) || grant.length === 0 || grant.some((g) => typeof g !== "string" || g.length === 0)) {
+        throw new VaerionError("E1202", `secrets.${name}.grant must be a non-empty array of principal-id patterns`);
+      }
+    }
+  }
+
   const telemetry = c.telemetry as Record<string, unknown> | undefined;
   if (!telemetry || typeof telemetry !== "object") {
     throw new VaerionError("E1202", "telemetry section required (zero telemetry is structural)");
@@ -243,7 +345,30 @@ export function policyFromConfig(config: VaerionConfig): PolicyContract {
       });
     }
   }
+  // Secrets (ADR-0013): humans may read locally; non-human principals only
+  // through an explicit scoped grant. The grant patterns are matched against
+  // the requesting principal id at decision time by secretGrantFor (below).
+  rules.push({
+    id: "human-secret-read-allow",
+    principalKinds: ["human"],
+    domain: "secret.read",
+    scope: "*",
+    effect: "allow",
+    rationale: "local human keychain access",
+  });
   return { policy_id: `default-${config.project.name}`, version: 1, rules };
+}
+
+/**
+ * Does the config grant the named secret to this principal id? (ADR-0013:
+ * "scoped grants naming which principals may read which secret"). Patterns
+ * are matched with the capability scope matcher (`gateway:*` covers
+ * `gateway:<runId>`, `*` covers everything). Fail-closed: no match = no.
+ */
+export function secretGrantFor(config: VaerionConfig, secretName: string, principalId: string): boolean {
+  const entry = config.secrets?.[secretName];
+  if (entry === undefined) return false;
+  return entry.grant.some((pattern) => scopeMatches(pattern, principalId));
 }
 
 /**

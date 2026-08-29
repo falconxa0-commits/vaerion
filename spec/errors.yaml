@@ -6,7 +6,8 @@
 # never reused, never remapped. Ranges:
 #   1xxx journal & persistence · 11xx event spine · 12xx configuration
 #   13xx permission broker · 14xx research · 15xx runtime/restore
-#   16xx surface/usage · 19xx internal invariants (always engine bugs)
+#   16xx surface/usage · 17xx model gateway
+#   19xx internal invariants (always engine bugs)
 version: 1
 
 errors:
@@ -138,6 +139,34 @@ errors:
     name: partial_with_repair_hint
     summary: "Operation completed partially; a repair path exists."
     fix: "Follow the repair hint in the output, then re-run the failed part."
+  E1700:
+    name: gateway_model_unknown
+    summary: "The requested model is not resolvable to a provider adapter."
+    fix: "Use the canonical form provider/model-id (e.g. mockbrain/mock-1) and declare the model under gateway.providers in vaerion.yaml; `vae doctor` lists the capability matrix."
+  E1701:
+    name: gateway_op_unsupported
+    summary: "The provider does not implement the requested operation."
+    fix: "Pick a provider whose declared capability matrix covers the op (chat/embed/rerank); the matrix is listed by `vae dev` and `vae doctor`."
+  E1702:
+    name: gateway_stream_invalid
+    summary: "A provider stream violated the normalized stream contract."
+    fix: "Compare the response against the recorded cassette for this request; re-record the cassette if the provider drifted, and report the drift."
+  E1703:
+    name: gateway_budget_exceeded
+    summary: "The run budget (tokens or micro-USD) was exceeded."
+    fix: "Raise gateway.budgets in vaerion.yaml deliberately or start a new run; spend already journaled is real and is never hidden."
+  E1704:
+    name: gateway_secret_unresolved
+    summary: "A declared secret resolved to nothing at call time (keychain and environment both empty)."
+    fix: "Store the value in the OS keychain (service \"vae\", account = the secret name) or export it as an environment variable, then retry; names live in config, values never do."
+  E1705:
+    name: gateway_breaker_open
+    summary: "The provider's circuit breaker is open after repeated failures."
+    fix: "Wait for the cooldown and probe again with `vae doctor`; the failures that opened it are journaled and must be investigated, not papered over."
+  E1706:
+    name: gateway_transport_refused
+    summary: "The transport refused the provider call (unreachable, DNS, aborted)."
+    fix: "Check connectivity and provider status; the call was broker-authorized, so a repeated refusal is environmental. `vae doctor` reports the breaker state."
   E1900:
     name: internal_unreachable
     summary: "An internal invariant was violated (engine bug)."

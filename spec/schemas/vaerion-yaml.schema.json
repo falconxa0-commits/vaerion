@@ -202,6 +202,88 @@
         }
       }
     },
+    "gateway": {
+      "description": "Model Gateway declaration (MS-3). Enabled providers declare their reachable models as `provider/model` ceiling scopes; disabled providers grant nothing (fail-closed at the ceiling layer). Budgets are per-run ceilings in tokens and integer micro-USD; exceeded budgets stop the run loudly (E1703), never silently.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "providers": {
+          "description": "Known provider keys only: anthropic, openai, ollama. The offline virtual provider mockbrain is always available and is not declared here.",
+          "type": "object",
+          "additionalProperties": false,
+          "propertyNames": {
+            "enum": [
+              "anthropic",
+              "openai",
+              "ollama"
+            ]
+          },
+          "patternProperties": {
+            "^(anthropic|openai|ollama)$": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "enabled"
+              ],
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                },
+                "models": {
+                  "description": "Model ids reachable under this provider; each becomes a `provider/model` scope in the permission ceiling.",
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "budgets": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "tokensPerRun": {
+              "description": "Per-run ceiling over input+output tokens.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "microUsdPerRun": {
+              "description": "Per-run ceiling in integer micro-USD (never floats; R-MG3).",
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "secrets": {
+      "description": "Secret NAMES with scoped grants (ADR-0013). Values are resolved exclusively at call time from the OS keychain (service `vae`) or environment indirection; a value never enters configuration, journal, receipt, or log. Reads are broker-mediated `secret.read` decisions. Grant patterns are matched against principal ids with the capability scope matcher.",
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[A-Z][A-Z0-9_]*$": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "grant"
+          ],
+          "properties": {
+            "grant": {
+              "description": "Non-empty list of principal-id patterns granted this secret (e.g. \"gateway:*\"); humans may always read locally.",
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
     "telemetry": {
       "description": "Zero telemetry is structural law: no phone-home, diagnostics stay on the machine.",
       "type": "object",

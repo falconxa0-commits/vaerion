@@ -33,6 +33,9 @@ export const EVENT_TYPES = [
   "research.source.fetched",
   "research.evidence.recorded",
   "research.context.prepared",
+  // model gateway (MS-3 — the single gate, D-J)
+  "gateway.invoke.recorded",
+  "gateway.invoke.failed",
   // tools (thin registry only in MS-1)
   "tool.call.requested",
   "tool.call.completed",

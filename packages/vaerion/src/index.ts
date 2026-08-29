@@ -52,6 +52,22 @@ export { ChainedAuditWriter, decisionToAuditBody, verifyAuditLedger, type AuditW
 export { BrokerEngine, graphCovers, graphFromConfig, type BrokerEvaluation, type BrokerEngineInput, type ConfigGrantInput } from "./broker/engine.ts";
 export { RefusalLogWriter, readRefusals, readRefusalHead, verifyRefusalLog, refusalFromBody, type RefusalEntry, type RefusalAppendInput, type RefusalVerifyReport, type RefusalFilter } from "./broker/refusal-log.ts";
 
+// model gateway (L1 — MS-3, the single gate)
+export { MODEL_OPS, parseModelId, assembleText, assertStreamFrame, type ModelOp, type ChatMessage, type ModelRequest, type StreamFrame, type TokenUsage, type UsageCost, type InvocationResult, type TransportRequest, type TransportChunk, type TransportResponse, type GatewayTransport, type ProviderContext, type ProviderAdapter } from "./gateway/types.ts";
+export { PRICE_TABLE, priceFor, costOf, formatMicroUsd, addCosts, type ModelPrice } from "./gateway/pricing.ts";
+export { mockBrainAdapter, estimateTokens, MOCKBRAIN_EMBED_DIM } from "./gateway/mockbrain.ts";
+export { SseParser, parseSseChunks, parseNdjsonChunks, type SseEvent } from "./gateway/adapters/sse.ts";
+export { anthropicAdapter, mapAnthropicEvent } from "./gateway/adapters/anthropic.ts";
+export { openaiAdapter, mapOpenAiEvent } from "./gateway/adapters/openai.ts";
+export { ollamaAdapter, mapOllamaEvent } from "./gateway/adapters/ollama.ts";
+export { fetchTransport, endpointForHost } from "./gateway/transport.ts";
+export { cassetteTransport, loadCassette, requestFingerprint, assertCassetteShape, type Cassette } from "./gateway/cassette.ts";
+export { CircuitBreaker, TransportRetries, backoffDelayMs, isRetryable, DEFAULT_RETRY, type BreakerState, type BreakerOptions, type RetryPolicy } from "./gateway/breaker.ts";
+export { envSecretPort, macKeychainSecretPort, defaultSecretPort, requireResolvedSecret, type SecretPort } from "./gateway/secrets.ts";
+export { meteringFromRecords, type GatewayMeteringRollup, type PerModelMetering } from "./gateway/metering.ts";
+export { GatewayService, GatewayGatePrompt, type GatewayHost, type GatewayInvokeInput, type GatewayServiceOptions, type GatewayIdGen, type BudgetGuard } from "./gateway/service.ts";
+export { secretGrantFor } from "./config/config.ts";
+
 // runtime (L2)
 export { RunHarness, initialRunState, runStateReducer, readAuditHead, type RunState, type RunHarnessOptions } from "./runtime/run.ts";
 

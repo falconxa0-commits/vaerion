@@ -4,6 +4,34 @@ All changes to files under `spec/` are recorded here. Evolution is
 additive-only within a major version; removals require a major bump and a
 deprecation window. Every entry requires two approvals on the change itself.
 
+## 0.1.2 — 2026-08-29 (MS-3 model gateway; additive only)
+
+Additive contract surface for the Model Gateway (MS-3, the single gate per
+constitution D-J). Nothing removed, nothing renamed; all prior v0.1 documents
+remain valid unchanged.
+
+- `events/registry.json` — added event types `gateway.invoke.recorded`
+  ("A model invocation completed through the gateway single gate; the
+  payload carries usage, integer micro-USD cost, attempts, latency, the
+  redacted assembled text, and the broker decision link.") and
+  `gateway.invoke.failed` ("A model invocation failed after its broker
+  decision — secret unresolved, breaker open, transport refusal, budget
+  stop; the payload carries the error code and the decision link.").
+  Registry version stays 1; evolution is additive per ADR-0002.
+- `errors.yaml` — added the 17xx range (model gateway): `E1700`
+  gateway_model_unknown, `E1701` gateway_op_unsupported, `E1702`
+  gateway_stream_invalid, `E1703` gateway_budget_exceeded, `E1704`
+  gateway_secret_unresolved, `E1705` gateway_breaker_open, `E1706`
+  gateway_transport_refused. Catalog version stays 1; codes are additive
+  and never reused (ADR-0014).
+- `schemas/vaerion-yaml.schema.json` — added optional top-level `gateway`
+  block (`providers` over the known keys anthropic|openai|ollama with
+  `enabled` + optional `models`; `budgets.tokensPerRun` /
+  `budgets.microUsdPerRun` as non-negative integers) and optional
+  top-level `secrets` block (NAME → `grant: [principal-id patterns]`;
+  names only — values are resolved exclusively at call time per ADR-0013).
+  Strict unknown-key rejection is unchanged.
+
 ## 0.1.1 — 2026-08-29 (MS-2 broker wiring; additive only)
 
 Additive contract surface for the Permission Broker engine (MS-2). Nothing
