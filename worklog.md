@@ -98,3 +98,18 @@ Stage Summary:
 - ALL 6 GATES GREEN: typecheck ×2, 114 tests/951 expectations with coverage floors, layerlint 0 violations, constitutional-check 6/6 in sync, repo lint.
 - Broker law now end-to-end: decide→journal→act with ceiling enforcement, refusals never silent, gates survive death, human authority explicit at every step.
 - Next: MS-3 Model Gateway through `model.invoke`; ADR-0018 ratification; MS-4 agent groundwork; MS-5 daemon.
+
+---
+Task ID: push-reconciliation
+Agent: Z.ai Code (Principal Constitutional Build System session)
+Task: Push the verified MS-2 milestone to falconxa0-commits/vaerion; reconcile a discovered parallel generation on the remote without destroying any work.
+
+Work Log:
+- Located the mission repository via the session credential (used transiently, never persisted): falconxa0-commits/vaerion (private). Remote main held one commit (fa48b51) with NO common ancestor to the local verified line — a parallel older generation: vae-* monorepo packages (foundation/store/capabilities/cli/config/context/agent/api/gateway/intel/workflow/package/ext-host/tools), root CONSTITUTION.md (Articles I–XV, Stages 1–22 materialization), GitHub Actions CI, OpenAPI spec.
+- Reconciliation decision (documented in the merge commit itself): force-push FORBIDDEN (never destroy remote work); true content merge infeasible (incompatible package layouts, same law, different lineage — would create a Frankenstein tree violating verified law). Executed: (1) remote generation preserved VERBATIM as branch archive/parallel-generation; (2) histories unioned via `git merge -s ours --allow-unrelated-histories` with an explicit ratification flag in the message; (3) tree continues from the verified MS-2 state.
+- Pushed: main fa48b51..094aa80 (fast-forward from remote's perspective) + archive/parallel-generation. Verified remote branch/commit state via API.
+- FLAGGED FOR FOUNDER RATIFICATION: two materializations of the law-in-repo exist (docs/constitution/VAERION_CONSTITUTION_v1.0.md + spec/ 0.1.1 on main; root CONSTITUTION.md + vae-* layout on archive/parallel-generation). The current verified line is main; if the Founder prefers the vae-* layout, the lines must be reconciled deliberately, not mechanically.
+
+Stage Summary:
+- Remote main = 094aa80 (merge of facafc5 MS-2 broker line with fa48b51 parallel generation). Archive branch = fa48b51. Nothing lost; everything auditable.
+- All 6 verification gates remain green on the pushed tree (tree content identical to the locally verified commit facafc5).
