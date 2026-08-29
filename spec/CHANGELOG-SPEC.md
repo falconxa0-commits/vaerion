@@ -4,6 +4,29 @@ All changes to files under `spec/` are recorded here. Evolution is
 additive-only within a major version; removals require a major bump and a
 deprecation window. Every entry requires two approvals on the change itself.
 
+## 0.1.1 — 2026-08-29 (MS-2 broker wiring; additive only)
+
+Additive contract surface for the Permission Broker engine (MS-2). Nothing
+removed, nothing renamed; all prior v0.1 documents remain valid unchanged.
+
+- `events/registry.json` — added event type `broker.elevation.recorded`
+  ("A human approval elevated a prompt decision into an authorized action;
+  the elevation is journaled and audited."). Registry version stays 1;
+  evolution is additive per ADR-0002.
+- `schemas/gate.schema.json` — added optional `decision_id` (string,
+  minLength 1): the journal link from a durable gate back to the prompt
+  decision that opened it. Optional, so all v0.1 gate records remain valid.
+- `schemas/journal-record.schema.json` — the inline `gateRecord` definition
+  gains the same optional `decision_id` property (mirror of gate.schema.json).
+- `schemas/broker-decision.schema.json` — added optional `action` (object):
+  the request's action parameters, redacted before journaling — decisions
+  never carry secrets. Optional, so all v0.1 decision records remain valid.
+- `schemas/vaerion-yaml.schema.json` — added optional top-level `policy`
+  block: `policy.rules[]` with `id`, `principalKinds` (`"all"` or a
+  non-empty array of principal kinds), `domain`, `scope`, `effect`
+  (`allow|deny|prompt`), optional `gateLabel`, and required `rationale`.
+  Strict unknown-key rejection is unchanged.
+
 ## 0.1.0 — 2026-08-29
 
 Initial publication of the contract set. Additive initial release; no prior

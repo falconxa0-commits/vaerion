@@ -78,4 +78,26 @@ describe("machine parity: SDK ⇄ CLI", () => {
     expect(typeof cliReport.exportHeadHash).toBe("string");
     expect(cliReport.exportHeadHash.length).toBe(64);
   });
+
+  test("MS-2 broker surface parity: refusals, audit, evidence triangulation", async () => {
+    const runs = await sdk.journalList();
+    // Research runs over a fresh workspace produce allow decisions — no refusals.
+    const refusals = await sdk.refusals();
+    expect(Array.isArray(refusals)).toBe(true);
+    expect(await sdk.verifyRefusals()).toMatchObject({ ok: true });
+    // Audit ledger verifies from the SDK exactly as `vae doctor` sees it.
+    const audit = await sdk.verifyAudit();
+    expect(audit.ok).toBe(true);
+    expect(audit.entries).toBeGreaterThan(0);
+    // Evidence triangulation over a real research run: records + blobs agree.
+    const evidence = await sdk.verifyRunEvidence(runs[0]!.run_id);
+    expect(evidence.ok).toBe(true);
+    expect(evidence.checked).toBeGreaterThan(0);
+    // explain (CLI) and refusals (SDK) observe the same empty set for the run.
+    const viaCli = await sdk.raw(["explain", runs[0]!.run_id]);
+    expect(viaCli.code).toBe(0);
+    const payload = viaCli.lines[viaCli.lines.length - 1] as { refusals: unknown[] };
+    expect(Array.isArray(payload.refusals)).toBe(true);
+    expect(payload.refusals).toHaveLength(0);
+  });
 });

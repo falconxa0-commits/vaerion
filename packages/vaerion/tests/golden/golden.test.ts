@@ -20,6 +20,7 @@ import { encodeEnvelope } from "../../src/spine/serialization.ts";
 import { RunHarness } from "../../src/runtime/run.ts";
 import { readJournal } from "../../src/journal/reader.ts";
 import { redactDeep } from "../../src/kernel/redact.ts";
+import { RefusalLogWriter, verifyRefusalLog } from "../../src/broker/refusal-log.ts";
 
 const FIXTURE_DIR = join(import.meta.dir, "..", "..", "fixtures", "golden");
 const BLESS = process.env.VAE_BLESS === "1";
@@ -132,5 +133,44 @@ describe("golden: receipt", () => {
     }
     const expected = await loadFixture("receipt.golden.json");
     compareGolden("receipt.golden.json", actual, expected);
+  });
+});
+
+describe("golden: refusal log chain", () => {
+  test("the blake3 refusal chain over a fixed seed is byte-stable", async () => {
+    const refusalsDir = join(ws, "refusals");
+    const path = join(refusalsDir, "refusals.log");
+    const idGen = new SeededIdGen(() => clock.nowMs(), new SeededRng(99));
+    const w = await RefusalLogWriter.open(path, null, clock);
+    const denyOf = (requestId: string, reasonCode: "E1300" | "E1301", reason: string, policy: string) => ({
+      decision_id: idGen.next(),
+      request_id: requestId,
+      run_id: runId,
+      trace_id: "t_golden",
+      principal: { kind: "agent" as const, id: "agent_gold" },
+      domain: "net.connect" as const,
+      scope: "api.example.com",
+      intent: "call the declared API",
+      decision: { kind: "deny" as const, reason_code: reasonCode, reason, policy },
+      decided_at: clock.nowIso(),
+    });
+    await w.append({ runId, record: denyOf("rq_g1", "E1300", "declared host ceiling refuses", "graph_gold:ceiling") });
+    await w.append({ runId, record: denyOf("rq_g2", "E1301", "no policy rule matched — broker fails closed", "policy_gold:default-deny") });
+    await w.close();
+
+    const raw = await readFile(path, "utf8");
+    const compact = raw.split("\n").filter((l) => l.trim().length > 0).map((l) => JSON.parse(l) as Record<string, unknown>)
+      .map((e) => ({ i: e.i, prev: e.prev, hash: e.hash, reason_code: e.reason_code, policy: e.policy }));
+    const actual = JSON.stringify(compact, null, 2) + "\n";
+    if (BLESS) {
+      await saveFixture("refusal.golden.json", actual);
+      return;
+    }
+    const expected = await loadFixture("refusal.golden.json");
+    compareGolden("refusal.golden.json", actual, expected);
+
+    const report = await verifyRefusalLog(path);
+    expect(report.ok).toBe(true);
+    expect(report.entries).toBe(2);
   });
 });

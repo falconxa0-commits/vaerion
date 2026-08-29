@@ -35,6 +35,14 @@ export interface BrokerGateResolvedPayload {
   answer_present: boolean;
 }
 
+export interface BrokerElevationRecordedPayload {
+  decision_id: string;
+  gate_id: string;
+  run_id: string;
+  /** The human's authority moment, journaled; the payload is redacted upstream. */
+  approved: boolean;
+}
+
 export interface BrokerAuditAppendedPayload {
   audit_index: number;
   entry_kind: "decision" | "elevation" | "extension_load" | "lock_change";
@@ -68,6 +76,14 @@ export const brokerEvents = {
       run_id: gate.run_id,
       resolution,
       answer_present: gate.answer !== undefined && gate.answer !== null,
+    };
+  },
+  elevationRecorded(decisionId: string, gate: GateRecord, approved: boolean): BrokerElevationRecordedPayload {
+    return {
+      decision_id: decisionId,
+      gate_id: gate.gate_id,
+      run_id: gate.run_id,
+      approved,
     };
   },
   auditAppended(auditIndex: number, entryKind: BrokerAuditAppendedPayload["entry_kind"], ref: string): BrokerAuditAppendedPayload {

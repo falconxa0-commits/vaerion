@@ -1,11 +1,15 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://vaerion.dev/spec/schemas/vaerion-yaml.schema.json",
-  "title": "Vaerion project configuration (vaerion.yaml) — schema 0.1",
-  "description": "The human-authored head of the source-of-truth chain (ADR-0007): vaerion.yaml -> vaerion.lock -> spec/. Unknown keys are rejected at load time (drift guard, E1201); the resolved configuration is fingerprinted with blake3 over its canonical JSON into every run header. Zero telemetry is structural: telemetry.enabled may only be false (constitution P10/D-K). Permissions are cumulative ceilings — grants never widen beyond them. Manifests use the VaerYaml strict subset: anchors, aliases, multi-document streams, tags, and complex mapping keys are banned.",
+  "title": "Vaerion project configuration (vaerion.yaml) \u2014 schema 0.1",
+  "description": "The human-authored head of the source-of-truth chain (ADR-0007): vaerion.yaml -> vaerion.lock -> spec/. Unknown keys are rejected at load time (drift guard, E1201); the resolved configuration is fingerprinted with blake3 over its canonical JSON into every run header. Zero telemetry is structural: telemetry.enabled may only be false (constitution P10/D-K). Permissions are cumulative ceilings \u2014 grants never widen beyond them. Manifests use the VaerYaml strict subset: anchors, aliases, multi-document streams, tags, and complex mapping keys are banned.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "project", "telemetry"],
+  "required": [
+    "schemaVersion",
+    "project",
+    "telemetry"
+  ],
   "properties": {
     "schemaVersion": {
       "description": "Configuration schema version; must equal a supported version.",
@@ -15,7 +19,9 @@
       "description": "Project identity.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "description": "Project name; lowercase kebab identifier used in policy ids and bundles.",
@@ -40,7 +46,10 @@
             "allowHosts": {
               "description": "Hosts (host or host:port) that network capabilities may target. Network access is a broker-mediated capability, never ambient (E1402).",
               "type": "array",
-              "items": { "type": "string", "minLength": 1 }
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
             }
           }
         },
@@ -51,7 +60,10 @@
             "allowCommands": {
               "description": "Command ceilings (glob-ish patterns) that exec capabilities may request; grants only narrow these.",
               "type": "array",
-              "items": { "type": "string", "minLength": 1 }
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
             }
           }
         }
@@ -67,7 +79,11 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["name", "sources", "fencing"],
+            "required": [
+              "name",
+              "sources",
+              "fencing"
+            ],
             "properties": {
               "name": {
                 "description": "Capability name; referenced by evidence records and broker policy.",
@@ -75,12 +91,15 @@
                 "minLength": 1
               },
               "sources": {
-                "description": "Declared sources. v0.1 admits local sources only — undeclared network access is forbidden by law (E1402).",
+                "description": "Declared sources. v0.1 admits local sources only \u2014 undeclared network access is forbidden by law (E1402).",
                 "type": "array",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
-                  "required": ["kind", "path"],
+                  "required": [
+                    "kind",
+                    "path"
+                  ],
                   "properties": {
                     "kind": {
                       "description": "Source kind; local only in v0.1.",
@@ -96,7 +115,10 @@
               },
               "fencing": {
                 "description": "Fencing applied to content from this capability's sources; untrusted content never enters trusted channels (E1401).",
-                "enum": ["untrusted", "trusted"]
+                "enum": [
+                  "untrusted",
+                  "trusted"
+                ]
               },
               "maxItems": {
                 "description": "Optional bound on items ingested per index/update cycle.",
@@ -107,11 +129,86 @@
         }
       }
     },
+    "policy": {
+      "description": "Declared broker policy rules (MS-2 policy files). Rules are evaluated first-match-wins; an unmatched request is denied fail-closed (E1301). Every rule must state its rationale \u2014 declared authority explains itself.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "domain",
+              "scope",
+              "effect",
+              "rationale"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "principalKinds": {
+                "oneOf": [
+                  {
+                    "const": "all"
+                  },
+                  {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "enum": [
+                        "human",
+                        "agent",
+                        "tool",
+                        "extension",
+                        "research",
+                        "system"
+                      ]
+                    }
+                  }
+                ]
+              },
+              "domain": {
+                "type": "string",
+                "minLength": 1
+              },
+              "scope": {
+                "description": "Scope pattern (see capability scope matcher: '*', prefix/**, prefix/*).",
+                "type": "string",
+                "minLength": 1
+              },
+              "effect": {
+                "enum": [
+                  "allow",
+                  "deny",
+                  "prompt"
+                ]
+              },
+              "gateLabel": {
+                "description": "Human-visible gate label for prompt rules.",
+                "type": "string",
+                "minLength": 1
+              },
+              "rationale": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
     "telemetry": {
       "description": "Zero telemetry is structural law: no phone-home, diagnostics stay on the machine.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["enabled"],
+      "required": [
+        "enabled"
+      ],
       "properties": {
         "enabled": {
           "description": "May only be false. Any other value is a configuration error (E1202).",

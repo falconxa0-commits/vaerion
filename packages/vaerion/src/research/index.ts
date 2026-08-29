@@ -16,4 +16,5 @@ export * from "./citation.ts";
 export * from "./scoring.ts";
 export * from "./local-index.ts";
 export * from "./context.ts";
+export * from "./verification.ts";
 export * from "./replay.ts";

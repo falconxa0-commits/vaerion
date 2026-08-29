@@ -11,6 +11,8 @@ export interface GateRecord {
   run_id: string;
   trace_id: string;
   state: "open" | "resolved" | "cancelled";
+  /** The prompt decision that opened this gate (journal link; MS-2). */
+  decision_id?: string;
   /** What the human is being asked. */
   question: string;
   /** Structured options for the answer (contract for SDK/API rendering). */
@@ -38,6 +40,9 @@ export function assertGateRecordShape(value: unknown): asserts value is GateReco
   if (g.state === "resolved") {
     if (typeof g.resolved_at !== "string") fail("resolved gate missing resolved_at");
     if (g.answer === undefined || g.answer === null) fail("resolved gate missing answer");
+  }
+  if (g.decision_id !== undefined && (typeof g.decision_id !== "string" || g.decision_id.length === 0)) {
+    fail("gate.decision_id must be a non-empty string when present");
   }
 }
 

@@ -25,6 +25,7 @@ export const EVENT_TYPES = [
   "broker.decision.recorded",
   "broker.gate.opened",
   "broker.gate.resolved",
+  "broker.elevation.recorded",
   "broker.audit.appended",
   // research subsystem
   "research.capability.declared",

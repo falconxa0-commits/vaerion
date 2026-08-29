@@ -1,0 +1,16 @@
+[
+  {
+    "i": 1,
+    "prev": "0000000000000000000000000000000000000000000000000000000000000000",
+    "hash": "8a02ab00c39b320c37d94deb931315b2551352eb5bbb07d44814b517f22fc408",
+    "reason_code": "E1300",
+    "policy": "graph_gold:ceiling"
+  },
+  {
+    "i": 2,
+    "prev": "8a02ab00c39b320c37d94deb931315b2551352eb5bbb07d44814b517f22fc408",
+    "hash": "cad84418d7a8737f20da78328491e9ce9e72f9df3bacc476815b78b3edffef8f",
+    "reason_code": "E1301",
+    "policy": "policy_gold:default-deny"
+  }
+]

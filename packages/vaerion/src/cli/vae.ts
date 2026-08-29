@@ -53,17 +53,23 @@ const COMMAND_HELP: Record<string, string> = {
 vae run demo [--sources P,P] [--query Q]
 
   Executes a local research run through the full constitutional pipeline:
-  declared capability → broker decision (journaled) → fingerprint → fence →
-  blob CAS → evidence → local index → query → citations → context pack →
-  snapshot → receipt. Every step is attributed and hash-chained.
+  declared capability → broker decision PER SOURCE (journaled) →
+  fingerprint → fence → blob CAS → evidence → local index → query →
+  citations → context pack → snapshot → receipt. Every step is attributed
+  and hash-chained. Config policy rules (vaerion.yaml policy:) evaluate
+  first: deny stops the run (exit 3), prompt pauses it with a durable gate
+  (exit 0, awaiting) for 'vae resume'.
 
   demo defaults to ./docs/constitution + ./docs/adr with a fixed query.
   Exit 3 if the broker denies; 5 if the journal fails final verification.`,
   resume: `vae resume RUN_ID [--answer JSON]
 
   Restore a run deterministically from its journal. If a durable human gate
-  is pending, apply --answer (default {"approved":true}) and close the run
-  with a receipt. Exit 3 when the answer denies the gate.`,
+  is pending, resume WITHOUT --answer first: it renders the human review
+  (question, options, the linked decision, and a review diff when present).
+  Then resolve with --answer JSON (default when omitted: {"approved":true}).
+  Approval of a broker prompt records an elevation (journaled + audited).
+  Exit 3 when the answer denies the gate.`,
   explain: `vae explain RUN_ID
 
   Reconstruct the run's narrative (decisions, gates, events, receipt) from
@@ -80,7 +86,8 @@ vae journal export RUN_ID [--out PATH] [--dry-run]
   doctor: `vae doctor
 
   Verifies config validity, every journal's hash chain, every referenced
-  blob in the CAS, and audit-ledger continuity. Performs NO network access —
+  blob in the CAS, evidence↔blob↔fingerprint triangulation, audit-ledger
+  continuity, and the Refusal Log chain. Performs NO network access —
   zero telemetry is constitutional. Exit 5 with Fix: hints on failures.`,
   dev: `vae dev
 

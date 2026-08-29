@@ -20,6 +20,7 @@ export interface Workspace {
   blobsDir: string;
   configPath: string;
   auditPath: string;
+  refusalsPath: string;
 }
 
 export function workspaceAt(root: string): Workspace {
@@ -31,6 +32,7 @@ export function workspaceAt(root: string): Workspace {
     blobsDir: join(vaerionDir, "blobs"),
     configPath: join(root, "vaerion.yaml"),
     auditPath: join(vaerionDir, "audit.log"),
+    refusalsPath: join(vaerionDir, "refusals.log"),
   };
 }
 

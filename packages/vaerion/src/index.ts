@@ -45,14 +45,18 @@ export { evaluatePolicy, assertDecisionRecordShape, type DecisionRequest, type B
 export { assertGateRecordShape, gateResolutionConflict, type GateRecord } from "./broker/contracts/gate.ts";
 export { buildGraph, narrowingViolations, grantsFor, type PermissionGraph, type GrantEdge, type GraphNode } from "./broker/contracts/permission-graph.ts";
 export { assertReviewDiffShape, renderUnified, type ReviewDiff, type DiffHunk, type DiffOp } from "./broker/contracts/review-diff.ts";
-export { brokerEvents, type BrokerDecisionRecordedPayload, type BrokerGateOpenedPayload, type BrokerGateResolvedPayload, type BrokerAuditAppendedPayload } from "./broker/contracts/events.ts";
+export { brokerEvents, type BrokerDecisionRecordedPayload, type BrokerGateOpenedPayload, type BrokerGateResolvedPayload, type BrokerElevationRecordedPayload, type BrokerAuditAppendedPayload } from "./broker/contracts/events.ts";
 export { ChainedAuditWriter, decisionToAuditBody, verifyAuditLedger, type AuditWriter, type AuditEntry, type AuditEntryKind, type AuditVerifyReport } from "./broker/contracts/audit.ts";
+
+// broker engine (L1 — MS-2)
+export { BrokerEngine, graphCovers, graphFromConfig, type BrokerEvaluation, type BrokerEngineInput, type ConfigGrantInput } from "./broker/engine.ts";
+export { RefusalLogWriter, readRefusals, readRefusalHead, verifyRefusalLog, refusalFromBody, type RefusalEntry, type RefusalAppendInput, type RefusalVerifyReport, type RefusalFilter } from "./broker/refusal-log.ts";
 
 // runtime (L2)
 export { RunHarness, initialRunState, runStateReducer, readAuditHead, type RunState, type RunHarnessOptions } from "./runtime/run.ts";
 
 // config (L0)
-export { loadConfig, validateConfig, defaultPolicyFromConfig, CONFIG_SCHEMA_VERSION, type VaerionConfig } from "./config/config.ts";
+export { loadConfig, validateConfig, defaultPolicyFromConfig, policyFromConfig, CONFIG_SCHEMA_VERSION, type VaerionConfig } from "./config/config.ts";
 
 // research (L2)
 export * from "./research/index.ts";

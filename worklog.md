@@ -73,3 +73,28 @@ Stage Summary:
 - Key artifacts: constitution + 18 ADRs + 12 spec files; @vaerion/engine (5,677 lines + 2,000 test lines); @vaerion/sdk; tools/; four reports; status dashboard.
 - Decisions recorded: ADR-0018 (substrate = TypeScript on Bun) is Proposed — Founder ratification requested before MS-3; golden bless governance = VAE_BLESS=1 only.
 - Next: MS-2 broker engine against frozen contracts; human review loop; ADR-0018 ratification; coverage wiring (OBJ-Q6).
+
+---
+Task ID: MS-2-complete
+Agent: Z.ai Code (Principal Constitutional Build System session)
+Task: Recover repository reality; repair the broken green state; complete MS-2 (Permission Broker) in full; expand research verification; wire coverage floors; regenerate all reports; one clean verified commit.
+
+Work Log:
+- Phase 0 (recover reality): audited git state (5 commits, no remote), found 109 mode-only "modifications" (sandbox artifact; normalized via core.fileMode=false), confirmed MS-0/MS-1 complete per worklog. Full verify found 3 tests erroring: `research/local-index.ts` was imported by 5 call sites but never materialized. Rebuilt it against the test-pinned contract (deterministic BM25, journal-safe IndexedDoc, fromDocs replay) — suite restored to 83/795/0 before any new work.
+- MS-2 broker engine (L1): `broker/engine.ts` — BrokerEngine three-layer evaluation (request shape fail-closed E1301 → permission-graph ceiling E1300 → policy first-match with structural fail-closed), graphCovers, graphFromConfig (vaerion.yaml ceilings + explicit human declarations; declared-domain grants must sit inside the ceiling, undeclared domains follow the human's declaration).
+- MS-2 refusal log (L1): `broker/refusal-log.ts` — hash-chained append-only `.vaerion/refusals.log` (same blake3 chain primitive), head chaining across sessions, loud verifier (discontinuity/tamper/shape), filtered reader, refusalFromBody E1304 law.
+- Runtime integration: RunHarness opens a RefusalLogWriter alongside audit; decide() evaluates via the engine, journals the redacted `action` payload (new, spec-mirrored), writes a refusal on every deny; prompt gates carry `decision_id` (new, spec-mirrored); approved resolutions record elevations (audit "elevation" + `broker.elevation.recorded` event, new registry entry); denied resolutions record none.
+- CLI: `run` decides PER SOURCE (narrowest scope), evaluates config policy first (deny → exit 3; prompt → run PAUSES with open gate, exit 0 — never auto-sealed); `resume` renders the human review (gate/options/decision/diff/hint) before any answer; `explain` surfaces refusals; `doctor` verifies the refusal chain + evidence triangulation; help text updated.
+- Config (L0): `policy.rules[]` policy files with loud validation (E1201/E1202); `policyFromConfig` (declared rules precede structural defaults).
+- Research: `verification.ts` triangulates evidence ↔ blob bytes ↔ fingerprint (+ excerpt containment); store diagnostics pass through (E1007/E1008); wired into doctor + SDK.
+- SDK: `refusals()`, `verifyRefusals()`, `verifyRunEvidence()`, `verifyAudit()` — parity-tested against the CLI.
+- Spec 0.1.1 (additive only): `broker.elevation.recorded` event; gate `decision_id`; decision redacted `action`; vaerion-yaml `policy` block; changelog entry.
+- Tests: +31 tests → 114 tests / 951 expectations across 10 suites (broker unit, spine persistence, broker integration incl. CLI review loop, SDK broker parity, evidence verification, golden refusal chain with blessed fixture replacing an empty placeholder).
+- Quality: coverage floors wired (bunfig.toml + verify gate, OBJ-Q6) at measured values (80.63% lines / 87.43% branches); restored missing @types/node devDependency; fixed real defects found by verification: comma-joined request scope vs per-path grants (→ per-source decisions), ceiling law for undeclared domains, E1008→E1600 relabeling, CLI journaling evidence summaries (R-RT2 violation), prompt runs being sealed, test narrowing/collision issues.
+- Reports regenerated (BUILD/VERIFICATION/ARCHITECTURE/ROADMAP_PROGRESS), status tool + dashboard updated (overall 40%), landing page browser-verified (desktop + mobile, sticky/natural footer, zero console errors).
+
+Stage Summary:
+- MS-0 100%, MS-1 100%, MS-2 100% (engine against frozen contracts, no widening; only additive spec 0.1.1), overall arc 40% (from 31%).
+- ALL 6 GATES GREEN: typecheck ×2, 114 tests/951 expectations with coverage floors, layerlint 0 violations, constitutional-check 6/6 in sync, repo lint.
+- Broker law now end-to-end: decide→journal→act with ceiling enforcement, refusals never silent, gates survive death, human authority explicit at every step.
+- Next: MS-3 Model Gateway through `model.invoke`; ADR-0018 ratification; MS-4 agent groundwork; MS-5 daemon.

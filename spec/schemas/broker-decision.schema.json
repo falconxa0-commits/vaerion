@@ -2,10 +2,21 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://vaerion.dev/spec/schemas/broker-decision.schema.json",
   "title": "Vaerion broker decision record (v1)",
-  "description": "The journaled record of a PermissionBroker evaluation (ADR-0004). Law: fail-closed — un-evaluable requests deny with E1301, never allow-by-default (constitution D-A); decide -> journal -> act — a privileged action fires only after this record exists in the journal (E1304 otherwise); every decision, allow or deny, lands in the audit ledger (Refusal Log, D-L). Action payloads are redacted before journaling: decisions never carry secrets.",
+  "description": "The journaled record of a PermissionBroker evaluation (ADR-0004). Law: fail-closed \u2014 un-evaluable requests deny with E1301, never allow-by-default (constitution D-A); decide -> journal -> act \u2014 a privileged action fires only after this record exists in the journal (E1304 otherwise); every decision, allow or deny, lands in the audit ledger (Refusal Log, D-L). Action payloads are redacted before journaling: decisions never carry secrets.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["decision_id", "request_id", "run_id", "trace_id", "principal", "domain", "scope", "intent", "decision", "decided_at"],
+  "required": [
+    "decision_id",
+    "request_id",
+    "run_id",
+    "trace_id",
+    "principal",
+    "domain",
+    "scope",
+    "intent",
+    "decision",
+    "decided_at"
+  ],
   "properties": {
     "decision_id": {
       "description": "ULID of this decision record.",
@@ -31,10 +42,20 @@
       "description": "Who requested the privileged operation. The broker mediates identically for every principal kind.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "id"],
+      "required": [
+        "kind",
+        "id"
+      ],
       "properties": {
         "kind": {
-          "enum": ["human", "agent", "tool", "extension", "research", "system"]
+          "enum": [
+            "human",
+            "agent",
+            "tool",
+            "extension",
+            "research",
+            "system"
+          ]
         },
         "id": {
           "description": "CRN or stable id, e.g. crn_run_01J..., crn_ext_<ulid>, or local-user.",
@@ -68,15 +89,24 @@
       "type": "string",
       "minLength": 1
     },
+    "action": {
+      "description": "The request's action parameters, redacted before journaling (decisions never carry secrets). Optional: present when the caller supplied an action payload.",
+      "type": "object"
+    },
     "decision": {
       "description": "The decision body. Exactly one of allow / deny / prompt.",
       "oneOf": [
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "policy"],
+          "required": [
+            "kind",
+            "policy"
+          ],
           "properties": {
-            "kind": { "const": "allow" },
+            "kind": {
+              "const": "allow"
+            },
             "policy": {
               "description": "Identifier of the policy rule that allowed the request.",
               "type": "string",
@@ -87,12 +117,22 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "reason_code", "reason", "policy"],
+          "required": [
+            "kind",
+            "reason_code",
+            "reason",
+            "policy"
+          ],
           "properties": {
-            "kind": { "const": "deny" },
+            "kind": {
+              "const": "deny"
+            },
             "reason_code": {
-              "description": "E1300: denied by policy. E1301: could not be evaluated — broker failed closed.",
-              "enum": ["E1300", "E1301"]
+              "description": "E1300: denied by policy. E1301: could not be evaluated \u2014 broker failed closed.",
+              "enum": [
+                "E1300",
+                "E1301"
+              ]
             },
             "reason": {
               "description": "Human-readable denial reason (for E1300, the policy rationale; for E1301, the fail-closed explanation).",
@@ -109,9 +149,16 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "gate_id", "reason", "policy"],
+          "required": [
+            "kind",
+            "gate_id",
+            "reason",
+            "policy"
+          ],
           "properties": {
-            "kind": { "const": "prompt" },
+            "kind": {
+              "const": "prompt"
+            },
             "gate_id": {
               "description": "Durable gate awaiting human authority (see spec/schemas/gate.schema.json).",
               "type": "string",
@@ -133,7 +180,10 @@
     },
     "resolved_by": {
       "description": "Authority that resolved a prompt decision: a human through a gate, or policy (for example a timeout rule). Present only after resolution.",
-      "enum": ["human", "policy"]
+      "enum": [
+        "human",
+        "policy"
+      ]
     },
     "resolved_answer": {
       "description": "Human-authority input captured at resolution (redacted). Present only after resolution.",

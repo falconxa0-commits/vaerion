@@ -7,6 +7,11 @@
  */
 
 import { describe, expect, test } from "bun:test";
+import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, dirname } from "node:path";
+import { BlobStore } from "../../src/store/blob-cas.ts";
+import { verifyEvidence, verifyEvidenceSet, type EvidenceVerificationItem } from "../../src/research/verification.ts";
 import { FixedClock } from "../../src/kernel/clock.ts";
 import { GENESIS_HASH } from "../../src/kernel/hash.ts";
 import { VaerionError, type ErrorCode } from "../../src/kernel/errors.ts";
@@ -647,5 +652,117 @@ describe("replay (journal fold)", () => {
   test("malformed known-event payloads fail loudly as E1500 during restore", async () => {
     const bad = evtRecord("research.evidence.recorded", { evidence: { broken: true } }, 1);
     await expectCodeAsync(async () => replayResearch([bad]), "E1500");
+  });
+});
+
+
+/* ─────────────────────  evidence verification (triangulated)  ───────────────────── */
+
+describe("verifyEvidence (evidence ↔ blob ↔ fingerprint)", () => {
+  test("green path: blob bytes, fingerprint, and excerpt agree", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "vae-evverify-"));
+    try {
+      const blobs = new BlobStore(join(dir, "blobs"));
+      const content = "The vectordb compaction runs nightly and trades recall for latency.";
+      const ref = await blobs.put(content);
+      const fp = await fingerprintDocument(content, "doc_v1");
+      const fenced = fenceUntrusted({ sourceId: "doc_v1", sourcePath: "/ws/doc_v1.md", capability: CAP.name, fingerprint: fp, content });
+      const ev = buildEvidenceRecord({
+        evidenceId: "ev_v1",
+        runId: "run_unit",
+        traceId: "t_unit",
+        capability: CAP.name,
+        sourceId: "doc_v1",
+        blobRef: ref,
+        fenced,
+        provenance: provenanceOf({ evidenceId: "ev_v1", sourceId: "doc_v1", sourcePath: "/ws/doc_v1.md", fingerprint: fp, retrievedAt: clock.nowIso(), locator: "/ws/doc_v1.md#head" }),
+        recordedAt: clock.nowIso(),
+      });
+      const item = await verifyEvidence(ev, blobs);
+      expect(item.ok).toBe(true);
+      expect(item.code).toBeUndefined();
+      const set = await verifyEvidenceSet([ev], blobs);
+      expect(set.ok).toBe(true);
+      expect(set.checked).toBe(1);
+      expect(set.failedCount).toBe(0);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("missing blob reports E1007; digest mismatch reports E1008", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "vae-evverify2-"));
+    try {
+      const blobs = new BlobStore(join(dir, "blobs"));
+      const content = "lost content";
+      const fp = await fingerprintDocument(content, "doc_missing");
+      const fenced = fenceUntrusted({ sourceId: "doc_missing", sourcePath: "/ws/m.md", capability: CAP.name, fingerprint: fp, content });
+      const ev = buildEvidenceRecord({
+        evidenceId: "ev_missing", runId: "run_unit", traceId: "t_unit", capability: CAP.name, sourceId: "doc_missing",
+        blobRef: { alg: "blake3", hash: fp.content_hash, size: fp.size },
+        fenced,
+        provenance: provenanceOf({ evidenceId: "ev_missing", sourceId: "doc_missing", sourcePath: "/ws/m.md", fingerprint: fp, retrievedAt: clock.nowIso(), locator: "/ws/m.md" }),
+        recordedAt: clock.nowIso(),
+      });
+      const missing = await verifyEvidence(ev, blobs);
+      expect(missing.ok).toBe(false);
+      expect(missing.code).toBe("E1007");
+
+      // Digest mismatch: place DIFFERENT bytes at the claimed ref's CAS path.
+      const { blake3HexOf } = await import("../../src/kernel/hash.ts");
+      const claimed = "claimed content";
+      const claimedHash = await blake3HexOf(new TextEncoder().encode(claimed));
+      const casPath = join(dir, "blobs", "blake3", claimedHash.slice(0, 2), claimedHash.slice(2, 4), claimedHash);
+      await mkdir(dirname(casPath), { recursive: true });
+      await writeFile(casPath, "tampered bytes!!", { flag: "wx" });
+      const ev2 = { ...ev, blob_ref: { alg: "blake3" as const, hash: claimedHash, size: claimed.length } };
+      const mismatch = await verifyEvidence(ev2, blobs);
+      expect(mismatch.ok).toBe(false);
+      expect(mismatch.code).toBe("E1008");
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("fingerprint lie and excerpt escape are caught (identity law)", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "vae-evverify3-"));
+    try {
+      const blobs = new BlobStore(join(dir, "blobs"));
+      const real = "actual stored content";
+      const ref = await blobs.put(real);
+      const realFp = await fingerprintDocument(real, "doc_l");
+
+      // Lying fingerprint: claims other content.
+      const lieFp = await fingerprintDocument("fabricated", "doc_l");
+      const fencedLie = fenceUntrusted({ sourceId: "doc_l", sourcePath: "/ws/l.md", capability: CAP.name, fingerprint: lieFp, content: real });
+      const lie = buildEvidenceRecord({
+        evidenceId: "ev_lie", runId: "run_unit", traceId: "t_unit", capability: CAP.name, sourceId: "doc_l",
+        blobRef: ref, fenced: fencedLie,
+        provenance: provenanceOf({ evidenceId: "ev_lie", sourceId: "doc_l", sourcePath: "/ws/l.md", fingerprint: lieFp, retrievedAt: clock.nowIso(), locator: "/ws/l.md" }),
+        recordedAt: clock.nowIso(),
+      });
+      expect((await verifyEvidence(lie, blobs)).code).toBe("E1600");
+
+      // Excerpt escape: excerpt is not part of the real content.
+      const fencedEscape = fenceUntrusted({ sourceId: "doc_l", sourcePath: "/ws/l.md", capability: CAP.name, fingerprint: realFp, content: real });
+      const escaped = buildEvidenceRecord({
+        evidenceId: "ev_escape", runId: "run_unit", traceId: "t_unit", capability: CAP.name, sourceId: "doc_l",
+        blobRef: ref, fenced: fencedEscape,
+        provenance: provenanceOf({ evidenceId: "ev_escape", sourceId: "doc_l", sourcePath: "/ws/l.md", fingerprint: realFp, retrievedAt: clock.nowIso(), locator: "/ws/l.md" }),
+        recordedAt: clock.nowIso(),
+      });
+      // buildEvidenceRecord derives the excerpt from the fenced content, so splice a foreign excerpt:
+      const forged = { ...escaped, excerpt: "content that never existed in the blob" };
+      const item: EvidenceVerificationItem = await verifyEvidence(forged, blobs);
+      expect(item.ok).toBe(false);
+      expect(item.code).toBe("E1401");
+
+      // An empty evidence set verifies cleanly (vacuous truth, reported honestly).
+      const emptySet = await verifyEvidenceSet([], blobs);
+      expect(emptySet.ok).toBe(true);
+      expect(emptySet.checked).toBe(0);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 });

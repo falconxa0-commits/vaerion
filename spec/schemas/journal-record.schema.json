@@ -188,6 +188,11 @@
       "required": ["gate_id", "run_id", "trace_id", "state", "question", "options", "opened_at"],
       "properties": {
         "gate_id": { "type": "string", "minLength": 1 },
+        "decision_id": {
+          "description": "The prompt decision that opened this gate (journal link; present for broker-opened gates).",
+          "type": "string",
+          "minLength": 1
+        },
         "run_id": { "type": "string", "minLength": 1 },
         "trace_id": { "type": "string", "minLength": 1 },
         "state": { "enum": ["open", "resolved", "cancelled"] },

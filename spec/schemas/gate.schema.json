@@ -12,6 +12,11 @@
       "type": "string",
       "minLength": 1
     },
+    "decision_id": {
+      "description": "The prompt decision that opened this gate (journal link; present for broker-opened gates).",
+      "type": "string",
+      "minLength": 1
+    },
     "run_id": {
       "description": "Run the gate pauses.",
       "type": "string",

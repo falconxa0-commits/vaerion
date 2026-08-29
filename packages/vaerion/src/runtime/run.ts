@@ -23,11 +23,14 @@ import { readJournal, type ReadResult } from "../journal/reader.ts";
 import { verifyJournal, type VerifyReport } from "../journal/verify.ts";
 import { replayRecords, type Reducer } from "../journal/replay.ts";
 import type { BrokerDecisionRecord, DecisionRequest, BrokerDecision, PolicyContract } from "../broker/contracts/decision.ts";
-import { evaluatePolicy } from "../broker/contracts/decision.ts";
 import { decisionToAuditBody, ChainedAuditWriter, type AuditWriter } from "../broker/contracts/audit.ts";
 import { brokerEvents } from "../broker/contracts/events.ts";
 import type { GateRecord } from "../broker/contracts/gate.ts";
+import type { PermissionGraph } from "../broker/contracts/permission-graph.ts";
+import { BrokerEngine } from "../broker/engine.ts";
+import { RefusalLogWriter, readRefusalHead } from "../broker/refusal-log.ts";
 import { buildReceiptFromRecords } from "../receipts/receipt.ts";
+import { redactDeep } from "../kernel/redact.ts";
 import { VaerionError } from "../kernel/errors.ts";
 
 export interface RunState {
@@ -120,6 +123,8 @@ export interface RunHarnessOptions {
   idGen: IdGenLike;
   /** Principal recorded on run-origin events. */
   actor?: Actor;
+  /** Permission-graph ceiling for broker decisions (MS-2; null = policy-only). */
+  permissionGraph?: PermissionGraph | null;
 }
 
 /** Minimal id port used by the harness (ULID strings). */
@@ -131,6 +136,9 @@ export class RunHarness {
   readonly journal: JournalWriter;
   readonly bus: EventBus;
   private audit: AuditWriter;
+  private refusals: RefusalLogWriter;
+  /** Standing permission-graph ceiling (undefined = not supplied → policy-only). */
+  private readonly standingGraph: PermissionGraph | null | undefined;
   private readonly clock: Clock;
   private readonly idGen: IdGenLike;
   private readonly actor: Actor;
@@ -139,10 +147,18 @@ export class RunHarness {
   private closedHarness = false;
   private resolvedGateIds = new Set<string>();
 
-  private constructor(journal: JournalWriter, bus: EventBus, audit: AuditWriter, opts: RunHarnessOptions) {
+  private constructor(
+    journal: JournalWriter,
+    bus: EventBus,
+    audit: AuditWriter,
+    refusals: RefusalLogWriter,
+    opts: RunHarnessOptions,
+  ) {
     this.journal = journal;
     this.bus = bus;
     this.audit = audit;
+    this.refusals = refusals;
+    this.standingGraph = opts.permissionGraph;
     this.clock = opts.clock;
     this.idGen = opts.idGen;
     this.actor = opts.actor ?? { kind: "human", id: "local-user" };
@@ -163,7 +179,7 @@ export class RunHarness {
     return this.traceIdValue;
   }
 
-  private static async openWriters(opts: RunHarnessOptions): Promise<{ journal: JournalWriter; audit: AuditWriter }> {
+  private static async openWriters(opts: RunHarnessOptions): Promise<{ journal: JournalWriter; audit: AuditWriter; refusals: RefusalLogWriter }> {
     const journalPath = RunHarness.journalPathFor(opts.workspaceDir, opts.runId);
     const journal = await JournalWriter.open({
       journalPath,
@@ -173,13 +189,15 @@ export class RunHarness {
     });
     const auditPath = join(opts.workspaceDir, ".vaerion", "audit.log");
     const audit = await ChainedAuditWriter.open(auditPath, await readAuditHead(auditPath), opts.clock);
-    return { journal, audit };
+    const refusalsPath = join(opts.workspaceDir, ".vaerion", "refusals.log");
+    const refusals = await RefusalLogWriter.open(refusalsPath, await readRefusalHead(refusalsPath), opts.clock);
+    return { journal, audit, refusals };
   }
 
   /** Create a fresh run. */
   static async create(opts: RunHarnessOptions): Promise<RunHarness> {
-    const { journal, audit } = await RunHarness.openWriters(opts);
-    const harness = new RunHarness(journal, new EventBus(), audit, opts);
+    const { journal, audit, refusals } = await RunHarness.openWriters(opts);
+    const harness = new RunHarness(journal, new EventBus(), audit, refusals, opts);
     await harness.emit("run.opened", { run_id: opts.runId, engine_version: ENGINE_VERSION }, harness.actor, { kind: "origin", ref: null });
     return harness;
   }
@@ -205,12 +223,16 @@ export class RunHarness {
   }
 
   /**
-   * Broker decision flow (contracts enforced; engine lands MS-2):
-   * evaluate policy → journal decision → audit → emit event.
-   * Prompt decisions additionally open a durable gate.
+   * Broker decision flow (MS-2 engine): evaluate (ceiling → policy) → journal
+   * decision → audit → refuse loudly on deny → emit event. Prompt decisions
+   * additionally open a durable gate linked to the decision record.
    */
-  async decide(req: DecisionRequest, policy: PolicyContract): Promise<{ decision: BrokerDecision; record: BrokerDecisionRecord; gate?: GateRecord }> {
-    const decision = evaluatePolicy(policy, req);
+  async decide(req: DecisionRequest, policy: PolicyContract, graph?: PermissionGraph | null): Promise<{ decision: BrokerDecision; record: BrokerDecisionRecord; gate?: GateRecord }> {
+    // Per-call graph wins; else the standing graph from construction; else policy-only.
+    const effectiveGraph = graph !== undefined ? graph : this.standingGraph;
+    const engine = new BrokerEngine({ policy, graph: effectiveGraph });
+    const evaluation = engine.evaluate(req);
+    const decision = evaluation.decision;
     const record: BrokerDecisionRecord = {
       decision_id: this.idGen.next(),
       request_id: req.request_id,
@@ -220,12 +242,17 @@ export class RunHarness {
       domain: req.domain,
       scope: req.scope,
       intent: req.intent,
+      action: redactDeep(req.action) as Record<string, unknown>,
       decision,
       decided_at: this.clock.nowIso(),
     };
     // decide → journal → act: the decision record exists BEFORE anything acts.
     await this.journal.appendDecision(record);
     await this.audit.append("decision", record.decision_id, decisionToAuditBody(record));
+    if (decision.kind === "deny") {
+      // The Refusal Log is constitutional: the broker refuses nothing silently.
+      await this.refusals.append({ runId: this.journal.runId, record });
+    }
     await this.emit(
       "broker.decision.recorded",
       brokerEvents.decisionRecorded(record) as unknown as Record<string, unknown>,
@@ -239,6 +266,7 @@ export class RunHarness {
         run_id: this.journal.runId,
         trace_id: this.traceIdValue,
         state: "open",
+        decision_id: record.decision_id,
         question: decision.reason,
         options: [
           { id: "approve", label: "Approve" },
@@ -258,7 +286,9 @@ export class RunHarness {
     return { decision, record };
   }
 
-  /** Resolve a durable gate. Idempotency: resolving an already-resolved gate is E1303. */
+  /** Resolve a durable gate. Idempotency: resolving an already-resolved gate is E1303.
+   *  An APPROVED resolution of a gate opened by a prompt decision records the
+   *  human elevation (audit "elevation" entry + broker.elevation.recorded). */
   async resolveGate(gate: GateRecord, answer: Record<string, unknown>): Promise<GateRecord> {
     if (gate.state !== "open" || this.resolvedGateIds.has(gate.gate_id)) {
       throw new VaerionError("E1303", `gate ${gate.gate_id} is already ${gate.state === "open" ? "resolved" : gate.state}`);
@@ -272,9 +302,26 @@ export class RunHarness {
     };
     await this.journal.appendGate(resolved);
     this.resolvedGateIds.add(gate.gate_id);
+    const approved = answer.approved !== false;
+    if (approved && gate.decision_id) {
+      // Human authority moment: the prompt decision is elevated by explicit approval.
+      await this.audit.append("elevation", gate.decision_id, {
+        decision_id: gate.decision_id,
+        gate_id: gate.gate_id,
+        run_id: gate.run_id,
+        approved: true,
+        resolved_at: resolved.resolved_at ?? null,
+      });
+      await this.emit(
+        "broker.elevation.recorded",
+        brokerEvents.elevationRecorded(gate.decision_id, resolved, true) as unknown as Record<string, unknown>,
+        { kind: "human", id: "local-user" },
+        { kind: "gate", ref: gate.gate_id },
+      );
+    }
     await this.emit(
       "broker.gate.resolved",
-      brokerEvents.gateResolved(resolved, answer.approved === false ? "denied" : "approved") as unknown as Record<string, unknown>,
+      brokerEvents.gateResolved(resolved, approved ? "approved" : "denied") as unknown as Record<string, unknown>,
       { kind: "human", id: "local-user" },
       { kind: "gate", ref: gate.gate_id },
     );
@@ -309,6 +356,7 @@ export class RunHarness {
     if (this.closedHarness) return;
     this.closedHarness = true;
     await this.audit.close();
+    await this.refusals.close();
     await this.journal.close();
   }
 
@@ -334,6 +382,7 @@ export class RunHarness {
     const verify = await verifyJournal(journalPath);
     this.closedHarness = true;
     await this.audit.close();
+    await this.refusals.close();
     await this.journal.close();
     return { receipt, verify };
   }
@@ -351,8 +400,8 @@ export class RunHarness {
       reducer: runStateReducer,
       initial: initialRunState(opts.runId, opts.traceId),
     });
-    const { journal, audit } = await RunHarness.openWriters(opts);
-    const harness = new RunHarness(journal, new EventBus(), audit, opts);
+    const { journal, audit, refusals } = await RunHarness.openWriters(opts);
+    const harness = new RunHarness(journal, new EventBus(), audit, refusals, opts);
     harness.seedResolvedGates(result.state.resolvedGates.map((g) => g.gate_id));
     await harness.emit(
       "run.restored",
@@ -377,3 +426,6 @@ export async function readAuditHead(auditPath: string): Promise<{ i: number; hea
     throw new VaerionError("E1003", "audit ledger tail is corrupt");
   }
 }
+
+/** Re-export for harness consumers (CLI/SDK chain the refusal log via the same helper). */
+export { readRefusalHead } from "../broker/refusal-log.ts";

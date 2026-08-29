@@ -21,12 +21,21 @@ import {
   initialRunState,
   runStateReducer,
   replayRecords,
+  verifyRefusalLog,
+  readRefusals,
+  verifyEvidenceSet,
+  verifyAuditLedger,
   type RunState,
   type JournalRecord,
   type VerifyReport,
   type JournalListItem,
   type ExportReport,
   type BlobRef,
+  type RefusalEntry,
+  type RefusalVerifyReport,
+  type EvidenceVerificationReport,
+  type EvidenceRecord,
+  type AuditVerifyReport,
 } from "@vaerion/engine";
 
 export interface VaeClientOptions {
@@ -157,6 +166,38 @@ export class VaeClient {
     const args = ["resume", input.runId];
     if (input.answer !== undefined) args.push("--answer", JSON.stringify(input.answer));
     return this.raw(args);
+  }
+
+  /* ── MS-2 broker surface (machine parity with explain/doctor) ── */
+
+  /** The workspace's durable Refusal Log, optionally filtered to one run. */
+  async refusals(runId?: string): Promise<RefusalEntry[]> {
+    return readRefusals(`${this.cwd}/.vaerion/refusals.log`, runId ? { runId } : {});
+  }
+
+  /** Refusal-log chain verification (same chain law as journals). */
+  async verifyRefusals(): Promise<RefusalVerifyReport> {
+    return verifyRefusalLog(`${this.cwd}/.vaerion/refusals.log`);
+  }
+
+  /**
+   * Evidence triangulation for one run: evidence ↔ blob bytes ↔ fingerprint.
+   * Full evidence records only (summary payloads are skipped, never guessed).
+   */
+  async verifyRunEvidence(runId: string): Promise<EvidenceVerificationReport> {
+    const records = await this.journalRecords(runId);
+    const evidence: EvidenceRecord[] = [];
+    for (const rec of records) {
+      if (rec.k !== "evt" || rec.env.type !== "research.evidence.recorded") continue;
+      const candidate = (rec.env.payload as Record<string, unknown>).evidence;
+      if (candidate && typeof candidate === "object") evidence.push(candidate as EvidenceRecord);
+    }
+    return verifyEvidenceSet(evidence, this.blobs());
+  }
+
+  /** Audit-ledger verification for the workspace (machine parity with doctor). */
+  async verifyAudit(): Promise<AuditVerifyReport> {
+    return verifyAuditLedger(`${this.cwd}/.vaerion/audit.log`);
   }
 }
 

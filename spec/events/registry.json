@@ -51,6 +51,10 @@
       "description": "A human resolved a durable gate; the answer is journaled and authoritative."
     },
     {
+      "type": "broker.elevation.recorded",
+      "description": "A human approval elevated a prompt decision into an authorized action; the elevation is journaled and audited."
+    },
+    {
       "type": "broker.audit.appended",
       "description": "A broker evaluation, allow or deny, was appended to the hash-chained audit ledger."
     },

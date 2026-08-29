@@ -4,7 +4,8 @@
  * Gates:
  *   1. engine typecheck (tsc strict)
  *   2. sdk typecheck (tsc strict)
- *   3. full test suite (unit + integration + chaos + golden + parity)
+ *   3. full test suite with coverage floors (OBJ-Q6: bun --coverage +
+ *      bunfig coverageThreshold; a floor breach fails the gate)
  *   4. layerlint (architecture boundaries)
  *   5. constitutional-check (invariants + contract sync + secrets)
  *   6. repository lint (eslint, app + tooling)
@@ -55,7 +56,7 @@ console.log("vaerion verify — starting full gate run\n");
 
 gates.push(run("typecheck-engine", ["bunx", "tsc", "--noEmit", "-p", "tsconfig.json"], { cwd: ENGINE }));
 gates.push(run("typecheck-sdk", ["bunx", "tsc", "--noEmit", "-p", "tsconfig.json"], { cwd: join2(ROOT, "sdks", "typescript") }));
-gates.push(run("tests", ["bun", "test", "tests/"], { cwd: ENGINE }));
+gates.push(run("tests", ["bun", "test", "tests/", "--coverage"], { cwd: ENGINE }));
 gates.push(run("layerlint", ["bun", "run", join2(ROOT, "tools", "layerlint.ts")]));
 gates.push(run("constitutional-check", ["bun", "run", join2(ROOT, "tools", "constitutional-check.ts")]));
 gates.push(run("repo-lint", ["bun", "run", "lint"]));

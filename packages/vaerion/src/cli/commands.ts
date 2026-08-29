@@ -29,11 +29,16 @@ import { replayRecords } from "../journal/replay.ts";
 import { BlobStore } from "../store/blob-cas.ts";
 import { collectBlobRefs } from "../receipts/receipt.ts";
 import { verifyAuditLedger } from "../broker/contracts/audit.ts";
+import { verifyRefusalLog, readRefusals, type RefusalEntry } from "../broker/refusal-log.ts";
+import { graphFromConfig } from "../broker/engine.ts";
+import { verifyEvidence, type EvidenceVerificationItem } from "../research/verification.ts";
+import { renderUnified, assertReviewDiffShape, type ReviewDiff } from "../broker/contracts/review-diff.ts";
 import { type PolicyContract, type PolicyRule } from "../broker/contracts/decision.ts";
+import { policyFromConfig } from "../config/config.ts";
 import { researchPrincipal } from "../research/principal.ts";
 import { declareResearchCapability } from "../research/capability.ts";
 import { fingerprintDocument } from "../research/fingerprint.ts";
-import { fenceUntrusted, renderFence } from "../research/fencing.ts";
+import { fenceUntrusted } from "../research/fencing.ts";
 import { provenanceOf } from "../research/provenance.ts";
 import { buildEvidenceRecord, type EvidenceRecord } from "../research/evidence.ts";
 import { makeCitations } from "../research/citation.ts";
@@ -75,6 +80,16 @@ research:
         - { kind: local, path: "./docs" }
       fencing: untrusted
       maxItems: 100
+# Broker policy rules (MS-2) — first match wins; unmatched requests deny fail-closed.
+# Every rule must state its rationale:
+# policy:
+#   rules:
+#     - id: deny-secret-read
+#       principalKinds: [agent]
+#       domain: secret.read
+#       scope: "*"
+#       effect: deny
+#       rationale: "agents never read secrets; humans use the keychain directly"
 telemetry:
   enabled: false
 `;
@@ -166,20 +181,33 @@ function ctx_cwd(): string {
   return cwdHolder;
 }
 
-/** Build the fail-closed policy for an explicit human CLI declaration. */
-function runPolicy(sources: string[]): PolicyContract {
-  void sources; // scopes are matched via '*' because the human declared exact paths on the command line
-  const rules: PolicyRule[] = [
-    {
-      id: "human-research-declared-sources",
-      principalKinds: ["research"],
-      domain: "research.index",
-      scope: "*",
-      effect: "allow",
-      rationale: "sources explicitly declared by the human on the command line",
-    },
-  ];
-  return { policy_id: "cli-run-declared", version: 1, rules };
+/** Build the fail-closed policy for a research run: config policy + declared sources. */
+function runPolicy(config: ReturnType<typeof policyFromConfig>, sources: string[]): PolicyContract {
+  const declared: PolicyRule = {
+    id: "human-research-declared-sources",
+    principalKinds: ["research"],
+    domain: "research.index",
+    scope: "*",
+    effect: "allow",
+    rationale: "sources explicitly declared by the human on the command line",
+  };
+  // Standing human law (vaerion.yaml) evaluates FIRST — a file-declared deny
+  // or prompt outranks the momentary command-line declaration. The CLI
+  // declaration follows, then structural defaults.
+  return { ...config, rules: [...config.rules, declared] };
+}
+
+/** Extract a review diff from a decision's action payload when one is present. */
+function reviewDiffOfAction(action: Record<string, unknown> | undefined): ReviewDiff | null {
+  if (!action || typeof action !== "object") return null;
+  const candidate = (action as Record<string, unknown>).review;
+  if (!candidate || typeof candidate !== "object") return null;
+  try {
+    assertReviewDiffShape(candidate);
+    return candidate;
+  } catch {
+    return null;
+  }
 }
 
 export async function cmdRun(ctx: CommandContext): Promise<number> {
@@ -234,10 +262,15 @@ export async function cmdRun(ctx: CommandContext): Promise<number> {
   const idGen = new SystemIdGen();
   const runId = crn("run", idGen.next());
   const traceId = `t_${idGen.next().slice(-10).toLowerCase()}`;
-  const harness = await RunHarness.create({ workspaceDir: ws.root, runId, traceId, configFingerprint, clock, idGen });
+  const principalId = `research:${runId}`;
+  // Permission-graph ceiling: config ceilings + the journaled CLI declaration.
+  const graph = graphFromConfig(config, `graph_${configFingerprint.slice(0, 12)}`, [
+    { principalId, domain: "research.index", scopes: sources },
+  ]);
+  const harness = await RunHarness.create({ workspaceDir: ws.root, runId, traceId, configFingerprint, clock, idGen, permissionGraph: graph });
 
   try {
-    const principal = researchPrincipal(`research:${runId}`, "cli-declared", runId);
+    const principal = researchPrincipal(principalId, "cli-declared", runId);
     const capability = declareResearchCapability({
       name: "cli-declared",
       principal: principal.id,
@@ -248,21 +281,43 @@ export async function cmdRun(ctx: CommandContext): Promise<number> {
     });
     await harness.emit("research.capability.declared", { capability: capability.name, sources: capability.sources, fencing: capability.fencing }, principal, { kind: "origin", ref: null });
 
-    const decision = await harness.decide(
-      {
-        request_id: idGen.next(),
-        principal,
-        domain: "research.index",
-        scope: sources.join(","),
-        action: { sources, query },
-        intent: `index declared local sources and prepare context for query: ${query}`,
-      },
-      runPolicy(sources),
-    );
-    if (decision.decision.kind !== "allow") {
-      // decide→journal→act honored: the denial is already journaled + audited.
-      await harness.close(`run ${runId} denied by broker (${decision.decision.kind})`);
-      return ExitCode.brokerDenied;
+    // One decision PER SOURCE (MS-2): the broker decides at the narrowest
+    // scope, so refusals name the exact refused path and grants stay narrow.
+    const runPolicy_ = runPolicy(policyFromConfig(config), sources);
+    for (const source of sources) {
+      const decision = await harness.decide(
+        {
+          request_id: idGen.next(),
+          principal,
+          domain: "research.index",
+          scope: source,
+          action: { source, query },
+          intent: `index declared local source ${source} and prepare context for query: ${query}`,
+        },
+        runPolicy_,
+      );
+      if (decision.decision.kind === "deny") {
+        // decide→journal→act honored: the denial is journaled + audited + refused.
+        await harness.close(`run ${runId} denied by broker on ${source} (${decision.decision.reason_code})`);
+        return ExitCode.brokerDenied;
+      }
+      if (decision.decision.kind === "prompt") {
+        // Human authority checkpoint: the run pauses with an open durable gate
+        // (NEVER closed — the gate must survive process death, R-A4).
+        const gate = decision.gate!;
+        renderer.result({
+          command: "run",
+          kind,
+          run_id: runId,
+          trace_id: traceId,
+          awaiting: true,
+          gate: { gate_id: gate.gate_id, state: gate.state, question: gate.question, options: gate.options, decision_id: gate.decision_id ?? null },
+          decision: { decision_id: decision.record.decision_id, kind: decision.decision.kind, domain: decision.record.domain, scope: decision.record.scope, intent: decision.record.intent },
+          hint: `review with: vae resume ${runId} · resolve with: vae resume ${runId} --answer '{"approved":true}'`,
+        });
+        await harness.release();
+        return ExitCode.ok;
+      }
     }
 
     const docs = await collectDocs(sources, maxDocs);
@@ -275,7 +330,6 @@ export async function cmdRun(ctx: CommandContext): Promise<number> {
       const blobRef = await blobs.put(doc.text);
       await harness.emit("store.blob.put", { blob_ref: blobRef, purpose: `document:${doc.id}` }, principal, { kind: "envelope", ref: String(harness.journal.lastSeq) });
       const fenced = fenceUntrusted({ sourceId: doc.id, sourcePath: doc.path, capability: capability.name, fingerprint: fp, content: doc.text });
-      await harness.emit("research.evidence.recorded", { evidence_id: `${runId}:${doc.id}`, blob_ref: blobRef, fence: renderFence(fenced).slice(0, 120) + "…" }, principal, { kind: "envelope", ref: String(harness.journal.lastSeq) });
       const ev = buildEvidenceRecord({
         evidenceId: `${runId}:${doc.id}`,
         runId,
@@ -287,6 +341,10 @@ export async function cmdRun(ctx: CommandContext): Promise<number> {
         provenance: provenanceOf({ evidenceId: `${runId}:${doc.id}`, sourceId: doc.id, sourcePath: doc.path, fingerprint: fp, retrievedAt: clock.nowIso(), locator: `${doc.path}#head` }),
         recordedAt: clock.nowIso(),
       });
+      // The FULL evidence record is journaled (never a summary): research
+      // state must be restorable by folding the journal (R-RT2), and the
+      // replay reducer consumes exactly this payload shape.
+      await harness.emit("research.evidence.recorded", { evidence: ev, blob_ref: blobRef }, principal, { kind: "envelope", ref: String(harness.journal.lastSeq) });
       evidence.push(ev);
       const indexed = index.addDocument({ docId: doc.id, sourceId: doc.id, sourcePath: doc.path, fingerprint: fp, text: doc.text });
       await harness.emit("research.index.updated", { doc: indexed }, principal, { kind: "envelope", ref: String(harness.journal.lastSeq) });
@@ -361,12 +419,35 @@ export async function cmdResume(ctx: CommandContext): Promise<number> {
     clock: new SystemClock(),
     idGen: new SystemIdGen(),
   });
-  const { harness, state } = restored;
+  const { harness, state, read } = restored;
   const renderer = r(ctx);
 
   try {
     if (state.status === "awaiting_gate" && state.openGates.length > 0) {
       const gate = state.openGates[0] as NonNullable<RunState["openGates"][number]>;
+
+      // Human review loop: with --answer we resolve; without it we RENDER the
+      // review (question, options, linked decision, review diff) and stop —
+      // authority is exercised explicitly, never assumed.
+      if (answerRaw === null) {
+        const decisionRec = read.records.find(
+          (rec): rec is Extract<typeof rec, { k: "decision" }> => rec.k === "decision" && rec.decision.decision_id === gate.decision_id,
+        );
+        const review = reviewDiffOfAction(decisionRec?.decision.action as Record<string, unknown> | undefined);
+        renderer.result({
+          command: "resume",
+          run_id: runId,
+          awaiting: true,
+          gate: { gate_id: gate.gate_id, state: gate.state, question: gate.question, options: gate.options, decision_id: gate.decision_id ?? null },
+          decision: decisionRec
+            ? { decision_id: decisionRec.decision.decision_id, kind: decisionRec.decision.decision.kind, domain: decisionRec.decision.domain, scope: decisionRec.decision.scope, intent: decisionRec.decision.intent }
+            : null,
+          review_diff: review ? { diff_id: review.diff_id, op: review.op, target: review.target, rendered: renderUnified(review) } : null,
+          hint: `resolve with: vae resume ${runId} --answer '{"approved":true}'`,
+        });
+        return ExitCode.ok;
+      }
+
       await harness.resolveGate(gate, answer);
       const closed = await harness.close(`gate ${gate.gate_id} resolved by human`);
       const after = await readJournal(RunHarness.journalPathFor(ws.root, runId));
@@ -424,11 +505,26 @@ export async function cmdExplain(ctx: CommandContext): Promise<number> {
     else if (rec.k === "receipt") narrative.push(`receipt: ${rec.receipt.summary}`);
   }
 
+  // Refusal Log surface (MS-2): every refusal of this run, newest last.
+  const refusals: RefusalEntry[] = await readRefusals(ws.refusalsPath, { runId: target }).catch(() => []);
+  for (const refusal of refusals) {
+    narrative.push(`refusal ${refusal.reason_code} ${refusal.domain} ${refusal.scope} — ${refusal.reason} (policy ${refusal.policy})`);
+  }
+
   r(ctx).result({
     command: "explain",
     run_id: target,
     verified: verify.ok,
     state: { status: state.status, last_seq: state.lastSeq, decisions: state.decisions, open_gates: state.openGates.length },
+    refusals: refusals.map((refusal) => ({
+      reason_code: refusal.reason_code,
+      domain: refusal.domain,
+      scope: refusal.scope,
+      reason: refusal.reason,
+      policy: refusal.policy,
+      decision_id: refusal.decision_id,
+      at: refusal.at,
+    })),
     narrative,
   });
   return verify.ok ? ExitCode.ok : ExitCode.partial;
@@ -546,6 +642,39 @@ export async function cmdDoctor(ctx: CommandContext): Promise<number> {
   }
   if (blobRefsChecked === 0) checks.push({ check: "blob-store", ok: true, detail: "no blob refs referenced yet" });
 
+  // 3b. Evidence triangulation (MS-2): evidence ↔ blob bytes ↔ fingerprint.
+  let evidenceChecked = 0;
+  let evidenceFailed = 0;
+  const evidenceProblems: EvidenceVerificationItem[] = [];
+  for (const run of runs) {
+    const read = await readJournal(join(ws.journalDir, `${run.run_id}.ndjson`)).catch(() => null);
+    if (!read) continue;
+    for (const rec of read.records) {
+      if (rec.k !== "evt" || rec.env.type !== "research.evidence.recorded") continue;
+      const candidate = (rec.env.payload as Record<string, unknown>).evidence;
+      if (!candidate || typeof candidate !== "object") continue; // summary payloads carry no full record
+      try {
+        const item = await verifyEvidence(candidate as Parameters<typeof verifyEvidence>[0], blobStore);
+        evidenceChecked++;
+        if (!item.ok) {
+          evidenceFailed++;
+          evidenceProblems.push(item);
+        }
+      } catch {
+        // Shape-lie payloads are skipped here; research replay refuses them loudly (E1500).
+      }
+    }
+  }
+  checks.push({
+    check: "research-evidence",
+    ok: evidenceFailed === 0,
+    code: evidenceFailed === 0 ? undefined : "E1008",
+    detail: evidenceChecked === 0
+      ? "no full evidence records to triangulate"
+      : `${evidenceChecked} evidence record(s) verified against blob bytes + fingerprints${evidenceFailed === 0 ? "" : ", " + evidenceFailed + " failed"}`,
+    fix: evidenceFailed === 0 ? undefined : evidenceProblems.map((p) => `${p.evidence_id}: ${p.detail}`).join("; ").slice(0, 200),
+  });
+
   // 4. Audit ledger chain.
   const audit = await verifyAuditLedger(ws.auditPath);
   checks.push({
@@ -556,7 +685,17 @@ export async function cmdDoctor(ctx: CommandContext): Promise<number> {
     fix: audit.ok ? undefined : "restore .vaerion/audit.log from backup; never edit it",
   });
 
-  // 5. Zero telemetry sanity (structural: engine has no egress paths).
+  // 5. Refusal Log chain (MS-2): the broker refuses nothing silently.
+  const refusals = await verifyRefusalLog(ws.refusalsPath);
+  checks.push({
+    check: "refusal-log",
+    ok: refusals.ok,
+    code: refusals.ok ? undefined : "E1001",
+    detail: refusals.ok ? `${refusals.entries} refusals${refusals.head ? ", head " + refusals.head.slice(0, 12) + "…" : ""}` : (refusals.message ?? "refusal log chain broken"),
+    fix: refusals.ok ? undefined : "restore .vaerion/refusals.log from backup; never edit it",
+  });
+
+  // 6. Zero telemetry sanity (structural: engine has no egress paths).
   checks.push({ check: "zero-telemetry", ok: true, detail: "engine contains no network egress paths; doctor performs no phone-home" });
 
   const failed = checks.filter((c) => !c.ok);

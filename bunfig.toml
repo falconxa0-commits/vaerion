@@ -1,0 +1,10 @@
+# Vaerion test configuration — coverage floors (OBJ-Q6).
+#
+# The verify gate runs `bun test tests/ --coverage`; a threshold breach fails
+# the run. Floors are measured from the current state (ratchet up, never
+# down); they assert the test pyramid actually executes the engine.
+
+[test]
+coverage = true
+coverageThreshold = { lines = 0.78, functions = 0.72, statements = 0.78 }
+coverageSkipTestFiles = true

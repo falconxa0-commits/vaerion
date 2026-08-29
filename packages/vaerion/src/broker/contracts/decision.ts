@@ -45,6 +45,8 @@ export interface BrokerDecisionRecord {
   domain: CapabilityDomain;
   scope: string;
   intent: string;
+  /** The request's action parameters, redacted (never carries secrets). */
+  action?: Record<string, unknown>;
   decision: BrokerDecision;
   /** Human-authority input when decision.kind === "prompt" and resolved. */
   resolved_by?: "human" | "policy";
