@@ -1,0 +1,826 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Vaerion local API",
+    "version": "0.1.0-ms1",
+    "summary": "The loopback daemon surface: the same contracts the CLI exercises, over HTTP/SSE.",
+    "description": "Generated from the daemon route table (ADR-0010 decision 4, ADR-0020). Every described route is implemented; every implemented route is described. Authentication is the first-run pairing token (Authorization: Bearer); only /health, /version and /openapi.json are open. The daemon binds loopback only and never makes outbound calls.",
+    "license": {
+      "name": "Constitutional reference implementation",
+      "identifier": "UNLICENSED"
+    }
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "This local daemon (loopback only)."
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Pairing token printed once at daemon start (VAE_TRUST pre-provisions headless starts)."
+      }
+    },
+    "schemas": {
+      "EventEnvelope": {
+        "type": "object",
+        "description": "Journal-read event envelope (spec/schemas/envelope.schema.json, v1).",
+        "required": [
+          "v",
+          "type",
+          "ts",
+          "trace_id",
+          "span_id",
+          "actor",
+          "cause",
+          "payload",
+          "seq"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "v": {
+            "type": "integer",
+            "const": 1
+          },
+          "type": {
+            "type": "string",
+            "description": "Registered event type (spec/events/registry.json)."
+          },
+          "ts": {
+            "type": "string",
+            "description": "RFC3339 millisecond UTC timestamp."
+          },
+          "trace_id": {
+            "type": "string"
+          },
+          "span_id": {
+            "type": "string"
+          },
+          "actor": {
+            "type": "object"
+          },
+          "cause": {
+            "type": "object"
+          },
+          "payload": {
+            "type": "object"
+          },
+          "seq": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Per-run journal sequence (cursor replay key)."
+          }
+        }
+      },
+      "RunStatus": {
+        "type": "object",
+        "description": "One run's state folded deterministically from its hash-chained journal.",
+        "properties": {
+          "run_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "awaiting_gate",
+              "closed"
+            ]
+          },
+          "journal_ok": {
+            "type": "boolean"
+          },
+          "decisions": {
+            "type": "object",
+            "properties": {
+              "allow": {
+                "type": "integer"
+              },
+              "deny": {
+                "type": "integer"
+              },
+              "prompt": {
+                "type": "integer"
+              }
+            }
+          },
+          "open_gates": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "resolved_gates": {
+            "type": "integer"
+          },
+          "last_seq": {
+            "type": "integer"
+          },
+          "receipt": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "agent": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Agent-specific fold when the run is an agent run."
+          },
+          "workflow": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Workflow-specific fold when the run is a workflow run."
+          },
+          "metrics": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Agent metrics fold (tokens, micro-USD, steps, tools)."
+          },
+          "note": {
+            "type": "string",
+            "description": "Honest state note (e.g. 'run accepted; first journal record pending' or a verification warning)."
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "description": "Stable machine-parseable error (the Fix: contract).",
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "code",
+              "name",
+              "message",
+              "fix"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^E[0-9]{4}$"
+              },
+              "name": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "fix": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "meta",
+      "description": "Unauthenticated metadata endpoints (ADR-0010)."
+    },
+    {
+      "name": "runs",
+      "description": "Run lifecycle over the wire."
+    },
+    {
+      "name": "events",
+      "description": "SSE streams with journal-cursor replay (R-RT1)."
+    },
+    {
+      "name": "models",
+      "description": "Gateway capability surface (names only, never secret values)."
+    },
+    {
+      "name": "tools",
+      "description": "Declared tool surface."
+    },
+    {
+      "name": "admin",
+      "description": "Daemon hygiene."
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "getHealth",
+        "summary": "Daemon liveness (unauthenticated).",
+        "description": "Loopback liveness probe. Returns ok, the engine version, and the daemon uptime in milliseconds. No pairing token required (ADR-0010: metadata routes only).",
+        "tags": [
+          "meta"
+        ],
+        "responses": {
+          "200": {
+            "description": "DaemonStatus",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/version": {
+      "get": {
+        "operationId": "getVersion",
+        "summary": "Engine and contract versions (unauthenticated).",
+        "description": "Engine version, substrate, envelope version, and the published contract counts (event types, error codes) the daemon enforces.",
+        "tags": [
+          "meta"
+        ],
+        "responses": {
+          "200": {
+            "description": "VersionInfo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/openapi.json": {
+      "get": {
+        "operationId": "getOpenApi",
+        "summary": "The generated OpenAPI description (unauthenticated).",
+        "description": "Machine-readable description of THIS daemon's routes, generated from the same route table that dispatches requests (ADR-0010 decision 4). The committed contract lives at spec/openapi.json and constitutional check C4 verifies the two never drift.",
+        "tags": [
+          "meta"
+        ],
+        "responses": {
+          "200": {
+            "description": "OpenAPI document",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/runs": {
+      "get": {
+        "operationId": "listRuns",
+        "summary": "List runs known to this workspace.",
+        "description": "One entry per journal in the workspace journal directory: run id, status folded from the journal, event count, and closed/awaiting state. The journal is the truth; nothing is cached.",
+        "tags": [
+          "runs"
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of RunSummary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerToken": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "startRun",
+        "summary": "Start an agent or workflow run (background execution).",
+        "description": "Starts the same supervised agent loop or deterministic workflow DAG execution the CLI runs, as a background task. Runs execute SERIALLY per workspace (run queue, submission order): the audit ledger and refusal log are single-writer chains. Returns 201 with the run coordinates; poll /runs/{run_id} or stream /runs/{run_id}/events.",
+        "tags": [
+          "runs"
+        ],
+        "responses": {
+          "201": {
+            "description": "RunStarted (Location: /runs/{run_id})",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "E1600 validation"
+          },
+          "403": {
+            "description": "broker denial"
+          }
+        },
+        "security": [
+          {
+            "bearerToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind"
+                ],
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "agent",
+                      "workflow"
+                    ],
+                    "description": "Run kind."
+                  },
+                  "goal": {
+                    "type": "string",
+                    "description": "agent: the stated objective."
+                  },
+                  "planner": {
+                    "type": "string",
+                    "enum": [
+                      "inline",
+                      "model"
+                    ],
+                    "description": "agent: planner kind (default inline)."
+                  },
+                  "steps": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    },
+                    "description": "agent, inline planner: the declared plan steps."
+                  },
+                  "max_steps": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "agent: step ceiling override."
+                  },
+                  "dag": {
+                    "type": "object",
+                    "description": "workflow: the DAG definition {id, nodes:[{id, deps, step, maxAttempts?}]}."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/runs/{run_id}": {
+      "get": {
+        "operationId": "getRun",
+        "summary": "One run's status, folded from its journal.",
+        "description": "Deterministic restoration: journal verification result, the RunState fold (status, decision counts, open/resolved gates), the agent- or workflow-specific fold when present, the agent metrics fold, and the terminal receipt when the run is closed.",
+        "tags": [
+          "runs"
+        ],
+        "responses": {
+          "200": {
+            "description": "RunStatus",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "E2003 unknown run"
+          }
+        },
+        "security": [
+          {
+            "bearerToken": []
+          }
+        ]
+      },
+      "parameters": [
+        {
+          "name": "run_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^crn_run_[0-9ABCDEFGHJKMNPQRSTVWXYZabcdefghjkmnpqrstvwxyz]{26}$"
+          },
+          "description": "Run id (the journal name without its extension)."
+        }
+      ]
+    },
+    "/runs/{run_id}/events": {
+      "get": {
+        "operationId": "streamRunEvents",
+        "summary": "Event stream for one run (SSE with cursor replay).",
+        "description": "Server-sent events. First REPLAYS every journaled event envelope with seq > cursor (query: cursor, default 0), then — unless follow=false — FOLLOWS the journal until the run is closed (receipt seen), emitting new envelopes as they are journaled. Payloads pass redaction before publication (ADR-0011 law). Each frame is `data: <envelope JSON>`; the stream ends with `event: end`.",
+        "tags": [
+          "events"
+        ],
+        "responses": {
+          "200": {
+            "description": "text/event-stream",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "E2003 unknown run"
+          }
+        },
+        "security": [
+          {
+            "bearerToken": []
+          }
+        ]
+      },
+      "parameters": [
+        {
+          "name": "run_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^crn_run_[0-9ABCDEFGHJKMNPQRSTVWXYZabcdefghjkmnpqrstvwxyz]{26}$"
+          },
+          "description": "Run id (the journal name without its extension)."
+        }
+      ]
+    },
+    "/runs/{run_id}/answer": {
+      "post": {
+        "operationId": "answerGate",
+        "summary": "Resolve a pending durable human gate.",
+        "description": "Human authority over a paused run, identical to `vae resume RUN_ID --answer JSON`. Restores the harness (verifying the hash chain first), resolves the named gate, and records the elevation when approved. A denial closes the run with a receipt. Continue an approved agent run with POST /runs/{run_id}/continue.",
+        "tags": [
+          "runs"
+        ],
+        "responses": {
+          "200": {
+            "description": "GateResolution",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "E1303 gate conflict"
+          },
+          "404": {
+            "description": "E2003 unknown run/gate"
+          }
+        },
+        "security": [
+          {
+            "bearerToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "gate_id"
+                ],
+                "properties": {
+                  "gate_id": {
+                    "type": "string",
+                    "description": "The pending gate id (from GET /runs/{run_id})."
+                  },
+                  "answer": {
+                    "type": "object",
+                    "description": "Gate answer; default {\"approved\":true}."
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "run_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^crn_run_[0-9ABCDEFGHJKMNPQRSTVWXYZabcdefghjkmnpqrstvwxyz]{26}$"
+          },
+          "description": "Run id (the journal name without its extension)."
+        }
+      ]
+    },
+    "/runs/{run_id}/continue": {
+      "post": {
+        "operationId": "continueRun",
+        "summary": "Continue an approved agent run (or a workflow with its DAG).",
+        "description": "Continues execution after gate approval, exactly like `vae resume` continuation: the approved gate is durable elevation authority and the loop resumes from its journaled steps. Workflow runs require the original DAG in the body (the journal does not embed the caller's DAG file).",
+        "tags": [
+          "runs"
+        ],
+        "responses": {
+          "202": {
+            "description": "Continuation accepted (background execution)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "E1600 not continuable / missing DAG"
+          },
+          "404": {
+            "description": "E2003 unknown run"
+          }
+        },
+        "security": [
+          {
+            "bearerToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "dag": {
+                    "type": "object",
+                    "description": "workflow continuation: the original DAG definition."
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "run_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^crn_run_[0-9ABCDEFGHJKMNPQRSTVWXYZabcdefghjkmnpqrstvwxyz]{26}$"
+          },
+          "description": "Run id (the journal name without its extension)."
+        }
+      ]
+    },
+    "/runs/{run_id}/cancel": {
+      "post": {
+        "operationId": "cancelRun",
+        "summary": "Cancel a paused or interrupted run (terminal, receipted).",
+        "description": "Cancellation is defined where it is constitutionally meaningful: a run awaiting a durable gate (the open gate is denied — the human refuses) and an open run with NO live executor (e.g. after a daemon restart). In-flight runs are refused with 409 E2005 — the supervisor loop is the only authority between steps, and pretending otherwise would be a lie the journal would not support.",
+        "tags": [
+          "runs"
+        ],
+        "responses": {
+          "200": {
+            "description": "Cancelled (receipt)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "E2005 in-flight / E1500 closed"
+          }
+        },
+        "security": [
+          {
+            "bearerToken": []
+          }
+        ]
+      },
+      "parameters": [
+        {
+          "name": "run_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^crn_run_[0-9ABCDEFGHJKMNPQRSTVWXYZabcdefghjkmnpqrstvwxyz]{26}$"
+          },
+          "description": "Run id (the journal name without its extension)."
+        }
+      ]
+    },
+    "/events": {
+      "get": {
+        "operationId": "streamWorkspaceEvents",
+        "summary": "Workspace-wide event tail (SSE, merged across runs).",
+        "description": "Merged event stream across every run journal in the workspace, ordered by (ts, run_id, seq). Query: cursor (emit events strictly after this global ordinal), types (comma-separated event-type filter), follow (default true — keep the stream open and poll the journal directory), limit (replay bound, default 200). Global ordinals are (ts, run_id, seq) and are stable across restarts because the journal is the truth.",
+        "tags": [
+          "events"
+        ],
+        "responses": {
+          "200": {
+            "description": "text/event-stream",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerToken": []
+          }
+        ]
+      }
+    },
+    "/models": {
+      "get": {
+        "operationId": "listModels",
+        "summary": "Gateway provider capability matrix.",
+        "description": "The declared capability matrix (provider, ops, requiresSecret, secretName) exactly as `vae doctor`/`vae dev` surface it. Secret NAMES only — secret values are broker-mediated and never cross this surface.",
+        "tags": [
+          "models"
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of ProviderCapability",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerToken": []
+          }
+        ]
+      }
+    },
+    "/models/{logical}": {
+      "get": {
+        "operationId": "getModel",
+        "summary": "One logical model's capability and price record.",
+        "description": "Provider membership, supported ops, secret requirement (name only), and the published integer micro-USD price table entry when the model is priced. Unknown logical models are 404 E1600.",
+        "tags": [
+          "models"
+        ],
+        "responses": {
+          "200": {
+            "description": "ModelCapability",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "E1600 unknown model"
+          }
+        },
+        "security": [
+          {
+            "bearerToken": []
+          }
+        ]
+      },
+      "parameters": [
+        {
+          "name": "logical",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Logical model id (provider/model)."
+        }
+      ]
+    },
+    "/tools": {
+      "get": {
+        "operationId": "listTools",
+        "summary": "Declared tools plus the deterministic builtins.",
+        "description": "The intersection the agent pipeline can actually use: tools declared in vaerion.yaml (name, scope, description) and the engine builtins (echo, clock.read).",
+        "tags": [
+          "tools"
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of ToolDescription",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerToken": []
+          }
+        ]
+      }
+    },
+    "/shutdown": {
+      "post": {
+        "operationId": "shutdownDaemon",
+        "summary": "Graceful shutdown with token echo guard.",
+        "description": "Stops the listener and waits for in-flight runs to settle (bounded). The body must echo the pairing token ({\"token\":\"...\"}) in addition to the Authorization header — the echo guard prevents accidental shutdowns.",
+        "tags": [
+          "admin"
+        ],
+        "responses": {
+          "200": {
+            "description": "Shutting down",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "E2004 echo mismatch"
+          }
+        },
+        "security": [
+          {
+            "bearerToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "token"
+                ],
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "description": "The pairing token (echo guard)."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "x-vaerion-contracts": {
+    "eventTypes": 36,
+    "errorCodes": 55,
+    "envelopeVersion": 1,
+    "engineVersion": "0.1.0-ms1"
+  }
+}

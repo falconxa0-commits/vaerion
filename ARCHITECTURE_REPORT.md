@@ -1,10 +1,10 @@
-# ARCHITECTURE_REPORT — Vaerion (as of MS-4)
+# ARCHITECTURE_REPORT — Vaerion (as of MS-5: local API daemon)
 
 | | |
 |---|---|
 | **Date** | 2026-08-29 |
-| **Scope** | Architecture state after MS-4 (Intelligence + Agents) — layers, boundaries, data flows, and the one sanctioned seam |
-| **Verification** | ALL 6 GATES GREEN (`VERIFICATION_REPORT.md`); layerlint: 81 files / 353 runtime edges / 0 violations |
+| **Scope** | Architecture state after MS-5 Surfaces (local API daemon) — layers, boundaries, data flows, and the sanctioned seams |
+| **Verification** | ALL 6 GATES GREEN (`VERIFICATION_REPORT.md`); layerlint: 86 files / 405 runtime edges / 0 violations |
 
 ---
 
@@ -14,9 +14,9 @@
 |---|---|---|
 | L0 | `kernel/` (errors, ids, clock, canonical, redact, hash), `config/` | nothing above |
 | L1 | `spine/`, `journal/`, `store/`, `receipts/`, `broker/` (contracts + engine + refusal log), `gateway/` | L0 |
-| L2 | `runtime/run.ts`, `research/` | L0, L1 |
-| L4 | `cli/` | L0–L2 |
-| SDK | `sdks/typescript` (in-process projection of the engine) | engine public API |
+| L2 | `runtime/run.ts`, `research/`, `agents/`, `workflow/`, `evals/` | L0, L1 |
+| L4 | `cli/`, `api/` (local daemon — MS-5) | L0–L2 |
+| SDK | `sdks/typescript` (in-process client + wire client) | engine public API |
 
 **MS-3 change**: `gateway/` enters L1. It consumes broker contracts and kernel
 ports; it never imports runtime or CLI. The `secretGrantFor` helper lives in
@@ -117,3 +117,41 @@ The eval harness (ADR-0012) runs REAL agent runs hermetically: declared plans, b
 ### 12.5 Money and metrics
 
 Agent metrics are a pure fold over the journal; token/cost/latency accounting comes EXCLUSIVELY from `gateway.invoke.*` records (the single gate's metering truth) — step events contribute structure, never spend. Integer micro-USD throughout.
+
+---
+
+## 13. MS-5 architecture additions (the local API daemon)
+
+**Two sibling surfaces, one set of contracts.** `api/` enters the layer model
+as L4 beside `cli/`, with a NEW hard edge enforced by layerlint: the daemon
+must never import the CLI. Both surfaces compose the SAME engine building
+blocks (RunHarness, AgentRuntime, WorkflowEngine, GatewayService,
+ToolInvocationService); parity is proven by tests that journal identical
+event-type sequences through both journeys.
+
+**Where the network seams now live (exactly two, both singular and
+scanner-enforced):**
+
+| Seam | File | Law |
+|---|---|---|
+| Model EGRESS (MS-3) | `gateway/transport.ts` | The only outbound provider site; reachable only behind journaled broker decisions (ADR-0019). |
+| Wire CLIENT (MS-5) | `sdks/typescript/src/daemon-transport.ts` | The only SDK HTTP-client site; loopback-enforced IN CODE (E2006 refuses any non-loopback host before a byte is sent) per ADR-0020. |
+| Listener | `packages/vaerion/src/api/` | May listen, never call out — constitutional check C7 scans the surface for client primitives with ZERO allow entries. |
+
+**The serial run queue.** The daemon executes runs one-at-a-time per
+workspace, in submission order. This is not a limitation of convenience: the
+audit ledger and the refusal log are single-writer hash chains, and concurrent
+writers would break them. Concurrent execution needs a ratified ADR that
+solves chained-writer coordination first.
+
+**Truth topology.** The daemon caches nothing authoritative: run status is a
+pure journal fold (verify + RunState + subsystem folds + receipt); the SSE
+streams replay the journal by seq and follow it to the receipt; the registry's
+in-memory bookkeeping exists only to answer honestly in the window between
+`201 Created` and the first journal record ("run accepted; first journal
+record pending") and to record failed starts — the journal always wins.
+
+**OpenAPI by construction.** `spec/openapi.json` is generated from the same
+route table that dispatches requests; constitutional check C4 verifies the
+committed contract never drifts from the generator. Only implemented routes
+are described — an unimplemented route is never advertised.

@@ -13,6 +13,9 @@
  *      registry.json ⇄ EVENT_TYPES (drift is a defect).
  *  C5  No secret material in the repository (test vectors are allow-listed).
  *  C6  Zero-telemetry config guard present (telemetry.enabled must be false).
+ *  C7  The daemon listener surface never egresses (api/ has no HTTP client
+ *      primitives); the SDK wire client is confined to its single sanctioned
+ *      site (ADR-0020), symmetric to the gateway egress site (ADR-0019).
  */
 
 import { readdirSync, readFileSync, statSync } from "node:fs";
@@ -73,9 +76,20 @@ function scanFiles(dir: string, check: string, patterns: RegExp[], allow: (rel: 
 // provider endpoint map and is reachable ONLY behind journaled broker
 // decisions (model.invoke/secret.read, decide→journal→act). Everywhere else
 // the ban is absolute. (CLI doctor text mentions "network" in prose only.)
-const C1_ALLOW = (rel: string): boolean => rel.endsWith("packages/vaerion/src/gateway/transport.ts");
+// MS-5 (ADR-0020): the SDK gains ONE sanctioned CLIENT site —
+// sdks/typescript/src/daemon-transport.ts — loopback-enforced in code (E2006),
+// so SDKs can attach to the local daemon per R-S1. It is a client to the
+// local daemon only, never a second gateway.
+const C1_ALLOW = (rel: string): boolean =>
+  rel.endsWith("packages/vaerion/src/gateway/transport.ts");
 scanFiles(ENGINE, "C1-network", [/\bfetch\(/, /node:http/, /node:https/, /node:net\b/, /axios/, /\bhttps?:\/\//], C1_ALLOW);
-scanFiles(SDK, "C1-network", [/\bfetch\(/, /node:http/, /node:https/, /node:net\b/, /axios/], () => false);
+scanFiles(SDK, "C1-network", [/\bfetch\(/, /node:http/, /node:https/, /node:net\b/, /axios/], (rel) =>
+  rel.endsWith("sdks/typescript/src/daemon-transport.ts"));
+
+// C7 — listener egress-freedom (MS-5, ADR-0020). The daemon surface listens;
+// it must never call out. No allow entries: if api/ ever contains an HTTP
+// CLIENT primitive, that is a violation by definition.
+scanFiles(join(ENGINE, "api"), "C7-listener-egress", [/\bfetch\(/, /node:http/, /node:https/, /axios/], () => false);
 
 // C2 — determinism ports. Allow: the port implementations themselves.
 const C2_ALLOW = (rel: string): boolean =>
@@ -138,9 +152,23 @@ try {
   findings.push({ check: "C4-contract-sync", file: "spec/events/registry.json", line: null, detail: `failed to parse: ${(err as Error).message}` });
 }
 
+// C4 (MS-5, ADR-0020) — openapi sync: spec/openapi.json must equal the
+// description generated from the route table (an "API gap" is impossible by
+// construction; drift between generator and committed contract is a defect).
+try {
+  const { generateOpenApi } = await import(join(ENGINE, "api", "openapi.ts"));
+  const committed = JSON.parse(readFileSync(join(SPEC, "openapi.json"), "utf8")) as unknown;
+  const generated = generateOpenApi();
+  if (JSON.stringify(committed) !== JSON.stringify(generated)) {
+    findings.push({ check: "C4-contract-sync", file: "spec/openapi.json", line: null, detail: "committed openapi.json differs from the generated route-table description (regenerate with: bun run tools/gen-openapi.ts)" });
+  }
+} catch (err) {
+  findings.push({ check: "C4-contract-sync", file: "spec/openapi.json", line: null, detail: `openapi sync failed: ${(err as Error).message}` });
+}
+
 const result = {
   gate: "constitutional-check",
-  checks: ["C1-network", "C2-determinism", "C3-placeholders", "C4-contract-sync", "C5-secrets", "C6-zero-telemetry-guard"],
+  checks: ["C1-network", "C2-determinism", "C3-placeholders", "C4-contract-sync", "C5-secrets", "C6-zero-telemetry-guard", "C7-listener-egress"],
   catalogCodes: catalogCodes.length,
   findings,
   ok: findings.length === 0,

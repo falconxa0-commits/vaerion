@@ -6,7 +6,7 @@
 
 [test]
 coverage = true
-# Ratcheted at MS-4 close (measured 84.62% lines / 89.45% branches; prior
-# floor 0.78 set at MS-2). Floors only move up (OBJ-Q6).
-coverageThreshold = { lines = 0.82, functions = 0.74, statements = 0.82, branches = 0.87 }
+# Ratcheted at MS-5 daemon close (measured 85.23% lines / 90.16% branches;
+# prior floors 0.82/0.74/0.82/0.87 set at MS-4). Floors only move up (OBJ-Q6).
+coverageThreshold = { lines = 0.85, functions = 0.74, statements = 0.85, branches = 0.89 }
 coverageSkipTestFiles = true

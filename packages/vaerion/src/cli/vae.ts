@@ -9,7 +9,7 @@
  */
 
 import { ExitCode, type CliIo } from "./io.ts";
-import { cmdDev, cmdExplain, cmdInit, cmdJournal, cmdDoctor, cmdResume, cmdRun, type CommandContext } from "./commands.ts";
+import { cmdDev, cmdExplain, cmdInit, cmdJournal, cmdDoctor, cmdResume, cmdRun, cmdServe, type CommandContext } from "./commands.ts";
 import { VaerionError } from "../kernel/errors.ts";
 import { isVaerionError } from "./workspace.ts";
 
@@ -52,6 +52,11 @@ Daily Seven (the complete command surface):
                              matrix (no phone-home)
   dev                        engine status: version, layers, gateway matrix,
                              milestone position
+  serve [--port N] [--host ADDR]
+                             the local API daemon (MS-5): loopback HTTP/SSE
+                             over the same contracts this CLI exercises;
+                             first-run pairing token printed once (or
+                             pre-provision headlessly via VAE_TRUST)
 
 Global flags:
   --json                     stable NDJSON output (machine mode, guaranteed)
@@ -146,6 +151,20 @@ vae journal export RUN_ID [--out PATH] [--dry-run]
 
   Engine status: version, substrate (ADR-0018), layer map, workspace state,
   milestone position. Read-only.`,
+  serve: `vae serve [--port N] [--host ADDR]
+
+  Start the local API daemon (MS-5, ADR-0010/ADR-0020): loopback HTTP/SSE
+  over the SAME engine contracts the CLI exercises — run starts, durable
+  gate answers, continuations, cancellations, event streams with journal
+  cursor replay, the gateway capability matrix (secret NAMES only), and the
+  generated OpenAPI description at /openapi.json.
+
+  Authentication: a pairing token is generated at start and printed ONCE
+  ('Authorization: Bearer <token>' on every call except /health, /version,
+  /openapi.json). Headless starts pre-provision via VAE_TRUST=<token> —
+  the token is then never printed. Shutdown: POST /shutdown with the token
+  echoed in the body. Non-loopback binds are REFUSED (E2001): remote
+  exposure requires a ratified transport-security ADR, never a flag.`,
 };
 
 interface ParsedArgs {
@@ -172,7 +191,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
       const value = eq === -1 ? undefined : a.slice(eq + 1);
       if (value !== undefined) {
         parsed.flags[name] = value;
-      } else if (i + 1 < argv.length && !(argv[i + 1] as string).startsWith("--") && ["cwd", "sources", "query", "max-docs", "answer", "out", "name", "profile", "model", "prompt", "system", "op", "seed", "max-tokens", "intent", "input-json", "docs-json", "goal", "planner", "steps", "plan-json", "dag", "resume"].includes(name)) {
+      } else if (i + 1 < argv.length && !(argv[i + 1] as string).startsWith("--") && ["cwd", "sources", "query", "max-docs", "answer", "out", "name", "profile", "model", "prompt", "system", "op", "seed", "max-tokens", "intent", "input-json", "docs-json", "goal", "planner", "steps", "plan-json", "dag", "resume", "port", "host"].includes(name)) {
         parsed.flags[name] = argv[i + 1] as string;
         i++;
       } else {
@@ -238,6 +257,7 @@ export async function runCli(argv: string[], io: CliIo, cwd: string): Promise<Cl
       case "journal": code = await cmdJournal(ctx); break;
       case "doctor": code = await cmdDoctor(ctx); break;
       case "dev": code = await cmdDev(ctx); break;
+      case "serve": code = await cmdServe(ctx); break;
       case "version": io.out(`vae ${VERSION}`); code = ExitCode.ok; break;
       default:
         io.err(`E1600 unknown command: ${parsed.command}. Fix: run \`vae --help\` for the Daily Seven.`);

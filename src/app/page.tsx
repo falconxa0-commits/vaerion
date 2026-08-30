@@ -33,6 +33,10 @@ function loadStatus(): Status | null {
   return null;
 }
 
+// The dashboard is a status tool: it must always reflect the latest
+// regenerated site-data/vaerion-status.json — never a stale prerender.
+export const dynamic = "force-dynamic";
+
 const status = loadStatus();
 
 export default function Home() {

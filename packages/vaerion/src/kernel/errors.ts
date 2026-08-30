@@ -67,7 +67,14 @@ export type ErrorCode =
   | "E1806" // citation_enforcement_violation
   // 19xx — internal invariants (never user-caused; always a bug)
   | "E1900" // internal_unreachable
-  | "E1901"; // canonical_json_rejected_value
+  | "E1901" // canonical_json_rejected_value
+  | "E2000" // daemon_auth_required
+  | "E2001" // daemon_bind_refused
+  | "E2002" // daemon_route_unknown
+  | "E2003" // daemon_run_unknown
+  | "E2004" // daemon_shutdown_echo_mismatch
+  | "E2005" // daemon_cancel_unavailable
+  | "E2006"; // daemon_nonloopback_refused
 
 export interface ErrorDescriptor {
   readonly code: ErrorCode;
@@ -128,6 +135,13 @@ export const ERROR_CATALOG: Readonly<Record<ErrorCode, ErrorDescriptor>> = {
   E1806: { code: "E1806", name: "citation_enforcement_violation", summary: "An answer used research context without referencing its citations.", fix: "Answer with explicit citation references (cit_NNNN from the prepared context pack); unattributed claims over research content are refused by law." },
   E1900: { code: "E1900", name: "internal_unreachable", summary: "An internal invariant was violated (engine bug).", fix: "File a bug with the trace id; this is never user-caused." },
   E1901: { code: "E1901", name: "canonical_json_rejected_value", summary: "Value cannot be canonically serialized (float/undefined/symbol).", fix: "Encode the value as an integer or string before journaling; hashed content must be byte-stable." },
+  E2000: { code: "E2000", name: "daemon_auth_required", summary: "The daemon request lacks the pairing token (or it does not match).", fix: "Pass the pairing token printed once at daemon start as 'Authorization: Bearer <token>'; /health, /version and /openapi.json are the only unauthenticated routes." },
+  E2001: { code: "E2001", name: "daemon_bind_refused", summary: "The daemon refused a non-loopback bind.", fix: "Bind the daemon to 127.0.0.1 (default), the user runtime unix socket, or a Windows named pipe; remote exposure requires a ratified transport-security ADR, never a flag." },
+  E2002: { code: "E2002", name: "daemon_route_unknown", summary: "No daemon route matches the method and path.", fix: "Fetch /openapi.json from the same daemon for the generated route surface; only implemented routes are described." },
+  E2003: { code: "E2003", name: "daemon_run_unknown", summary: "The requested run id is not known to this daemon workspace.", fix: "List known runs from the journal directory; run ids are crn_run_* journal names under .vaerion/journal/." },
+  E2004: { code: "E2004", name: "daemon_shutdown_echo_mismatch", summary: "The shutdown body did not echo the pairing token.", fix: "POST /shutdown with {\"token\":\"<pairing token>\"} — the echo guard prevents accidental shutdowns; authenticated callers still must echo the token in the body." },
+  E2005: { code: "E2005", name: "daemon_cancel_unavailable", summary: "The run cannot be cancelled in its current state.", fix: "Cancellation is defined for runs awaiting a durable gate (the open gate is denied) or for open runs with no live executor; in-flight runs finish their journaled step first." },
+  E2006: { code: "E2006", name: "daemon_nonloopback_refused", summary: "The wire client refused a non-loopback daemon address.", fix: "Attach the SDK client to 127.0.0.1, localhost or [::1] only; remote daemon attachment requires a ratified transport-security ADR." },
 };
 
 export class VaerionError extends Error {

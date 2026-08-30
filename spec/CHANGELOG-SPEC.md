@@ -4,6 +4,24 @@ All changes to files under `spec/` are recorded here. Evolution is
 additive-only within a major version; removals require a major bump and a
 deprecation window. Every entry requires two approvals on the change itself.
 
+## 0.1.4 — 2026-08-29 (MS-5 surfaces: local API daemon; additive only)
+
+Additive contract surface for the local API daemon (MS-5, ADR-0010 +
+ADR-0020). Nothing removed, nothing renamed; all prior v0.1 documents remain
+valid unchanged.
+
+- `openapi.json` — NEW. The machine-readable description of the daemon's
+  HTTP/SSE surface, GENERATED deterministically from the same route table
+  that dispatches requests (ADR-0010 decision 4: an "API gap" is impossible
+  by construction). Only implemented routes are described. Constitutional
+  check C4 verifies this file never drifts from the generator.
+- `errors.yaml` — added the 20xx range (local API daemon, ADR-0010): `E2000`
+  daemon_auth_required, `E2001` daemon_bind_refused, `E2002`
+  daemon_route_unknown, `E2003` daemon_run_unknown, `E2004`
+  daemon_shutdown_echo_mismatch, `E2005` daemon_cancel_unavailable, `E2006`
+  daemon_nonloopback_refused. Catalog version stays 1; codes are additive
+  and never reused (ADR-0014).
+
 ## 0.1.3 — 2026-08-29 (MS-4 intelligence + agents; additive only)
 
 Additive contract surface for the Agent Runtime, Workflow DAG Engine,

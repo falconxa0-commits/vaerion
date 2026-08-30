@@ -1,4 +1,38 @@
-# BUILD_REPORT — Vaerion MS-0 → MS-4 (Intelligence + Agents)
+# BUILD_REPORT — Vaerion MS-0 → MS-5 (Surfaces: local API daemon)
+
+---
+
+## 0a. What was built in MS-5 (this sprint — local API daemon, ADR-0010 + ADR-0020)
+
+PHASE 0 recovery first: prior-session MS-4 claims independently re-verified
+(ALL gates green on commit `90d86d2`, remote HEAD confirmed) before any new
+work. Then the daemon sprint:
+
+| Surface | Law it implements |
+|---|---|
+| `api/routes.ts` — route table (single source) | Dispatch and documentation are the SAME data (ADR-0010 decision 4): `spec/openapi.json` is generated from this table and constitutional check C4 verifies byte-sync; only implemented routes are described — an API gap is impossible by construction. |
+| `api/openapi.ts` — deterministic generator | OpenAPI 3.1 description, fixed key order, no timestamps; regenerated via `tools/gen-openapi.ts`. |
+| `api/server.ts` — Bun.serve loopback listener | Loopback-only binds (E2001 for anything else, before any socket); pairing-token authn from the platform CSPRNG (32B base64url), printed ONCE, `VAE_TRUST` headless pre-provision (R-S2), timing-safe comparison via sha256 digests; fail-closed 401 E2000 on every route except /health, /version, /openapi.json; VaerionError → stable HTTP mapping (401/403/404/409/400) with the machine-parseable Fix: contract; graceful shutdown waits (bounded) for in-flight runs. |
+| `api/run-registry.ts` — background execution | The SAME engine composition the CLI runs (RunHarness + AgentRuntime/WorkflowEngine + GatewayService + ToolInvocationService + agentGrants ceiling-internal derivation). SERIAL run queue per workspace: the audit ledger and refusal log are single-writer chains, so concurrent executions are refused by design until an ADR says otherwise. Runs paused on durable gates RELEASE the writer lock; status is a pure journal fold (verify + RunState + agent/workflow folds + metrics + receipt), with an honest "accepted; first journal record pending" view for the 201→first-write window. |
+| Wire run lifecycle | POST /runs (agent|workflow) → 201 + Location; GET /runs/{id}; GET /runs (journal listing); POST /runs/{id}/answer (durable gate resolution — the `vae resume --answer` law; denial closes receipted); POST /runs/{id}/continue (agent continuation as the SAME principal per the elevation law; workflow continuation takes the original DAG); POST /runs/{id}/cancel (receipted; awaiting-gate runs deny their open gates explicitly — in-flight runs refuse with E2005 because the supervisor loop is the only authority between steps); POST /shutdown (token echo guard E2004). |
+| SSE event streams | GET /runs/{id}/events replays journal envelopes with seq > cursor (R-RT1), then follows the journal to the receipt; GET /events is the merged workspace tail ordered by (ts, run_id, seq) with types filter and replay bound. Payloads pass `redactDeep` BEFORE publication (ADR-0011 redaction-before-publication law). |
+| Capability surfaces | GET /models (+ /models/{logical}, greedy provider/model matching) — gateway matrix and price records, secret NAMES only; GET /tools — declared tools + deterministic builtins. |
+| CLI `vae serve` | Additive eighth command (Daily Seven unchanged): binds, prints the token once, teaches everything in `serve --help`, stops cleanly on shutdown/SIGINT. |
+| SDK wire client | `daemon-transport.ts` = the ONE sanctioned CLIENT egress site (C1 allow, symmetric to ADR-0019), loopback-enforced IN CODE (E2006 for any non-loopback host before a byte is sent); `VaeDaemonClient` (runs, gates, continuations, cancels, SSE generators, models/tools, shutdown) with PARITY TESTS: the same agent run journals an identical event-type sequence in-process and over the wire. |
+| Verification law growth | layerlint: `api/` classified L4 with a hard edge (api must not import cli — sibling surfaces over the same contracts); constitutional-check C7: the listener surface can NEVER egress (no fetch/http-client in `api/`, zero allow entries); C4 extended with openapi byte-sync. |
+| Contracts | spec 0.1.4 (additive): `openapi.json` + E2000–E2006 (daemon_auth_required, daemon_bind_refused, daemon_route_unknown, daemon_run_unknown, daemon_shutdown_echo_mismatch, daemon_cancel_unavailable, daemon_nonloopback_refused). |
+
+**Root-cause defect fixed during MS-5 (found by the new tests):**
+`cmdResume` (CLI) continued agent runs as a synthetic principal
+(`agent:resumed`) that can never match the elevation key granted to the
+original run principal (`agent:<run-id-suffix>`) — a prompt-policy agent run
+would re-prompt forever after approval, violating the elevation law
+("authority for the SAME principal+domain+scope"). Fixed in BOTH the CLI and
+the daemon continuation path: resume continues as the identity that asked.
+Also fixed by tests: GET /runs/{id} answered E2003 ("not known") in the
+201→first-journal-write window (now an honest accepted/pending view), and
+`GET /models/{logical}` now matches multi-segment logical ids
+(`provider/model`).
 
 ---
 

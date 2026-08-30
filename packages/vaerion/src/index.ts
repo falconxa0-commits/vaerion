@@ -88,3 +88,6 @@ export * from "./research/index.ts";
 // CLI (L4)
 export { runCli, parseArgs, MAIN_HELP, VERSION } from "./cli/vae.ts";
 export { ExitCode, type CliIo, type OutputMode } from "./cli/io.ts";
+
+// local API daemon (L4 — MS-5)
+export * from "./api/index.ts";

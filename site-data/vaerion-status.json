@@ -1,108 +1,110 @@
 {
-  "generatedAt": "2026-08-29T21:16:52.204Z",
+  "generatedAt": "2026-08-30T02:01:52.007Z",
   "engineVersion": "0.1.0-ms1",
   "substrate": "TypeScript on Bun (ADR-0018, Proposed — pending Founder ratification)",
   "verification": {
-    "generatedAt": "2026-08-29T21:16:52.170Z",
+    "generatedAt": "2026-08-30T02:00:40.565Z",
     "ok": true,
     "gates": [
       {
         "gate": "typecheck-engine",
         "ok": true,
-        "durationMs": 3290
+        "durationMs": 3225
       },
       {
         "gate": "typecheck-sdk",
         "ok": true,
-        "durationMs": 2655
+        "durationMs": 2822
       },
       {
         "gate": "tests",
         "ok": true,
-        "durationMs": 838
+        "durationMs": 1662
       },
       {
         "gate": "layerlint",
         "ok": true,
-        "durationMs": 28
+        "durationMs": 27
       },
       {
         "gate": "constitutional-check",
         "ok": true,
-        "durationMs": 173
+        "durationMs": 203
       },
       {
         "gate": "repo-lint",
         "ok": true,
-        "durationMs": 8304
+        "durationMs": 8560
       }
     ]
   },
   "tests": {
-    "suites": 19,
-    "assertedExpectations": 1563,
-    "totalTests": 218,
+    "suites": 22,
+    "assertedExpectations": 1700,
+    "totalTests": 237,
     "coverage": {
-      "lines": 84.62,
-      "branches": 89.45,
-      "floors": "bunfig.toml coverageThreshold (OBJ-Q6, ratcheted at MS-4)"
+      "lines": 85.23,
+      "branches": 90.16,
+      "floors": "bunfig.toml coverageThreshold (OBJ-Q6, ratcheted at MS-5 daemon close: 0.85/0.74/0.85/0.89)"
     },
     "note": "counts from the latest full run of `bun test tests/ --coverage`"
   },
   "code": {
     "engine": {
-      "files": 81,
-      "lines": 12429
+      "files": 86,
+      "lines": 14252
     },
     "engineTests": {
-      "files": 19,
-      "lines": 5355
+      "files": 22,
+      "lines": 5912
     },
     "sdk": {
-      "files": 1,
-      "lines": 439
+      "files": 3,
+      "lines": 779
     },
     "tools": {
-      "files": 4,
-      "lines": 471
+      "files": 5,
+      "lines": 522
     }
   },
   "contracts": {
     "specFiles": [
-      "spec/schemas/envelope.schema.json",
-      "spec/schemas/evidence-record.schema.json",
-      "spec/schemas/broker-decision.schema.json",
-      "spec/schemas/capability-declaration.schema.json",
-      "spec/schemas/vaerion-yaml.schema.json",
       "spec/schemas/gate.schema.json",
-      "spec/schemas/journal-record.schema.json",
+      "spec/schemas/envelope.schema.json",
+      "spec/schemas/broker-decision.schema.json",
       "spec/schemas/receipt.schema.json",
-      "spec/CHANGELOG-SPEC.md",
+      "spec/schemas/evidence-record.schema.json",
+      "spec/schemas/vaerion-yaml.schema.json",
+      "spec/schemas/capability-declaration.schema.json",
+      "spec/schemas/journal-record.schema.json",
+      "spec/openapi.json",
+      "spec/events/registry.json",
       "spec/errors.yaml",
-      "spec/README.md",
-      "spec/events/registry.json"
+      "spec/CHANGELOG-SPEC.md",
+      "spec/README.md"
     ],
-    "adrCount": 19,
+    "adrCount": 20,
     "adrFiles": [
-      "docs/adr/0011-tokio-axum-tower-stack.md",
-      "docs/adr/0008-sqlite-wal-fts5-vec-local-store.md",
+      "docs/adr/0007-strict-subset-yaml-vaeryaml-manifests.md",
+      "docs/adr/0009-wasi-p2-components-capability-broker.md",
+      "docs/adr/0001-monorepo-single-version-policy.md",
+      "docs/adr/0010-loopback-daemon-pairing-token.md",
+      "docs/adr/0004-centralized-permission-broker.md",
+      "docs/adr/0013-os-keychain-first-secrets-env-fallback.md",
+      "docs/adr/0006-event-sourced-run-journals-checkpoint-chaining.md",
       "docs/adr/0015-per-platform-exec-sandbox-matrix.md",
+      "docs/adr/0003-contract-first-specs-drive-sdk-generation.md",
+      "docs/adr/0012-cassette-mockbrain-hermetic-evals.md",
+      "docs/adr/0008-sqlite-wal-fts5-vec-local-store.md",
+      "docs/adr/0002-versioned-event-spine-envelope.md",
       "docs/adr/0018-engine-substrate-typescript-bun.md",
       "docs/adr/0016-reproducible-vxn-bundles.md",
-      "docs/adr/0001-monorepo-single-version-policy.md",
-      "docs/adr/0004-centralized-permission-broker.md",
-      "docs/adr/0009-wasi-p2-components-capability-broker.md",
-      "docs/adr/0010-loopback-daemon-pairing-token.md",
+      "docs/adr/0020-daemon-http-stack-ts-substrate.md",
       "docs/adr/0005-tiered-intelligence-progressive-enhancement.md",
-      "docs/adr/0007-strict-subset-yaml-vaeryaml-manifests.md",
-      "docs/adr/0003-contract-first-specs-drive-sdk-generation.md",
-      "docs/adr/0006-event-sourced-run-journals-checkpoint-chaining.md",
-      "docs/adr/0002-versioned-event-spine-envelope.md",
-      "docs/adr/0012-cassette-mockbrain-hermetic-evals.md",
-      "docs/adr/0014-stable-diagnostics-catalog-ecodes.md",
+      "docs/adr/0019-single-sanctioned-gateway-egress.md",
       "docs/adr/0017-reserved-cloud-seams.md",
-      "docs/adr/0013-os-keychain-first-secrets-env-fallback.md",
-      "docs/adr/0019-single-sanctioned-gateway-egress.md"
+      "docs/adr/0011-tokio-axum-tower-stack.md",
+      "docs/adr/0014-stable-diagnostics-catalog-ecodes.md"
     ]
   },
   "milestones": [
@@ -144,9 +146,9 @@
     {
       "id": "MS-5",
       "name": "Surfaces",
-      "status": "pending",
-      "progress": 12,
-      "evidence": "CLI Daily Seven operational with broker review loop + agent/workflow runs; SDK in-process client with broker + gateway + agent surface; daemon + SDK-parity-over-HTTP pending."
+      "status": "in_progress",
+      "progress": 75,
+      "evidence": "DONE this sprint: local API daemon (ADR-0010/ADR-0020) — loopback Bun.serve listener with pairing-token authn (CSPRNG, print-once, VAE_TRUST pre-provision, timing-safe compare); route table as the single source for dispatch AND the generated spec/openapi.json (C4 byte-sync); agent/workflow runs over the wire with the SAME engine composition as the CLI (serial run queue protecting the single-writer audit/refusal chains); SSE event streams with journal-cursor replay + follow-to-receipt and redaction-before-publication; workspace-wide merged event tail; durable gate answer/continue over the wire (elevation law); receipted cancellation for paused/interrupted runs; models/tools capability surfaces (secret NAMES only); POST /shutdown token-echo guard; `vae serve` CLI command (additive eighth command, Daily Seven unchanged); SDK wire client (daemon-transport.ts — the ONE sanctioned loopback-enforced client site, E2006) + VaeDaemonClient with parity tests proving identical journaled event-type sequences vs the in-process client; new checks: layerlint api/→L4 sibling-surface rule, C7 listener-egress-freedom, C4 openapi sync; spec 0.1.4 (openapi.json + E2000–E2006); coverage ratcheted to measured 85.23/90.16. REMAINING: extension kit alpha (WIT/host per ADR-0009, contingency R-2), optional blueprint route groups (sessions/intel/packages) deferred until their subsystems ship."
     },
     {
       "id": "MS-6",
@@ -163,16 +165,17 @@
       "evidence": "Post-hardening."
     }
   ],
-  "overallProgress": 64,
+  "overallProgress": 72,
   "risks": [
     "Substrate: TypeScript-on-Bun reference implementation awaits Founder ADR-0018 ratification before shipping milestones.",
     "Journal per-record fsync trades durability for throughput; batching decision needed before agent-scale testing.",
     "Provider price table is build-time data (2026-08); provider drift is a data update with a reviewed contract change.",
-    "Breaker state is per-process (deliberately not journaled); multi-process breaker sharing is an MS-5 daemon concern.",
-    "ModelPlanner success path needs a recorded real-provider cassette for end-to-end golden coverage (MockBrain output is not plan JSON by design)."
+    "Breaker state is per-process (deliberately not journaled); the daemon executes runs serially per workspace so breaker/audit chains stay sound, but multi-process daemon federation still needs an ADR.",
+    "ModelPlanner success path needs a recorded real-provider cassette for end-to-end golden coverage (MockBrain output is not plan JSON by design).",
+    "Extension kit alpha (ADR-0009 WIT/host) is the remaining MS-5 exit criterion; Bun's WASI support must be evaluated against the fail-closed capability law before the host lands."
   ],
   "nextWork": [
-    "MS-5: loopback daemon (ADR-0010) so SDK parity holds over the wire, not only in-process; HTTP/SSE transport; extension kit.",
+    "MS-5 completion: extension kit alpha (WIT locked, host fail-closed per ADR-0009/contingency R-2); optional blueprint route groups (sessions/intel/packages) once their subsystems warrant wire exposure.",
     "Record real-provider planning cassettes through scripts/record-cassettes.ts when network access is available.",
     "Ratify or amend ADR-0018 (substrate) and re-baseline shipping goals accordingly.",
     "Coverage: per-module ratchets on top of the total-based floors (mechanical follow-up)."

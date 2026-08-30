@@ -7,12 +7,17 @@
  *   L0 (kernel, config)      → L0
  *   L1 (spine, journal, store, receipts, broker) → L0, L1
  *   L2 (runtime, research)   → L0, L1, L2
- *   L4 (cli)                 → L0, L1, L2, L4
+ *   L4 (cli, api)            → L0, L1, L2, L4
+ *
+ * L2 also holds the MS-4 intelligence modules (agents, workflow, evals) —
+ * they compose the runtime spine and may not be imported by it.
  *
  * Additional hard edges:
  *   - journal must not import runtime (would invert the dependency the run
  *     harness owns);
  *   - broker must not import runtime;
+ *   - spine must not import journal (persistence bridges live above);
+ *   - api must not import cli (two sibling surfaces over the same contracts);
  *   - nothing in packages/vaerion/src imports sdks/ or tools/.
  */
 
@@ -29,7 +34,7 @@ function layerOf(relPath: string): Layer | null {
   if (p.startsWith("kernel/") || p.startsWith("config/")) return "L0";
   if (p.startsWith("spine/") || p.startsWith("journal/") || p.startsWith("store/") || p.startsWith("receipts/") || p.startsWith("broker/")) return "L1";
   if (p.startsWith("runtime/") || p.startsWith("research/") || p.startsWith("agents/") || p.startsWith("workflow/") || p.startsWith("evals/")) return "L2";
-  if (p.startsWith("cli/")) return "L4";
+  if (p.startsWith("cli/") || p.startsWith("api/")) return "L4";
   return null;
 }
 
@@ -44,6 +49,7 @@ const FORBIDDEN_PAIRS: Array<{ from: RegExp; to: RegExp; why: string }> = [
   { from: /^journal\//, to: /^runtime\//, why: "journal must not know the run harness (inversion)" },
   { from: /^broker\//, to: /^runtime\//, why: "broker contracts must not know the run harness" },
   { from: /^spine\//, to: /^journal\//, why: "spine is storage-agnostic; persistence bridges live above (type-only exempt)" },
+  { from: /^api\//, to: /^cli\//, why: "the daemon is a sibling surface over the same contracts, never a CLI wrapper" },
 ];
 
 function walk(dir: string, out: string[] = []): string[] {

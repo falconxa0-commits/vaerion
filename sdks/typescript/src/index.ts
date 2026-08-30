@@ -436,3 +436,8 @@ export class VaeClient {
 
 export { RunHarness } from "@vaerion/engine";
 export default VaeClient;
+
+/* ── MS-5 daemon surface (wire parity over HTTP/SSE) ── */
+export { VaeDaemonClient, type VaeDaemonClientOptions, type DaemonRunStarted, type DaemonRunStatus, type DaemonEvent } from "./daemon.ts";
+export { DaemonWireTransport, assertLoopbackBase, type WireResponse } from "./daemon-transport.ts";
+

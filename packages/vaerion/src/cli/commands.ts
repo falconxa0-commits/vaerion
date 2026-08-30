@@ -901,6 +901,11 @@ export async function cmdResume(ctx: CommandContext): Promise<number> {
       const resumeIdGen = new SystemIdGen();
       if (agentState.started) {
         const { gateway, tools } = agentServices(resumeConfig, resumeClock, resumeIdGen, ws);
+        // Elevation law (MS-4): the approved gate is durable authority for the
+        // SAME principal that asked (agent:<run-id-suffix>). A synthetic
+        // principal would never match the elevation key and would re-prompt
+        // forever — resume continues as the same identity.
+        const samePrincipal = { kind: "agent" as const, id: `agent:${runId.slice(-8).toLowerCase()}` };
         const runtime = new AgentRuntime({
           harness,
           clock: resumeClock,
@@ -909,15 +914,14 @@ export async function cmdResume(ctx: CommandContext): Promise<number> {
           gateway,
           tools,
           research: null,
-          actor: { kind: "agent", id: agentState.history.length > 0 ? "agent:resumed" : "agent" },
+          actor: samePrincipal,
         });
         const goal = agentState.goal ?? "(resumed agent run)";
-        const principal = { kind: "agent" as const, id: "agent:resumed" };
         const planner = new InlinePlanner({ goal, steps: [] });
         const result = await runtime.run(
           {
             goal,
-            principal,
+            principal: samePrincipal,
             policy: resumePolicy,
             planner,
             budget: { tokensUsed: 0, microUsdUsed: 0, tokensPerRun: resumeConfig.gateway?.budgets?.tokensPerRun, microUsdPerRun: resumeConfig.gateway?.budgets?.microUsdPerRun },
@@ -1329,4 +1333,61 @@ export async function cmdDev(ctx: CommandContext): Promise<number> {
     next_milestone: "MS-5 Surfaces (daemon per ADR-0010; HTTP/SSE transport; SDK parity over the wire; extension kit)",
   });
   return ExitCode.ok;
+}
+
+/* ──────────────────────────────  serve (MS-5)  ────────────────────────────── */
+
+/** `vae serve` — the local API daemon (ADR-0010/ADR-0020): loopback HTTP/SSE
+ *  over the same contracts this CLI exercises, with first-run pairing-token
+ *  authn. VAE_TRUST=<token> pre-provisions headless starts (R-S2). */
+export async function cmdServe(ctx: CommandContext): Promise<number> {
+  const ws = workspaceAt(ctx.cwd);
+  await ensureWorkspaceDirs(ws);
+  const portFlag = typeof ctx.flags.port === "string" ? parseInt(String(ctx.flags.port), 10) : NaN;
+  const port = Number.isInteger(portFlag) && portFlag >= 0 && portFlag <= 65535 ? portFlag : undefined;
+  const hostname = typeof ctx.flags.host === "string" && String(ctx.flags.host).length > 0 ? String(ctx.flags.host) : undefined;
+  const trust = typeof process.env.VAE_TRUST === "string" && process.env.VAE_TRUST.length > 0 ? process.env.VAE_TRUST : undefined;
+  const renderer = r(ctx);
+  const { startDaemon } = await import("../api/server.ts");
+  const handle = await startDaemon({
+    workspaceDir: ws.root,
+    port,
+    hostname,
+    token: trust,
+    log: (line) => {
+      if (ctx.mode === "plain") io_line(ctx, line);
+    },
+  });
+  if (ctx.mode === "json") {
+    // The ONE machine line that carries the token (printed once, by law).
+    renderer.result({
+      command: "serve",
+      listening: `${handle.hostname}:${handle.port}`,
+      token: handle.tokenGenerated ? handle.token : "(pre-provisioned via VAE_TRUST)",
+      routes: "/openapi.json",
+      pid: process.pid,
+    });
+  } else {
+    io_line(ctx, `vae daemon listening on ${handle.hostname}:${handle.port} (loopback only, ADR-0010)`);
+    io_line(ctx, `machine surface: /openapi.json · health: /health · run it with 'vae --help' to learn the flow`);
+  }
+  const onSignal = () => {
+    void handle.stop().catch(() => undefined);
+  };
+  const proc = process as unknown as { once: (sig: string, fn: () => void) => void; removeListener: (sig: string, fn: () => void) => void };
+  proc.once("SIGINT", onSignal);
+  proc.once("SIGTERM", onSignal);
+  try {
+    await handle.stopped;
+  } finally {
+    proc.removeListener("SIGINT", onSignal);
+    proc.removeListener("SIGTERM", onSignal);
+  }
+  renderer.result({ command: "serve", stopped: true, note: "daemon stopped cleanly; journals were never touched" });
+  return ExitCode.ok;
+}
+
+/** Plain-mode single line (kept tiny; the daemon logs the token line itself). */
+function io_line(ctx: CommandContext, line: string): void {
+  ctx.io.out(line);
 }
