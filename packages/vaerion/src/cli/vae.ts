@@ -9,7 +9,7 @@
  */
 
 import { ExitCode, type CliIo } from "./io.ts";
-import { cmdDev, cmdExplain, cmdInit, cmdJournal, cmdDoctor, cmdResume, cmdRun, cmdServe, type CommandContext } from "./commands.ts";
+import { cmdDev, cmdExplain, cmdInit, cmdJournal, cmdDoctor, cmdPackage, cmdResume, cmdRun, cmdServe, type CommandContext } from "./commands.ts";
 import { VaerionError } from "../kernel/errors.ts";
 import { isVaerionError } from "./workspace.ts";
 
@@ -19,7 +19,7 @@ const MAIN_HELP = `vae — Vaerion engine command line (v${VERSION})
 
 Usage: vae [global flags] <command> [args] [flags]
 
-Daily Seven (the complete command surface):
+Command surface (the Daily Seven + additive commands):
   init                       scaffold vaerion.yaml + .vaerion/ workspace
   run research --sources P[,P] --query Q [--max-docs N]
   run demo [--sources P,P] [--query Q]
@@ -57,6 +57,16 @@ Daily Seven (the complete command surface):
                              over the same contracts this CLI exercises;
                              first-run pairing token printed once (or
                              pre-provision headlessly via VAE_TRUST)
+  package build [--out PATH] [--dry-run]
+                             build a reproducible .vxn bundle (MS-6,
+                             ADR-0016): a deterministic fold over the
+                             declared inputs + pin-verified extension
+                             artifacts — identical inputs, identical bytes;
+                             regenerates vaerion.lock
+  package verify BUNDLE [--dry-run]
+                             the pure check: digests recomputed, pins
+                             compared, content NEVER executed; honest
+                             per-check findings report
 
 Global flags:
   --json                     stable NDJSON output (machine mode, guaranteed)
@@ -168,6 +178,25 @@ vae journal export RUN_ID [--out PATH] [--dry-run]
   the token is then never printed. Shutdown: POST /shutdown with the token
   echoed in the body. Non-loopback binds are REFUSED (E2001): remote
   exposure requires a ratified transport-security ADR, never a flag.`,
+  package: `vae package build [--out PATH] [--dry-run]
+vae package verify BUNDLE [--dry-run]
+
+  build (MS-6, ADR-0016) folds the DECLARED inputs into a .vxn bundle:
+  package.include paths from vaerion.yaml (files carry themselves;
+  directories carry every file under them recursively) plus every declared
+  extension artifact — each pin-verified BEFORE it is bundled (a mismatched
+  artifact is never distributed, exactly as it is never executed). Entries
+  are canonically ordered; compression is zstd at the pinned level; content
+  identity is blake3. Identical inputs produce BYTE-IDENTICAL bundles — no
+  wall-clock, no ambient paths. The build also regenerates vaerion.lock
+  (generated, committed, never hand-edited). The build run is journaled and
+  closes with a receipt.
+
+  verify is the PURE check: it recomputes every digest, compares the
+  manifest pins against vaerion.yaml AND vaerion.lock (a mismatch is a hard
+  failure — the digest-swap defense), and reports an honest per-check
+  findings list. It NEVER executes package content. Exit 0 verified;
+  exit 5 with E2206 + findings when the bundle must be refused.`,
 };
 
 interface ParsedArgs {
@@ -261,6 +290,7 @@ export async function runCli(argv: string[], io: CliIo, cwd: string): Promise<Cl
       case "doctor": code = await cmdDoctor(ctx); break;
       case "dev": code = await cmdDev(ctx); break;
       case "serve": code = await cmdServe(ctx); break;
+      case "package": code = await cmdPackage(ctx); break;
       case "version": io.out(`vae ${VERSION}`); code = ExitCode.ok; break;
       default:
         io.err(`E1600 unknown command: ${parsed.command}. Fix: run \`vae --help\` for the Daily Seven.`);
@@ -272,13 +302,13 @@ export async function runCli(argv: string[], io: CliIo, cwd: string): Promise<Cl
       const renderer = new (await import("./render.ts")).Renderer(io, mode);
       renderer.error(err);
       const code =
-        err.code === "E1600" || err.code === "E1700" || err.code === "E1701"
+        err.code === "E1600" || err.code === "E1700" || err.code === "E1701" || err.code === "E2204"
           ? ExitCode.usage
           : err.code === "E1300" || err.code === "E1301" || err.code === "E1302"
             ? ExitCode.brokerDenied
             : err.code === "E1702" || err.code === "E1704" || err.code === "E1705" || err.code === "E1706" || err.code === "E1601"
               ? ExitCode.providerDown
-              : err.code === "E1703"
+              : err.code === "E1703" || err.code === "E2200" || err.code === "E2201" || err.code === "E2202" || err.code === "E2203" || err.code === "E2205" || err.code === "E2206"
                 ? ExitCode.partial
                 : ExitCode.internal;
       return { code };

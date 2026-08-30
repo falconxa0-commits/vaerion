@@ -6,8 +6,8 @@
 
 [test]
 coverage = true
-# Ratcheted at MS-5 extension-host close (measured 85.33% lines / 90.20%
-# branches; prior floors 0.85/0.74/0.85/0.89 set at the daemon close).
+# Ratcheted at MS-6 bundle-build close (measured 86.07% lines / 90.87%
+# branches; prior floors 0.85/0.74/0.85/0.90 set at the extension-host close).
 # Floors only move up (OBJ-Q6).
-coverageThreshold = { lines = 0.85, functions = 0.74, statements = 0.85, branches = 0.90 }
+coverageThreshold = { lines = 0.86, functions = 0.74, statements = 0.86, branches = 0.90 }
 coverageSkipTestFiles = true

@@ -387,6 +387,30 @@
           }
         }
       }
+    },
+    "package": {
+      "description": "Reproducible bundle declaration (MS-6, ADR-0016). The build is a fold over these declared inputs plus the lockfile pins: identical inputs produce byte-identical .vxn bundles. Import and verify are pure checks and never execute package content.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "include"
+      ],
+      "properties": {
+        "include": {
+          "description": "Project-relative paths to carry in the bundle: a file path carries that file; a directory path carries every file under it recursively. Entries are ordered canonically; paths must stay inside the project root (traversal refused, E2204).",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "out": {
+          "description": "Bundle output path override (project-relative). Default: .vaerion/package/<project.name>.vxn.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
     }
   }
 }

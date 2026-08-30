@@ -9,8 +9,9 @@
  *   L2 (runtime, research)   → L0, L1, L2
  *   L4 (cli, api)            → L0, L1, L2, L4
  *
- * L2 also holds the MS-4 intelligence modules (agents, workflow, evals) —
- * they compose the runtime spine and may not be imported by it.
+ * L2 also holds the MS-4 intelligence modules (agents, workflow, evals) and
+ * the MS-6 packaging subsystem — they compose the runtime spine and may not
+ * be imported by it.
  *
  * Additional hard edges:
  *   - journal must not import runtime (would invert the dependency the run
@@ -33,7 +34,7 @@ function layerOf(relPath: string): Layer | null {
   const p = relPath.replaceAll("\\", "/");
   if (p.startsWith("kernel/") || p.startsWith("config/")) return "L0";
   if (p.startsWith("spine/") || p.startsWith("journal/") || p.startsWith("store/") || p.startsWith("receipts/") || p.startsWith("broker/")) return "L1";
-  if (p.startsWith("runtime/") || p.startsWith("research/") || p.startsWith("agents/") || p.startsWith("workflow/") || p.startsWith("evals/") || p.startsWith("extensions/")) return "L2";
+  if (p.startsWith("runtime/") || p.startsWith("research/") || p.startsWith("agents/") || p.startsWith("workflow/") || p.startsWith("evals/") || p.startsWith("extensions/") || p.startsWith("package/")) return "L2";
   if (p.startsWith("cli/") || p.startsWith("api/")) return "L4";
   return null;
 }

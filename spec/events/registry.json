@@ -153,6 +153,14 @@
     {
       "type": "store.blob.put",
       "description": "Content was stored in the blake3 content-addressed blob store; the payload carries the blob_ref."
+    },
+    {
+      "type": "package.built",
+      "description": "A .vxn bundle was built as a deterministic fold over declared inputs; the payload carries the bundle blake3 digest, entry count, and byte size."
+    },
+    {
+      "type": "package.verified",
+      "description": "A .vxn bundle was verified as a pure check (digests recomputed, pins compared; content never executed); the payload carries the outcome and the bundle blake3 digest."
     }
   ]
 }

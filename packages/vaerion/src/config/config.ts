@@ -75,6 +75,19 @@ export interface ExtensionConfig {
   description?: string;
 }
 
+/** Reproducible bundle declaration (MS-6, ADR-0016): the build is a fold over
+ *  these declared inputs plus the lockfile pins — identical inputs produce
+ *  byte-identical .vxn bundles. */
+export interface PackageConfig {
+  /** Project-relative paths: files carry themselves; directories carry every
+   *  file under them recursively. Entries are canonically ordered; traversal
+   *  is refused (E2204). */
+  include: string[];
+  /** Bundle output path override (project-relative).
+   *  Default: .vaerion/package/<project.name>.vxn. */
+  out?: string;
+}
+
 export interface VaerionConfig {
   schemaVersion: string;
   project: {
@@ -109,10 +122,12 @@ export interface VaerionConfig {
   tools?: ToolDeclarationConfig[];
   /** Declared extensions (MS-5, ADR-0009) — pinned subprocess tools (R-2 host). */
   extensions?: ExtensionConfig[];
+  /** Reproducible bundle declaration (MS-6, ADR-0016). */
+  package?: PackageConfig;
   telemetry: { enabled: false };
 }
 
-const TOP_LEVEL_KEYS: ReadonlySet<string> = new Set(["schemaVersion", "project", "permissions", "research", "policy", "gateway", "secrets", "agents", "tools", "extensions", "telemetry"]);
+const TOP_LEVEL_KEYS: ReadonlySet<string> = new Set(["schemaVersion", "project", "permissions", "research", "policy", "gateway", "secrets", "agents", "tools", "extensions", "package", "telemetry"]);
 const PROJECT_KEYS: ReadonlySet<string> = new Set(["name", "description"]);
 const PERMISSIONS_KEYS: ReadonlySet<string> = new Set(["net", "exec"]);
 const RESEARCH_KEYS: ReadonlySet<string> = new Set(["capabilities"]);
@@ -124,6 +139,7 @@ const SECRETS_ENTRY_KEYS: ReadonlySet<string> = new Set(["grant"]);
 const AGENTS_KEYS: ReadonlySet<string> = new Set(["maxSteps", "plannerModel"]);
 const TOOL_DECLARATION_KEYS: ReadonlySet<string> = new Set(["name", "scope", "description"]);
 const EXTENSION_KEYS: ReadonlySet<string> = new Set(["name", "artifact", "digest", "timeoutMs", "maxHostCalls", "args", "description"]);
+const PACKAGE_KEYS: ReadonlySet<string> = new Set(["include", "out"]);
 const ARG_KINDS: ReadonlySet<string> = new Set(["string", "number", "boolean", "string[]", "number[]", "any"]);
 const POLICY_RULE_KEYS: ReadonlySet<string> = new Set(["id", "principalKinds", "domain", "scope", "effect", "gateLabel", "rationale"]);
 const PRINCIPAL_KINDS: ReadonlySet<string> = new Set(["human", "agent", "tool", "extension", "research", "system"]);
@@ -405,6 +421,33 @@ export function validateConfig(value: unknown): VaerionConfig {
           }
         }
       }
+    }
+  }
+
+  const pkg = c.package as Record<string, unknown> | undefined;
+  if (pkg !== undefined) {
+    if (!pkg || typeof pkg !== "object" || Array.isArray(pkg)) {
+      throw new VaerionError("E1202", "package must be a mapping");
+    }
+    for (const key of Object.keys(pkg)) {
+      if (!PACKAGE_KEYS.has(key)) throw new VaerionError("E1201", `unknown package key: ${key}`, { key: `package.${key}` });
+    }
+    if (!Array.isArray(pkg.include) || pkg.include.length === 0) {
+      throw new VaerionError("E1202", "package.include must be a non-empty array of project-relative paths");
+    }
+    for (const p of pkg.include) {
+      if (typeof p !== "string" || p.length === 0) {
+        throw new VaerionError("E1202", "package.include entries must be non-empty strings");
+      }
+      if (p.startsWith("/") || /^[a-zA-Z]:/.test(p) || p.split("/").some((s) => s === "." || s === "..")) {
+        throw new VaerionError("E1202", `package.include entry "${p}" must be a project-relative path without traversal (E2204 law at build time)`);
+      }
+    }
+    if (pkg.out !== undefined && (typeof pkg.out !== "string" || pkg.out.length === 0)) {
+      throw new VaerionError("E1202", "package.out must be a non-empty project-relative path when present");
+    }
+    if (typeof pkg.out === "string" && (pkg.out.startsWith("/") || /^[a-zA-Z]:/.test(pkg.out) || pkg.out.split("/").some((s) => s === "." || s === ".."))) {
+      throw new VaerionError("E1202", `package.out "${pkg.out}" must be a project-relative path without traversal`);
     }
   }
 

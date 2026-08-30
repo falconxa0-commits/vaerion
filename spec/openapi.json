@@ -818,8 +818,8 @@
     }
   },
   "x-vaerion-contracts": {
-    "eventTypes": 38,
-    "errorCodes": 60,
+    "eventTypes": 40,
+    "errorCodes": 67,
     "envelopeVersion": 1,
     "engineVersion": "0.1.0-ms1"
   }

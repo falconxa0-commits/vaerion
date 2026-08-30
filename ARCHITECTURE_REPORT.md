@@ -1,10 +1,10 @@
-# ARCHITECTURE_REPORT — Vaerion (as of MS-5: local API daemon)
+# ARCHITECTURE_REPORT — Vaerion (as of MS-6: reproducible bundles)
 
 | | |
 |---|---|
-| **Date** | 2026-08-29 |
-| **Scope** | Architecture state after MS-5 Surfaces (local API daemon) — layers, boundaries, data flows, and the sanctioned seams |
-| **Verification** | ALL 6 GATES GREEN (`VERIFICATION_REPORT.md`); layerlint: 86 files / 405 runtime edges / 0 violations |
+| **Date** | 2026-08-30 |
+| **Scope** | Architecture state after the MS-6 bundle-build objective (ADR-0016) — layers, boundaries, data flows, and the sanctioned seams |
+| **Verification** | ALL 6 GATES GREEN (`VERIFICATION_REPORT.md`); layerlint: 94 files / 446 runtime edges / 0 violations |
 
 ---
 
@@ -14,7 +14,7 @@
 |---|---|---|
 | L0 | `kernel/` (errors, ids, clock, canonical, redact, hash), `config/` | nothing above |
 | L1 | `spine/`, `journal/`, `store/`, `receipts/`, `broker/` (contracts + engine + refusal log), `gateway/` | L0 |
-| L2 | `runtime/run.ts`, `research/`, `agents/`, `workflow/`, `evals/` | L0, L1 |
+| L2 | `runtime/run.ts`, `research/`, `agents/`, `workflow/`, `evals/`, `extensions/`, `package/` (MS-6) | L0, L1 |
 | L4 | `cli/`, `api/` (local daemon — MS-5) | L0–L2 |
 | SDK | `sdks/typescript` (in-process client + wire client) | engine public API |
 
@@ -173,3 +173,37 @@ budget, time) kills the process and journals an honest `extension.exited
 runtime spine and is never imported by it. When the WASI-P2 component
 toolchain lands, the SAME world and broker semantics move onto components;
 the WIT contract is locked now.
+
+## 15. MS-6 architecture additions (reproducible bundles, ADR-0016)
+
+**The bundle is a protocol artifact, not an archive choice.** `package/`
+(L2, beside `extensions/`) implements ADR-0016 exactly: a `.vxn` file is
+magic `VXN1` + a CANONICAL JSON manifest + a zstd-pinned (level 19) payload
+of a canonically ordered entry stream; identity is blake3 per entry and over
+the full bytes. Three laws make rebuilds byte-identical (P2): the build is a
+FOLD over declared inputs (`package.include` + pin-verified extension
+artifacts — auto-carried because the manifest pins them), the manifest
+records no wall-clock and no ambient paths, and the compression level is
+part of the format contract (drift ⇒ E2203, never a silent rebuild).
+
+**Verify is a pure check, import never executes.** `verifyBundleBytes`
+recomputes every digest and compares pins, then REPORTS honest per-check
+findings (E2200 format law · E2201 digests · E2202 pin swap both directions
+against config · E2203 magic/version · E2205 stale lock) — content is never
+executed, never even written to the workspace. The digest-swap defense of
+Blueprint §9.4 is enforced: manifest pins must equal vaerion.yaml pins AND
+vaerion.lock pins, and the lock must seal exactly the bytes being verified.
+
+**The lockfile closes the source-of-truth chain.** `vaerion.lock` is the
+third element of `vaerion.yaml → vaerion.lock → spec/`: a generated,
+committed, canonical-JSON seal (config fingerprint, extension pins, bundle
+digest). It is never hand-edited — doctor cross-checks it against reality
+and points at `vae package build` for the repair; the lock diff is the
+review surface for any supply-chain change.
+
+**Surface placement.** `vae package build|verify` is the additive NINTH
+command (D-M remains the Daily Seven; `serve` (MS-5) and `package` (MS-6)
+are documented additive commands on the same five-guarantee law). Build and
+verify open REAL run journals (`package.built` / `package.verified` events,
+receipts) — packaging is journaled like every other engine action, with
+`--dry-run` computing the full fold in memory and writing nothing.

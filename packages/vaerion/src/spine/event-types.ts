@@ -56,6 +56,9 @@ export const EVENT_TYPES = [
   "reasoning.folded",
   "extension.spawned",
   "extension.exited",
+  // packaging (MS-6 — reproducible .vxn bundles, ADR-0016)
+  "package.built",
+  "package.verified",
   // store
   "store.blob.put",
 ] as const;

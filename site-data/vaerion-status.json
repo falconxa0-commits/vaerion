@@ -1,62 +1,62 @@
 {
-  "generatedAt": "2026-08-30T02:35:51.511Z",
+  "generatedAt": "2026-08-30T11:03:47.774Z",
   "engineVersion": "0.1.0-ms1",
   "substrate": "TypeScript on Bun (ADR-0018, Proposed — pending Founder ratification)",
   "verification": {
-    "generatedAt": "2026-08-30T02:35:28.021Z",
+    "generatedAt": "2026-08-30T11:02:44.252Z",
     "ok": true,
     "gates": [
       {
         "gate": "typecheck-engine",
         "ok": true,
-        "durationMs": 3780
+        "durationMs": 3944
       },
       {
         "gate": "typecheck-sdk",
         "ok": true,
-        "durationMs": 3098
+        "durationMs": 3222
       },
       {
         "gate": "tests",
         "ok": true,
-        "durationMs": 2633
+        "durationMs": 2801
       },
       {
         "gate": "layerlint",
         "ok": true,
-        "durationMs": 28
+        "durationMs": 34
       },
       {
         "gate": "constitutional-check",
         "ok": true,
-        "durationMs": 194
+        "durationMs": 227
       },
       {
         "gate": "repo-lint",
         "ok": true,
-        "durationMs": 9135
+        "durationMs": 9738
       }
     ]
   },
   "tests": {
-    "suites": 23,
-    "assertedExpectations": 1740,
-    "totalTests": 250,
+    "suites": 25,
+    "assertedExpectations": 1858,
+    "totalTests": 278,
     "coverage": {
-      "lines": 85.33,
-      "branches": 90.2,
-      "floors": "bunfig.toml coverageThreshold (OBJ-Q6, ratcheted at MS-5 close: 0.85/0.74/0.85/0.90)"
+      "lines": 86.07,
+      "branches": 90.87,
+      "floors": "bunfig.toml coverageThreshold (OBJ-Q6, ratcheted at MS-6 bundle close: 0.86/0.74/0.86/0.90)"
     },
     "note": "counts from the latest full run of `bun test tests/ --coverage`"
   },
   "code": {
     "engine": {
-      "files": 89,
-      "lines": 14913
+      "files": 94,
+      "lines": 16110
     },
     "engineTests": {
-      "files": 23,
-      "lines": 6385
+      "files": 25,
+      "lines": 7008
     },
     "sdk": {
       "files": 3,
@@ -64,48 +64,48 @@
     },
     "tools": {
       "files": 5,
-      "lines": 521
+      "lines": 522
     }
   },
   "contracts": {
     "specFiles": [
-      "spec/schemas/gate.schema.json",
-      "spec/schemas/envelope.schema.json",
       "spec/schemas/broker-decision.schema.json",
       "spec/schemas/receipt.schema.json",
       "spec/schemas/evidence-record.schema.json",
-      "spec/schemas/vaerion-yaml.schema.json",
       "spec/schemas/capability-declaration.schema.json",
+      "spec/schemas/vaerion-yaml.schema.json",
       "spec/schemas/journal-record.schema.json",
-      "spec/openapi.json",
-      "spec/events/registry.json",
+      "spec/schemas/gate.schema.json",
+      "spec/schemas/envelope.schema.json",
+      "spec/README.md",
       "spec/errors.yaml",
       "spec/wit/vaerion-extension@0.1.0.wit",
+      "spec/events/registry.json",
       "spec/CHANGELOG-SPEC.md",
-      "spec/README.md"
+      "spec/openapi.json"
     ],
     "adrCount": 20,
     "adrFiles": [
-      "docs/adr/0007-strict-subset-yaml-vaeryaml-manifests.md",
-      "docs/adr/0009-wasi-p2-components-capability-broker.md",
+      "docs/adr/0019-single-sanctioned-gateway-egress.md",
       "docs/adr/0001-monorepo-single-version-policy.md",
-      "docs/adr/0010-loopback-daemon-pairing-token.md",
       "docs/adr/0004-centralized-permission-broker.md",
-      "docs/adr/0013-os-keychain-first-secrets-env-fallback.md",
-      "docs/adr/0006-event-sourced-run-journals-checkpoint-chaining.md",
-      "docs/adr/0015-per-platform-exec-sandbox-matrix.md",
-      "docs/adr/0003-contract-first-specs-drive-sdk-generation.md",
-      "docs/adr/0012-cassette-mockbrain-hermetic-evals.md",
-      "docs/adr/0008-sqlite-wal-fts5-vec-local-store.md",
-      "docs/adr/0002-versioned-event-spine-envelope.md",
       "docs/adr/0018-engine-substrate-typescript-bun.md",
+      "docs/adr/0012-cassette-mockbrain-hermetic-evals.md",
+      "docs/adr/0013-os-keychain-first-secrets-env-fallback.md",
+      "docs/adr/0008-sqlite-wal-fts5-vec-local-store.md",
+      "docs/adr/0015-per-platform-exec-sandbox-matrix.md",
+      "docs/adr/0006-event-sourced-run-journals-checkpoint-chaining.md",
       "docs/adr/0016-reproducible-vxn-bundles.md",
       "docs/adr/0020-daemon-http-stack-ts-substrate.md",
-      "docs/adr/0005-tiered-intelligence-progressive-enhancement.md",
-      "docs/adr/0019-single-sanctioned-gateway-egress.md",
       "docs/adr/0017-reserved-cloud-seams.md",
+      "docs/adr/0002-versioned-event-spine-envelope.md",
+      "docs/adr/0014-stable-diagnostics-catalog-ecodes.md",
       "docs/adr/0011-tokio-axum-tower-stack.md",
-      "docs/adr/0014-stable-diagnostics-catalog-ecodes.md"
+      "docs/adr/0009-wasi-p2-components-capability-broker.md",
+      "docs/adr/0007-strict-subset-yaml-vaeryaml-manifests.md",
+      "docs/adr/0010-loopback-daemon-pairing-token.md",
+      "docs/adr/0003-contract-first-specs-drive-sdk-generation.md",
+      "docs/adr/0005-tiered-intelligence-progressive-enhancement.md"
     ]
   },
   "milestones": [
@@ -154,9 +154,9 @@
     {
       "id": "MS-6",
       "name": "Packaging + Hardening",
-      "status": "pending",
-      "progress": 0,
-      "evidence": "Pack/verify flows not started."
+      "status": "in_progress",
+      "progress": 40,
+      "evidence": "REPRODUCIBLE BUNDLES (ADR-0016) COMPLETE: src/package/ deterministic .vxn format (magic VXN1, canonical JSON manifest, strictly ascending entry order, zstd pinned level 19, blake3 content identity); build = pure fold over declared inputs (config package.include + pin-verified extension artifacts auto-carried, E2100 refusal on mismatch) — no wall-clock, no ambient paths, byte-identical rebuilds proven by test; vaerion.lock generated canonical-JSON seal (config fingerprint + extension pins + bundle digest); verify = pure check with honest per-check findings (payload/entry digests E2201, pin swap E2202, non-canonical E2200, bad magic E2203, stale lock E2205) — content NEVER executed; CLI `vae package build|verify` (additive ninth command) with --dry-run purity + journaled package.built/package.verified runs + receipts; doctor package-lock cross-check (E2205); config package block (spec 0.1.6: errors E2200–E2206, events package.built/verified); exit-code mapping E2204→usage, verification failures→partial; +28 tests (unit format law + integration build/verify/tamper matrix/doctor), coverage ratcheted to measured 86.07/90.87. REMAINING: installers, docs sweep, accessibility, performance double-check."
     },
     {
       "id": "GA",
@@ -166,7 +166,7 @@
       "evidence": "Post-hardening."
     }
   ],
-  "overallProgress": 75,
+  "overallProgress": 80,
   "risks": [
     "Substrate: TypeScript-on-Bun reference implementation awaits Founder ADR-0018 ratification before shipping milestones.",
     "Journal per-record fsync trades durability for throughput; batching decision needed before agent-scale testing.",
@@ -175,7 +175,7 @@
     "ModelPlanner success path needs a recorded real-provider cassette for end-to-end golden coverage (MockBrain output is not plan JSON by design)."
   ],
   "nextWork": [
-    "Optional blueprint route groups (sessions/intel/packages) land when their subsystems warrant wire exposure; the extension host upgrades to WASI-P2 components when the component toolchain is available (the WIT world is already locked).",
+    "MS-6 remaining exit criteria: installers, docs sweep, accessibility, performance double-check; then the daemon packages route group (wire parity, spec/openapi regen) now that the packaging subsystem exists.",
     "Record real-provider planning cassettes through scripts/record-cassettes.ts when network access is available.",
     "Ratify or amend ADR-0018 (substrate) and re-baseline shipping goals accordingly.",
     "Coverage: per-module ratchets on top of the total-based floors (mechanical follow-up)."

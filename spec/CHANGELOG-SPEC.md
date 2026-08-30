@@ -4,6 +4,32 @@ All changes to files under `spec/` are recorded here. Evolution is
 additive-only within a major version; removals require a major bump and a
 deprecation window. Every entry requires two approvals on the change itself.
 
+## 0.1.6 — 2026-08-30 (MS-6 packaging: reproducible .vxn bundles; additive only)
+
+Additive contract surface for reproducible packaging (MS-6, ADR-0016).
+Nothing removed, nothing renamed; all prior v0.1 documents remain valid
+unchanged.
+
+- `errors.yaml` — added the 22xx range (reproducible bundles / packaging,
+  ADR-0016): `E2200` vxn_format_invalid, `E2201` vxn_digest_mismatch,
+  `E2202` vxn_pin_mismatch, `E2203` vxn_unsupported_format, `E2204`
+  vxn_input_missing, `E2205` vxn_lock_mismatch, `E2206` vxn_verify_failed.
+  Catalog version stays 1; codes are additive and never reused (ADR-0014).
+- `events/registry.json` — added `package.built` (a `.vxn` bundle was built
+  as a deterministic fold over declared inputs; the payload carries the
+  bundle blake3 digest, entry count, and byte size) and `package.verified`
+  (a bundle was verified as a pure check — digests recomputed, pins
+  compared, content never executed; the payload carries the outcome and the
+  bundle blake3 digest). Registry version stays 1; evolution is additive
+  per ADR-0002.
+- `schemas/vaerion-yaml.schema.json` — added the optional top-level
+  `package` object (`include`: project-relative paths — files carry
+  themselves, directories carry every file under them recursively;
+  optional `out` path override). The build is a fold over declared inputs
+  plus lockfile pins: identical inputs produce byte-identical bundles
+  (P2). Import and verify are pure checks and never execute package
+  content (ADR-0016 decision 3). Strict unknown-key rejection is unchanged.
+
 ## 0.1.5 — 2026-08-29 (MS-5 surfaces: extension host alpha; additive only)
 
 Additive contract surface for the extension host (MS-5, ADR-0009

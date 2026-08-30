@@ -1,8 +1,40 @@
-# BUILD_REPORT — Vaerion MS-0 → MS-5 (Surfaces: local API daemon)
+# BUILD_REPORT — Vaerion MS-0 → MS-6 (Packaging: reproducible .vxn bundles)
 
 ---
 
-## 0a. What was built in MS-5 (this sprint — local API daemon, ADR-0010 + ADR-0020)
+## 0. What was built in MS-6 so far (this sprint — reproducible bundles, ADR-0016)
+
+PHASE 0 recovery first: the sprint opened with constitutional reality
+recovery — git state audited (clean tree, main; no remote configured in this
+environment — GitHub sync marked UNVERIFIED with the exact reason: no remote
+URL and no credential are provisioned in the sandbox; nothing was pushed,
+nothing was claimed pushed), all governance documents re-read, and ALL 6
+gates independently re-run GREEN on the MS-5 tree (250 tests / 1740
+expectations / 85.33-90.20) before any new work. Then the packaging sprint:
+
+| Surface | Law it implements |
+|---|---|
+| `src/package/format.ts` — the .vxn format | ADR-0016: magic `VXN1` (format version in the magic; newer magics refuse with E2203); canonical JSON manifest (sorted keys, no whitespace — a non-canonical header is a hard E2200, not a parsing choice); strictly ascending canonical entry order (out-of-order/duplicates refuse); entry stream `u32be pathLen · path · u64be len · content`; zstd at PINNED level 19 (the pin is part of the format contract — E2203 at encode/decode on drift); blake3 content identity per entry + payload. |
+| `src/package/build.ts` — the deterministic fold | The build is a fold over DECLARED inputs: `package.include` paths (files carry themselves; directories carry every file under them recursively) plus every declared extension artifact — each artifact sha256-pin-verified BEFORE bundling (a mismatched artifact is never distributed, exactly as it is never executed — E2100). No wall-clock, no ambient paths, no globs (P2; ADR-0016 decision 5). Path law fail-closed: absolute, `..`, drive letters, backslashes, NUL, `.`/empty segments refused (E2204). Rebuild determinism is test-proven: two builds of the same inputs → byte-identical bundles AND an identical vaerion.lock. |
+| `src/package/lock.ts` — vaerion.lock | The GENERATED, COMMITTED seal (Blueprint §5.5/§7.1): canonical JSON recording the config fingerprint, every extension pin, and the bundle digest + size + entry count. Never hand-edited; a stale lock is repaired by rebuilding with a reviewed diff. `parseLock` refuses shape drift (E2205). |
+| `src/package/verify.ts` — the pure check | ADR-0016 decision 3: recompute digests, compare pins, REPORT — content is NEVER executed. Honest per-check findings (not fail-first): structure E2200, payload/entry digest E2201, pin mismatch (both directions against config; digest-swap defense per Blueprint §9.4) E2202, magic/version E2203, stale lock (bundle digest, config fingerprint, extension pins) E2205; the CLI surfaces E2206 with exit 5 when a bundle must be refused. |
+| CLI `vae package build|verify` | The additive NINTH command (Daily Seven unchanged, `serve` unchanged): build writes the bundle + regenerates vaerion.lock, journals `package.built` on a real run harness and closes with a receipt; verify journals `package.verified` with the full findings payload; `--dry-run` computes everything in memory and writes NOTHING (test-proven zero side effects); `--json` stable NDJSON; exit codes honest: E2204 → usage 2, verification failures → partial 5, verified → 0. |
+| doctor package-lock check | New `package-lock` check: lock present ⇒ config fingerprint, extension pins, and the on-disk bundle digest must all agree with reality (E2205 + repair hint); no lock ⇒ informative green. |
+| dev status | Layer map now lists `package` at L2; stale `next_milestone` string repaired (MS-5 → MS-6); `additive_commands` field added honestly listing serve (MS-5) and package (MS-6). |
+| Contracts (additive) | spec 0.1.6: `errors.yaml` 22xx range E2200–E2206 (mirrored in `kernel/errors.ts`, C4-synced); events `package.built` / `package.verified` (both mirrors); `vaerion-yaml.schema.json` `package` block (include + out); CHANGELOG 0.1.6; layerlint `package/` → L2. |
+
+**Root-cause defects found and fixed during this sprint (caught by the
+typecheck gate, not by hope):** (1) TS never-return narrowing is only
+enabled when the callee carries an explicit VARIABLE type annotation — the
+three `fail` helpers in `format.ts`/`lock.ts`/`build.ts` were annotated
+`(why: string) => never` at the declaration, restoring fail-closed control
+flow; (2) `RunHarness.close()` returns `{receipt, verify}` (no `traceId`) —
+the CLI result was corrected to use the local trace id; (3) `bunfig.toml`
+floors ratcheted to the measured 86.07/90.87 (lines/statements 0.86).
+
+---
+
+## 0a. What was built in MS-5 (local API daemon, ADR-0010 + ADR-0020)
 
 PHASE 0 recovery first: prior-session MS-4 claims independently re-verified
 (ALL gates green on commit `90d86d2`, remote HEAD confirmed) before any new

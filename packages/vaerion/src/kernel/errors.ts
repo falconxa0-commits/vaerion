@@ -79,7 +79,14 @@ export type ErrorCode =
   | "E2101" // extension_not_declared
   | "E2102" // extension_protocol_violation
   | "E2103" // extension_timeout
-  | "E2104"; // extension_spawn_failed
+  | "E2104" // extension_spawn_failed
+  | "E2200" // vxn_format_invalid
+  | "E2201" // vxn_digest_mismatch
+  | "E2202" // vxn_pin_mismatch
+  | "E2203" // vxn_unsupported_format
+  | "E2204" // vxn_input_missing
+  | "E2205" // vxn_lock_mismatch
+  | "E2206"; // vxn_verify_failed
 
 export interface ErrorDescriptor {
   readonly code: ErrorCode;
@@ -152,6 +159,13 @@ export const ERROR_CATALOG: Readonly<Record<ErrorCode, ErrorDescriptor>> = {
   E2102: { code: "E2102", name: "extension_protocol_violation", summary: "The extension broke the host protocol (bad handshake, unknown frame, oversized line, or unsolicited response).", fix: "Fix the extension to speak the published world (spec/wit/); the host kills the process fail-closed on the first violation." },
   E2103: { code: "E2103", name: "extension_timeout", summary: "The extension exceeded its time budget (handshake or call).", fix: "Raise extensions.timeoutMs deliberately, or fix the extension's latency; the process is killed and the call fails closed." },
   E2104: { code: "E2104", name: "extension_spawn_failed", summary: "The extension artifact could not be spawned (missing, not executable, or crash at exec).", fix: "Check the artifact path is an executable file and matches the pinned digest; the R-2 host executes exactly the declared artifact with an empty environment." },
+  E2200: { code: "E2200", name: "vxn_format_invalid", summary: "The .vxn bundle structure violates the format law (manifest not canonical, entry order not canonical, unsafe path, or malformed stream).", fix: "The bundle is not provably reproducible — refuse it. Rebuild from a trusted source with `vae package build`; never hand-edit bundle bytes." },
+  E2201: { code: "E2201", name: "vxn_digest_mismatch", summary: "A recomputed blake3 digest (payload or entry) does not match the bundle manifest.", fix: "The bundle was corrupted or tampered with in transit. Refuse the bundle; obtain it from the publisher and re-verify. Never execute unverifiable content." },
+  E2202: { code: "E2202", name: "vxn_pin_mismatch", summary: "A component pin in the bundle manifest does not equal the pin recorded in vaerion.yaml / vaerion.lock (digest swap).", fix: "Refuse the bundle (digest-swap attack per Blueprint §9.4). Re-derive the expected pin from the audited source; only a reviewed lock diff may change a pin." },
+  E2203: { code: "E2203", name: "vxn_unsupported_format", summary: "The file is not a .vxn bundle (bad magic) or the format version is not supported.", fix: "Verify the file is a Vaerion bundle produced by `vae package build`. If the format version is newer, upgrade the engine; downgrades are never negotiated." },
+  E2204: { code: "E2204", name: "vxn_input_missing", summary: "A declared package input is missing, unreadable, or escapes the project root.", fix: "Fix package.include in vaerion.yaml: paths must exist, stay inside the project, and be relative. Absolute paths and traversal are refused by law." },
+  E2205: { code: "E2205", name: "vxn_lock_mismatch", summary: "vaerion.lock disagrees with reality (config fingerprint, extension pins, or the recorded bundle digest).", fix: "The lock is generated, never hand-edited. Re-run `vae package build` to regenerate vaerion.lock, then review the lock diff before committing." },
+  E2206: { code: "E2206", name: "vxn_verify_failed", summary: "Bundle verification completed with failures (the detailed per-check report carries each finding).", fix: "Treat the bundle as unverified: it must not be imported, distributed, or executed. Rebuild and re-verify; publish only bundles whose verify report is fully green." },
 };
 
 export class VaerionError extends Error {
