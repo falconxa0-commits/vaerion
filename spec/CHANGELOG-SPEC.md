@@ -4,6 +4,31 @@ All changes to files under `spec/` are recorded here. Evolution is
 additive-only within a major version; removals require a major bump and a
 deprecation window. Every entry requires two approvals on the change itself.
 
+## 0.1.5 — 2026-08-29 (MS-5 surfaces: extension host alpha; additive only)
+
+Additive contract surface for the extension host (MS-5, ADR-0009
+contingency R-2). Nothing removed, nothing renamed.
+
+- `wit/vaerion-extension@0.1.0.wit` — NEW. The extension world: the guest
+  entry point (`invoke`) and the single imported host function (`tool-call`),
+  with the broker law documented in the file. The R-2 host implements this
+  world over stdio line-delimited JSON; WASI-P2 components will implement
+  the same world through the component ABI when the toolchain lands.
+- `events/registry.json` — added `extension.spawned` (digest-verified
+  artifact spawned; payload names the extension and the pinned digest) and
+  `extension.exited` (exit code or signal; failed terminations are marked).
+  Registry version stays 1; evolution is additive per ADR-0002.
+- `errors.yaml` — added the 21xx range (extension host): `E2100`
+  extension_artifact_digest_mismatch, `E2101` extension_not_declared, `E2102`
+  extension_protocol_violation, `E2103` extension_timeout, `E2104`
+  extension_spawn_failed. Catalog version stays 1; codes are additive and
+  never reused (ADR-0014).
+- `schemas/vaerion-yaml.schema.json` — added the optional top-level
+  `extensions` array (name, artifact, digest `sha256:<hex>`, optional
+  timeoutMs / maxHostCalls / args / description). Declaring an extension
+  grants nothing: the caller's tool.call and the extension's own host calls
+  are all broker-decided. Strict unknown-key rejection is unchanged.
+
 ## 0.1.4 — 2026-08-29 (MS-5 surfaces: local API daemon; additive only)
 
 Additive contract surface for the local API daemon (MS-5, ADR-0010 +

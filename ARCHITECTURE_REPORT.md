@@ -155,3 +155,21 @@ record pending") and to record failed starts — the journal always wins.
 route table that dispatches requests; constitutional check C4 verifies the
 committed contract never drifts from the generator. Only implemented routes
 are described — an unimplemented route is never advertised.
+
+---
+
+## 14. MS-5b architecture additions (the extension host, ADR-0009 R-2)
+
+**Extensions are principals, not plugins.** The R-2 subprocess host speaks
+the published world (`spec/wit/vaerion-extension@0.1.0.wit`): the artifact is
+sha256-pinned and verified BEFORE execution; it runs with an EMPTY
+environment; and every power request crosses the broker bridge as a
+decide→journal→act evaluation with `extension:<name>` as the principal.
+`extensionGrants` derive ceiling-internal scopes so the graph covers the
+extension without widening anything. The host is fail-closed by
+construction: the first protocol violation (handshake, frame shape, size,
+budget, time) kills the process and journals an honest `extension.exited
+{failed:true}`. `extensions/` sits at L2 beside `agents/` — it composes the
+runtime spine and is never imported by it. When the WASI-P2 component
+toolchain lands, the SAME world and broker semantics move onto components;
+the WIT contract is locked now.

@@ -36,6 +36,26 @@ Also fixed by tests: GET /runs/{id} answered E2003 ("not known") in the
 
 ---
 
+## 0b. What was built in MS-5b (extension kit alpha — ADR-0009 contingency R-2)
+
+| Piece | Law it implements |
+|---|---|
+| `spec/wit/vaerion-extension@0.1.0.wit` | THE extension world, published and versioned: guest `invoke` + one imported host function `tool-call`, with the broker law in the file. The R-2 host implements this world over stdio NDJSON; WASI-P2 components will implement the same world when the component toolchain exists (the contract is locked NOW). |
+| `extensions/host.ts` — the R-2 subprocess host | Digest pinning (sha256 streamed, verified BEFORE any execution — mismatch ⇒ E2100 and the artifact never runs); EMPTY-environment spawn (no ambient powers — fixtures proved `env bun` cannot even resolve without PATH, so artifacts must be self-locating); handshake law (exact world + protocol version); fail-closed protocol (unparseable frames, wrong world, premature exit, unsolicited results, oversized >1MB lines, host-call budget overrun ⇒ E2102 + kill; time budgets ⇒ E2103 + kill); stderr captured and discarded (no unstructured crossing); lifecycle journaled (`extension.spawned` with the pinned digest, `extension.exited` with code/failed). |
+| The broker bridge | The extension's power requests are decide→journal→act evaluations with the EXTENSION as principal (`extension:<name>`): allow executes the builtin; deny refuses with E1300 (refusal log); prompt refuses inline with E1302 (the decision is journaled for the human — the alpha does not suspend a process mid-gate). `extensionGrants` derive ceiling-internal scopes (bridgeable builtins admitted by declared policy) so extensions widen nothing. |
+| `extensions/factory.ts` | Extensions are TOOLS: declared-before-used, args-schema validated, executed through the normal tool pipeline (requested → decision → completed/denied with blake3 result hashes) on BOTH surfaces (CLI + daemon share the factory). |
+| Config + contracts | `extensions:` block in vaerion.yaml (name, artifact, digest `sha256:<hex>`, timeoutMs, maxHostCalls, args schema, description) with loud validation (E1201/E1202, tool-name collision refusal); spec 0.1.5 (WIT file + 2 event types + 5 codes E2100–E2104 + schema); PRINCIPAL_KINDS already carried `extension` — the broker contracts anticipated this day. |
+| Tests (+13, adversarial) | Pin mismatch never executes; config law; pure-extension happy path through the REAL pipeline (spawned/exited/completed journaled, digest on the spine); bridge allow (EXTENSION principal decision recorded); bridge deny (refusal logged, extension informed, tool call still completes); unbridgeable host call (E1801 inline refusal, no kill); malformed first line / wrong world / exit-before-handshake / unsolicited result / oversized frame ⇒ E2102; hang ⇒ E2103; full agent loop with an extension step closes receipted with journal verified. |
+
+**Root-cause findings during MS-5b (caught by the adversarial suite):** the
+frame router originally validated frame types in the pump (killing `ready`
+before the handshake could consume it — phase validation now belongs to the
+consuming phase); a fully empty environment breaks even the bun runtime, so
+the host's `env: {}` law is documented as intentional and artifacts must be
+self-locating (absolute interpreter/compiled binary).
+
+---
+
 ## 0. What was built in MS-4 (this milestone)
 
 ### 0.1 The agents subsystem (`packages/vaerion/src/agents/` — 8 modules)

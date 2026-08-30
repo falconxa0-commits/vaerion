@@ -106,8 +106,11 @@ vae run model --model P/M [--prompt TEXT] [--system TEXT] [--seed N]
   determinism device); --planner model plans through the gateway single
   gate (agents.plannerModel, default mockbrain/mock-1). Tools must be
   declared in vaerion.yaml AND granted by policy rules; undeclared tool
-  calls are refused fail-closed (E1801). Broker refusals are fatal; the
-  step ceiling stops loudly (E1804); gates pause for 'vae resume'.
+  calls are refused fail-closed (E1801). Declared extensions (MS-5) are
+  reachable as tools after their pinned artifact digest verifies; their
+  own power requests cross the broker with the extension as principal.
+  Broker refusals are fatal; the step ceiling stops loudly (E1804); gates
+  pause for 'vae resume'.
 
   workflow executes a DAG: {id, nodes:[{id, deps, step, maxAttempts?}]}
   validated fail-closed (E1803); deterministic topological scheduling;

@@ -79,6 +79,9 @@ export * from "./workflow/index.ts";
 // evals (L2 — MS-4)
 export * from "./evals/index.ts";
 
+// extensions (L2 — MS-5, ADR-0009)
+export * from "./extensions/index.ts";
+
 // config (L0)
 export { loadConfig, validateConfig, defaultPolicyFromConfig, policyFromConfig, CONFIG_SCHEMA_VERSION, type VaerionConfig } from "./config/config.ts";
 

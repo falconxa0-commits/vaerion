@@ -54,6 +54,8 @@ export const EVENT_TYPES = [
   // reasoning sessions (MS-4 — persistent scratchpads with deterministic folding)
   "reasoning.note.recorded",
   "reasoning.folded",
+  "extension.spawned",
+  "extension.exited",
   // store
   "store.blob.put",
 ] as const;

@@ -143,6 +143,14 @@
       "description": "Older scratchpad notes were folded into a deterministic summary checkpoint; the fold is recomputable from the journal alone."
     },
     {
+      "type": "extension.spawned",
+      "description": "An extension artifact was digest-verified and spawned by the host; the payload names the extension and the pinned digest."
+    },
+    {
+      "type": "extension.exited",
+      "description": "A spawned extension process exited; the payload carries the exit code (or signal)."
+    },
+    {
       "type": "store.blob.put",
       "description": "Content was stored in the blake3 content-addressed blob store; the payload carries the blob_ref."
     }

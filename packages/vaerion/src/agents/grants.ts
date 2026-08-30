@@ -36,8 +36,12 @@ function policyAdmits(policy: PolicyContract, domain: string, scope: string, age
 /** Derive the agent's ceiling-internal grants from config + policy. */
 export function agentGrants(config: VaerionConfig, policy: PolicyContract, agent: Principal): ConfigGrantInput[] {
   const grants: ConfigGrantInput[] = [];
-  // Tool ceilings: declared tools only (declared-before-used law).
-  const toolScopes = (config.tools ?? []).map((t) => t.scope ?? t.name);
+  // Tool ceilings: declared tools + declared extensions only (declared-before-used
+  // law; an extension is reachable as a tool, so its name is its scope).
+  const toolScopes = [
+    ...(config.tools ?? []).map((t) => t.scope ?? t.name),
+    ...(config.extensions ?? []).map((e) => e.name),
+  ];
   if (toolScopes.length > 0) grants.push({ principalId: agent.id, domain: "tool.call", scopes: toolScopes });
   // Model ceilings: concrete declared models admitted by declared policy.
   const modelScopes: string[] = [];
@@ -50,4 +54,20 @@ export function agentGrants(config: VaerionConfig, policy: PolicyContract, agent
   }
   if (modelScopes.length > 0) grants.push({ principalId: agent.id, domain: "model.invoke", scopes: modelScopes });
   return grants;
+}
+
+/** The builtin scopes the R-2 host bridge exposes to extensions. */
+export const BRIDGEABLE_BUILTIN_SCOPES: ReadonlyArray<string> = ["echo", "clock.read"];
+
+/**
+ * Derive the EXTENSION principal's ceiling-internal grants (MS-5, ADR-0009):
+ * an extension may bridge only to the declared builtins, and only where a
+ * declared policy rule admits `extension` for that scope. Declaring an
+ * extension grants nothing by itself — this mirrors agentGrants.
+ */
+export function extensionGrants(config: VaerionConfig, policy: PolicyContract): ConfigGrantInput[] {
+  if ((config.extensions ?? []).length === 0) return [];
+  const scopes = BRIDGEABLE_BUILTIN_SCOPES.filter((scope) => policyAdmits(policy, "tool.call", scope, "extension"));
+  if (scopes.length === 0) return [];
+  return (config.extensions ?? []).map((ext) => ({ principalId: `extension:${ext.name}`, domain: "tool.call", scopes: [...scopes] }));
 }

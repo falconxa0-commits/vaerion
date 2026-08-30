@@ -51,11 +51,12 @@ import { meteringFromRecords } from "../gateway/metering.ts";
 import { MODEL_OPS, type ModelOp } from "../gateway/types.ts";
 import { formatMicroUsd } from "../gateway/pricing.ts";
 import { ToolRegistry, ToolInvocationService, echoTool, clockReadTool, researchSearchTool, ToolGatePrompt, type ToolExecutor } from "../agents/tools.ts";
+import { createExtensionTool } from "../extensions/factory.ts";
 import { InlinePlanner, ModelPlanner, type PlanStep } from "../agents/planner.ts";
 import { AgentRuntime, agentStateFromRecords } from "../agents/runtime.ts";
 import { agentMetricsFromRecords } from "../agents/metrics.ts";
 import { LocalResearchPort } from "../agents/research-port.ts";
-import { agentGrants } from "../agents/grants.ts";
+import { agentGrants, extensionGrants } from "../agents/grants.ts";
 import { WorkflowEngine, workflowStateFromRecords, assertWorkflowDag, type WorkflowDag } from "../workflow/index.ts";
 
 export interface CommandContext {
@@ -381,8 +382,16 @@ async function runModel(ctx: CommandContext): Promise<number> {
 /* ───────────────────────────  run agent / workflow  ─────────────────────────── */
 
 /** Shared agent-run wiring: gateway over the sanctioned transport, declared
- *  tools, builtin executors, results content-addressed in the blob CAS. */
-function agentServices(config: import("../config/config.ts").VaerionConfig, clock: SystemClock, idGen: SystemIdGen, ws: { blobsDir: string }) {
+ *  tools (+ declared extensions as tools), builtin executors, results
+ *  content-addressed in the blob CAS. `extensionCtx` carries the run port
+ *  the extension host bridges through (extensions are just principals). */
+function agentServices(
+  config: import("../config/config.ts").VaerionConfig,
+  clock: SystemClock,
+  idGen: SystemIdGen,
+  ws: { blobsDir: string },
+  extensionCtx?: { harness: RunHarness; policy: PolicyContract; graph: ReturnType<typeof graphFromConfig> | null },
+) {
   const gateway = new GatewayService({
     clock,
     rng: new SystemRng(),
@@ -390,11 +399,34 @@ function agentServices(config: import("../config/config.ts").VaerionConfig, cloc
     transport: fetchTransport,
     secrets: defaultSecretPort(),
   });
-  const registry = ToolRegistry.fromConfig(config.tools ?? []);
+  // Declared extensions register as tool declarations (declared-before-used):
+  // the caller's tool.call decision crosses the normal pipeline.
+  const registry = ToolRegistry.fromConfig([
+    ...(config.tools ?? []),
+    ...(config.extensions ?? []).map((e) => ({ name: e.name, scope: e.name, description: e.description })),
+  ]);
   const executors = new Map<string, ToolExecutor>([
     ["echo", echoTool],
     ["clock.read", clockReadTool],
   ]);
+  const builtinBindings = new Map<string, import("../extensions/host.ts").BuiltinBinding>([
+    ["echo", { executor: echoTool, scope: "echo" }],
+    ["clock.read", { executor: clockReadTool, scope: "clock.read" }],
+  ]);
+  for (const declared of config.extensions ?? []) {
+    if (!extensionCtx) break; // no run port in this process — declarations stay unbound (invoke fails closed)
+    executors.set(
+      declared.name,
+      createExtensionTool(declared, {
+        host: extensionCtx.harness,
+        policy: extensionCtx.policy,
+        graph: extensionCtx.graph,
+        clock,
+        idGen,
+        builtins: builtinBindings,
+      }),
+    );
+  }
   const tools = new ToolInvocationService({ clock, idGen, registry, executors, blobStore: new BlobStore(ws.blobsDir) });
   return { gateway, registry, tools };
 }
@@ -421,13 +453,15 @@ async function runAgent(ctx: CommandContext): Promise<number> {
   const traceId = `t_agent_${idGen.next().slice(-10).toLowerCase()}`;
   // The agent principal acts inside the config ceiling; tool.call and
   // model.invoke grants come ONLY from declared policy rules (fail-closed).
-  const { gateway, registry, tools } = agentServices(config, clock, idGen, ws);
   const policy = policyFromConfig(config);
   const principal = { kind: "agent" as const, id: `agent:${runId.slice(-8).toLowerCase()}` };
   // The agent acts inside the ceiling: derived grants live INSIDE declared
   // ceilings (graphFromConfig enforces coverage); declare nothing, grant nothing.
-  const graph = graphFromConfig(config, `graph_${configFingerprint.slice(0, 12)}`, agentGrants(config, policy, principal));
+  // Ceiling covers BOTH the agent principal and the declared extension
+  // principals (their bridge scopes) — grants only ever narrow (MS-5 law).
+  const graph = graphFromConfig(config, `graph_${configFingerprint.slice(0, 12)}`, [...agentGrants(config, policy, principal), ...extensionGrants(config, policy)]);
   const harness = await RunHarness.create({ workspaceDir: ws.root, runId, traceId, configFingerprint, clock, idGen, permissionGraph: graph });
+  const { gateway, registry, tools } = agentServices(config, clock, idGen, ws, { harness, policy, graph });
 
   // Declared research capabilities power `context` steps through the ONE
   // context path (deterministic retrieval; untrusted content fenced).
@@ -900,7 +934,7 @@ export async function cmdResume(ctx: CommandContext): Promise<number> {
       const resumeClock = new SystemClock();
       const resumeIdGen = new SystemIdGen();
       if (agentState.started) {
-        const { gateway, tools } = agentServices(resumeConfig, resumeClock, resumeIdGen, ws);
+        const { gateway, tools } = agentServices(resumeConfig, resumeClock, resumeIdGen, ws, { harness, policy: resumePolicy, graph: null });
         // Elevation law (MS-4): the approved gate is durable authority for the
         // SAME principal that asked (agent:<run-id-suffix>). A synthetic
         // principal would never match the elevation key and would re-prompt
@@ -1318,7 +1352,7 @@ export async function cmdDev(ctx: CommandContext): Promise<number> {
     layers: {
       L0: ["kernel(errors,ids,clock,canonical,redact,hash)", "config"],
       L1: ["spine", "journal", "store(blob-cas)", "receipts", "broker/contracts", "gateway"],
-      L2: ["runtime(run)", "research", "agents", "workflow", "evals"],
+      L2: ["runtime(run)", "research", "agents", "workflow", "evals", "extensions"],
       L4: ["cli"],
     },
     daily_seven: ["init", "run", "resume", "explain", "journal", "doctor", "dev"],

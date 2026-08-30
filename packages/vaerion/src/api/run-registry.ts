@@ -40,6 +40,9 @@ import { defaultSecretPort } from "../gateway/secrets.ts";
 import { PRICE_TABLE, type ModelPrice } from "../gateway/pricing.ts";
 import { parseModelId, type ModelOp } from "../gateway/types.ts";
 import { ToolRegistry, ToolInvocationService, echoTool, clockReadTool, ToolGatePrompt, type ToolExecutor } from "../agents/tools.ts";
+import { createExtensionTool } from "../extensions/factory.ts";
+import type { BuiltinBinding, ExtensionHostContext } from "../extensions/host.ts";
+import type { PermissionGraph } from "../broker/contracts/permission-graph.ts";
 import { AgentRuntime, agentStateFromRecords, type AgentRunState } from "../agents/runtime.ts";
 import { agentMetricsFromRecords, type AgentMetrics } from "../agents/metrics.ts";
 import { InlinePlanner, ModelPlanner, type Planner, type PlanStep } from "../agents/planner.ts";
@@ -47,7 +50,7 @@ import { LocalResearchPort } from "../agents/research-port.ts";
 import { declareResearchCapability, type ResearchCapabilityDeclaration } from "../research/capability.ts";
 import { WorkflowEngine, workflowStateFromRecords, type WorkflowDag, type WorkflowState } from "../workflow/engine.ts";
 import { assertWorkflowDag } from "../workflow/dag.ts";
-import { agentGrants } from "../agents/grants.ts";
+import { agentGrants, extensionGrants } from "../agents/grants.ts";
 import { redactDeep } from "../kernel/redact.ts";
 
 /* ── workspace helpers (mirrored from the surface contract; api/ never imports cli/) ── */
@@ -87,7 +90,7 @@ interface AgentServices {
   tools: ToolInvocationService;
 }
 
-function agentServices(config: VaerionConfig, clock: SystemClock, idGen: SystemIdGen, blobsDir: string): AgentServices {
+function agentServices(config: VaerionConfig, clock: SystemClock, idGen: SystemIdGen, blobsDir: string, extensionCtx?: { host: ExtensionHostContext["host"]; policy: PolicyContract; graph: PermissionGraph | null }): AgentServices {
   const gateway = new GatewayService({
     clock,
     rng: new SystemRng(),
@@ -95,11 +98,34 @@ function agentServices(config: VaerionConfig, clock: SystemClock, idGen: SystemI
     transport: fetchTransport,
     secrets: defaultSecretPort(),
   });
-  const registry = ToolRegistry.fromConfig(config.tools ?? []);
+  // Declared extensions register as tool declarations (declared-before-used):
+  // the caller's tool.call decision crosses the normal pipeline.
+  const registry = ToolRegistry.fromConfig([
+    ...(config.tools ?? []),
+    ...(config.extensions ?? []).map((e) => ({ name: e.name, scope: e.name, description: e.description })),
+  ]);
   const executors = new Map<string, ToolExecutor>([
     ["echo", echoTool],
     ["clock.read", clockReadTool],
   ]);
+  const builtinBindings = new Map<string, BuiltinBinding>([
+    ["echo", { executor: echoTool, scope: "echo" }],
+    ["clock.read", { executor: clockReadTool, scope: "clock.read" }],
+  ]);
+  for (const declared of config.extensions ?? []) {
+    if (!extensionCtx) break; // no run port — declarations stay unbound (invoke fails closed)
+    executors.set(
+      declared.name,
+      createExtensionTool(declared, {
+        host: extensionCtx.host,
+        policy: extensionCtx.policy,
+        graph: extensionCtx.graph,
+        clock,
+        idGen,
+        builtins: builtinBindings,
+      }),
+    );
+  }
   const tools = new ToolInvocationService({ clock, idGen, registry, executors, blobStore: new BlobStore(blobsDir) });
   return { gateway, registry, tools };
 }
@@ -285,10 +311,11 @@ export class RunRegistry {
   ): Promise<void> {
     const clock = new SystemClock();
     const idGen = new SystemIdGen();
-    const { gateway, registry, tools } = agentServices(config, clock, idGen, this.ws.blobsDir);
     const principal = { kind: "agent" as const, id: `agent:${runId.slice(-8).toLowerCase()}` };
-    const graph = graphFromConfig(config, `graph_${configFingerprint.slice(0, 12)}`, agentGrants(config, policy, principal));
+    // Ceiling covers BOTH the agent principal and declared extension principals.
+    const graph = graphFromConfig(config, `graph_${configFingerprint.slice(0, 12)}`, [...agentGrants(config, policy, principal), ...extensionGrants(config, policy)]);
     const harness = await RunHarness.create({ workspaceDir: this.ws.root, runId, traceId, configFingerprint, clock, idGen, permissionGraph: graph });
+    const { gateway, tools } = agentServices(config, clock, idGen, this.ws.blobsDir, { host: harness, policy, graph });
 
     // Declared research capabilities power `context` steps through the ONE
     // context path (same wiring the CLI performs).
@@ -579,7 +606,7 @@ export class RunRegistry {
     const { harness, read } = restored;
     try {
       const agentState = agentStateFromRecords(runId, "t", read.records);
-      const { gateway, tools } = agentServices(config, resumeClock, resumeIdGen, this.ws.blobsDir);
+      const { gateway, tools } = agentServices(config, resumeClock, resumeIdGen, this.ws.blobsDir, { host: harness, policy, graph: null });
       // Elevation law: the approved gate is authority for the SAME principal
       // (agent:<run-id-suffix>) — the run continues as the identity that
       // asked, never a synthetic one that would not match the elevation.

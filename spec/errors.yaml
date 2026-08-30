@@ -10,6 +10,7 @@
 #   18xx agents, workflow, evals (MS-4)
 #   19xx internal invariants (always engine bugs)
 #   20xx local API daemon (MS-5, ADR-0010)
+#   21xx extension host (MS-5, ADR-0009 R-2)
 version: 1
 
 errors:
@@ -233,3 +234,23 @@ errors:
     name: daemon_nonloopback_refused
     summary: "The wire client refused a non-loopback daemon address."
     fix: "Attach the SDK client to 127.0.0.1, localhost or [::1] only; remote daemon attachment requires a ratified transport-security ADR."
+  E2100:
+    name: extension_artifact_digest_mismatch
+    summary: "The extension artifact does not match its pinned digest."
+    fix: "Re-pin the digest in vaerion.yaml only after verifying the artifact's provenance; a mismatched artifact is NEVER executed."
+  E2101:
+    name: extension_not_declared
+    summary: "The extension is not declared in this workspace."
+    fix: "Declare the extension under vaerion.yaml extensions: (name, artifact, digest) — declaring it grants nothing; the broker still decides every call."
+  E2102:
+    name: extension_protocol_violation
+    summary: "The extension broke the host protocol (bad handshake, unknown frame, oversized line, or unsolicited response)."
+    fix: "Fix the extension to speak the published world (spec/wit/); the host kills the process fail-closed on the first violation."
+  E2103:
+    name: extension_timeout
+    summary: "The extension exceeded its time budget (handshake or call)."
+    fix: "Raise extensions.timeoutMs deliberately, or fix the extension's latency; the process is killed and the call fails closed."
+  E2104:
+    name: extension_spawn_failed
+    summary: "The extension artifact could not be spawned (missing, not executable, or crash at exec)."
+    fix: "Check the artifact path is an executable file and matches the pinned digest; the R-2 host executes exactly the declared artifact with an empty environment."

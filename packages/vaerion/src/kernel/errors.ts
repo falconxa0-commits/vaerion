@@ -74,7 +74,12 @@ export type ErrorCode =
   | "E2003" // daemon_run_unknown
   | "E2004" // daemon_shutdown_echo_mismatch
   | "E2005" // daemon_cancel_unavailable
-  | "E2006"; // daemon_nonloopback_refused
+  | "E2006" // daemon_nonloopback_refused
+  | "E2100" // extension_artifact_digest_mismatch
+  | "E2101" // extension_not_declared
+  | "E2102" // extension_protocol_violation
+  | "E2103" // extension_timeout
+  | "E2104"; // extension_spawn_failed
 
 export interface ErrorDescriptor {
   readonly code: ErrorCode;
@@ -142,6 +147,11 @@ export const ERROR_CATALOG: Readonly<Record<ErrorCode, ErrorDescriptor>> = {
   E2004: { code: "E2004", name: "daemon_shutdown_echo_mismatch", summary: "The shutdown body did not echo the pairing token.", fix: "POST /shutdown with {\"token\":\"<pairing token>\"} — the echo guard prevents accidental shutdowns; authenticated callers still must echo the token in the body." },
   E2005: { code: "E2005", name: "daemon_cancel_unavailable", summary: "The run cannot be cancelled in its current state.", fix: "Cancellation is defined for runs awaiting a durable gate (the open gate is denied) or for open runs with no live executor; in-flight runs finish their journaled step first." },
   E2006: { code: "E2006", name: "daemon_nonloopback_refused", summary: "The wire client refused a non-loopback daemon address.", fix: "Attach the SDK client to 127.0.0.1, localhost or [::1] only; remote daemon attachment requires a ratified transport-security ADR." },
+  E2100: { code: "E2100", name: "extension_artifact_digest_mismatch", summary: "The extension artifact does not match its pinned digest.", fix: "Re-pin the digest in vaerion.yaml only after verifying the artifact's provenance; a mismatched artifact is NEVER executed." },
+  E2101: { code: "E2101", name: "extension_not_declared", summary: "The extension is not declared in this workspace.", fix: "Declare the extension under vaerion.yaml extensions: (name, artifact, digest) — declaring it grants nothing; the broker still decides every call." },
+  E2102: { code: "E2102", name: "extension_protocol_violation", summary: "The extension broke the host protocol (bad handshake, unknown frame, oversized line, or unsolicited response).", fix: "Fix the extension to speak the published world (spec/wit/); the host kills the process fail-closed on the first violation." },
+  E2103: { code: "E2103", name: "extension_timeout", summary: "The extension exceeded its time budget (handshake or call).", fix: "Raise extensions.timeoutMs deliberately, or fix the extension's latency; the process is killed and the call fails closed." },
+  E2104: { code: "E2104", name: "extension_spawn_failed", summary: "The extension artifact could not be spawned (missing, not executable, or crash at exec).", fix: "Check the artifact path is an executable file and matches the pinned digest; the R-2 host executes exactly the declared artifact with an empty environment." },
 };
 
 export class VaerionError extends Error {

@@ -303,7 +303,7 @@
       }
     },
     "tools": {
-      "description": "Declared tools (MS-4). Only declared names can be authorized for tool.exec decisions; undeclared tools are refused fail-closed (E1801). Grants still require explicit broker policy rules — declaring a tool grants nothing by itself.",
+      "description": "Declared tools (MS-4). Only declared names can be authorized for tool.exec decisions; undeclared tools are refused fail-closed (E1801). Grants still require explicit broker policy rules \u2014 declaring a tool grants nothing by itself.",
       "type": "array",
       "items": {
         "type": "object",
@@ -340,6 +340,51 @@
         "enabled": {
           "description": "May only be false. Any other value is a configuration error (E1202).",
           "const": false
+        }
+      }
+    },
+    "extensions": {
+      "type": "array",
+      "description": "Declared extensions (MS-5, ADR-0009): digest-pinned artifacts exposed as tools. Declaring grants nothing \u2014 every call is broker-decided.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "artifact",
+          "digest"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9._-]{0,62}$"
+          },
+          "artifact": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Path to the executable artifact (executed with an empty environment)."
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "maxHostCalls": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "args": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string"
+          }
         }
       }
     }

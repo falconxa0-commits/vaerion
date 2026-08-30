@@ -57,6 +57,24 @@ export interface ToolDeclarationConfig {
   description?: string;
 }
 
+/** A declared extension (MS-5, ADR-0009 R-2): pinned artifact + budget.
+ *  Declaring grants nothing — every call is broker-decided. */
+export interface ExtensionConfig {
+  /** Tool name the extension is reachable as (^[a-z][a-z0-9._-]{0,62}$). */
+  name: string;
+  /** Path to the executable artifact (executed with an EMPTY environment). */
+  artifact: string;
+  /** Supply-chain pin: "sha256:<64 lowercase hex>" of the artifact bytes. */
+  digest: string;
+  /** Per-call time budget (handshake + invoke + host round-trips). */
+  timeoutMs?: number;
+  /** Host-function call budget per invocation (fail-closed). */
+  maxHostCalls?: number;
+  /** Executor args schema (same law as tools: declared keys required, "?" = optional). */
+  args?: Record<string, string>;
+  description?: string;
+}
+
 export interface VaerionConfig {
   schemaVersion: string;
   project: {
@@ -89,10 +107,12 @@ export interface VaerionConfig {
   agents?: AgentsConfig;
   /** Declared tools (MS-4) — the only tool.exec scopes that can be authorized. */
   tools?: ToolDeclarationConfig[];
+  /** Declared extensions (MS-5, ADR-0009) — pinned subprocess tools (R-2 host). */
+  extensions?: ExtensionConfig[];
   telemetry: { enabled: false };
 }
 
-const TOP_LEVEL_KEYS: ReadonlySet<string> = new Set(["schemaVersion", "project", "permissions", "research", "policy", "gateway", "secrets", "agents", "tools", "telemetry"]);
+const TOP_LEVEL_KEYS: ReadonlySet<string> = new Set(["schemaVersion", "project", "permissions", "research", "policy", "gateway", "secrets", "agents", "tools", "extensions", "telemetry"]);
 const PROJECT_KEYS: ReadonlySet<string> = new Set(["name", "description"]);
 const PERMISSIONS_KEYS: ReadonlySet<string> = new Set(["net", "exec"]);
 const RESEARCH_KEYS: ReadonlySet<string> = new Set(["capabilities"]);
@@ -103,6 +123,8 @@ const GATEWAY_BUDGET_KEYS: ReadonlySet<string> = new Set(["tokensPerRun", "micro
 const SECRETS_ENTRY_KEYS: ReadonlySet<string> = new Set(["grant"]);
 const AGENTS_KEYS: ReadonlySet<string> = new Set(["maxSteps", "plannerModel"]);
 const TOOL_DECLARATION_KEYS: ReadonlySet<string> = new Set(["name", "scope", "description"]);
+const EXTENSION_KEYS: ReadonlySet<string> = new Set(["name", "artifact", "digest", "timeoutMs", "maxHostCalls", "args", "description"]);
+const ARG_KINDS: ReadonlySet<string> = new Set(["string", "number", "boolean", "string[]", "number[]", "any"]);
 const POLICY_RULE_KEYS: ReadonlySet<string> = new Set(["id", "principalKinds", "domain", "scope", "effect", "gateLabel", "rationale"]);
 const PRINCIPAL_KINDS: ReadonlySet<string> = new Set(["human", "agent", "tool", "extension", "research", "system"]);
 const POLICY_EFFECTS: ReadonlySet<string> = new Set(["allow", "deny", "prompt"]);
@@ -334,6 +356,54 @@ export function validateConfig(value: unknown): VaerionConfig {
       }
       if (td.description !== undefined && typeof td.description !== "string") {
         throw new VaerionError("E1202", `tools.${td.name as string}.description must be a string when present`);
+      }
+    }
+  }
+
+  const extensions = c.extensions as unknown;
+  if (extensions !== undefined) {
+    if (!Array.isArray(extensions)) throw new VaerionError("E1202", "extensions must be an array of extension declarations");
+    const seenExtensions = new Set<string>();
+    const declaredToolNames = new Set<string>((Array.isArray(tools) ? tools : (tools === undefined ? [] : [])).map((t) => ((t as { name?: unknown }).name as string) ?? ""));
+    for (const e of extensions) {
+      const ex = e as Record<string, unknown>;
+      if (!ex || typeof ex !== "object" || Array.isArray(ex)) {
+        throw new VaerionError("E1202", "each extensions entry must be a mapping");
+      }
+      for (const key of Object.keys(ex)) {
+        if (!EXTENSION_KEYS.has(key)) throw new VaerionError("E1201", `unknown extensions entry key: ${key}`, { key: `extensions.${key}` });
+      }
+      if (typeof ex.name !== "string" || !/^[a-z][a-z0-9._-]{0,62}$/.test(ex.name)) {
+        throw new VaerionError("E1202", `extensions name must match ^[a-z][a-z0-9._-]{0,62}$, got: ${String(ex.name)}`);
+      }
+      if (seenExtensions.has(ex.name)) throw new VaerionError("E1202", `duplicate extension declaration: ${ex.name as string}`);
+      if (declaredToolNames.has(ex.name)) throw new VaerionError("E1202", `extension ${ex.name as string} collides with a declared tool name`);
+      seenExtensions.add(ex.name as string);
+      if (typeof ex.artifact !== "string" || ex.artifact.length === 0 || (ex.artifact as string).includes("\0")) {
+        throw new VaerionError("E1202", `extensions.${ex.name as string}.artifact must be a non-empty path`);
+      }
+      if (typeof ex.digest !== "string" || !/^sha256:[0-9a-f]{64}$/.test(ex.digest)) {
+        throw new VaerionError("E1202", `extensions.${ex.name as string}.digest must be "sha256:" + 64 lowercase hex characters`);
+      }
+      if (ex.timeoutMs !== undefined && (!Number.isInteger(ex.timeoutMs) || (ex.timeoutMs as number) <= 0)) {
+        throw new VaerionError("E1202", `extensions.${ex.name as string}.timeoutMs must be a positive integer`);
+      }
+      if (ex.maxHostCalls !== undefined && (!Number.isInteger(ex.maxHostCalls) || (ex.maxHostCalls as number) <= 0)) {
+        throw new VaerionError("E1202", `extensions.${ex.name as string}.maxHostCalls must be a positive integer`);
+      }
+      if (ex.description !== undefined && typeof ex.description !== "string") {
+        throw new VaerionError("E1202", `extensions.${ex.name as string}.description must be a string when present`);
+      }
+      if (ex.args !== undefined) {
+        if (!ex.args || typeof ex.args !== "object" || Array.isArray(ex.args)) {
+          throw new VaerionError("E1202", `extensions.${ex.name as string}.args must be a mapping of key to kind`);
+        }
+        for (const [k, kind] of Object.entries(ex.args as Record<string, unknown>)) {
+          const base: unknown = typeof kind === "string" && kind.endsWith("?") ? kind.slice(0, -1) : kind;
+          if (typeof base !== "string" || !ARG_KINDS.has(base)) {
+            throw new VaerionError("E1202", `extensions.${ex.name as string}.args.${k}: unknown kind ${String(kind)} (known: string, number, boolean, string[], number[], any, each with optional "?")`);
+          }
+        }
       }
     }
   }

@@ -1,0 +1,53 @@
+// Vaerion extension world — v0.1.0 (MS-5, ADR-0009).
+//
+// THE contract surface for Vaerion extensions. The ratified substrate is
+// WASI Preview 2 components; until the component toolchain lands, the
+// contingency R-2 host (packages/vaerion/src/extensions/host.ts) implements
+// THIS world over stdio line-delimited JSON:
+//
+//   guest → host:  {"type":"ready","v":1,"world":"vaerion:extension@0.1.0"}
+//   host → guest:  {"type":"invoke","call_id":ULID,"args":{...}}
+//   guest → host:  {"type":"host","call_id":ULID,"host_fn":"tool.call",
+//                   "tool":NAME,"args":{...}}          (0..n times)
+//   host → guest:  {"type":"result","call_id":…,"ok":true,"value":{...}}
+//                | {"type":"result","call_id":…,"ok":false,"error":{...}}
+//   guest → host:  {"type":"result","call_id":ULID,"ok":true,"value":{...}}
+//   host → guest:  {"type":"shutdown"}
+//
+// Laws that hold in BOTH transports:
+//   - the artifact is digest-pinned and verified BEFORE execution (E2100);
+//   - the guest has NO ambient powers: every host call is a broker
+//     evaluation with the extension as principal (decide → journal → act);
+//   - the first protocol violation kills the process fail-closed (E2102);
+//   - time and host-call budgets are enforced by the host (E2103).
+
+package vaerion:extension@0.1.0;
+
+world extension {
+    /// A host function the guest may call to exercise a DECLARED builtin
+    /// tool. Every call is broker-evaluated with the extension as principal;
+    /// a denial carries the broker's code (E1300) and is journaled.
+    import tool-call: func(tool: string, args: list<u8>) -> result<list<u8>, host-error>;
+
+    /// The guest entry point: invoked exactly once per host `invoke`.
+    /// Returns a JSON object (the tool result recorded on the spine).
+    export invoke: func(args: list<u8>) -> result<list<u8>, invoke-error>;
+
+    enum host-error {
+        /// the requested tool is not bridgeable (not a declared builtin).
+        undeclared,
+        /// the broker denied the call (see the run's refusal log).
+        denied,
+        /// the broker demanded human approval; prompts are not continuable
+        /// inside a running extension process (the decision is journaled).
+        approval-required,
+        /// the builtin itself failed.
+        failed,
+    }
+
+    enum invoke-error {
+        /// the guest reported a failure (wrapped as E1600 by the host;
+        /// guest codes are diagnostics, never engine catalog identities).
+        failed,
+    }
+}
