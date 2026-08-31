@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | Proposed — pending Founder ratification |
+| Status | **Provisional** (Phase 1 finalization) — explicitly provisional pending Founder ratification; an explicit migration path is recorded below. The decision lapses into final only upon Founder ratification |
 | Date | 2026-08-29 |
 | Supersedes | none |
 | Superseded by | none |
@@ -73,3 +73,12 @@ chaos suites must be green) over aspiration.
 - Neutral: nothing in the constitution is interpreted or amended by this
   record; it is an engineering substrate proposal beneath ratified law,
   and it lapses into implementation only upon Founder ratification.
+
+## Migration path (recorded at Phase 1 finalization, 2026-08-30)
+
+This record is provisional. If the Founder later ratifies a Rust (tokio/axum/wasmtime) substrate for the shipping milestones, the following boundary makes the migration derivational rather than a rewrite:
+
+1. **What carries unchanged (language-agnostic by construction):** the `spec/` contract surface — error catalog, event registry, JSON schemas, OpenAPI document, WIT extension world (ADR-0009); the on-disk formats — blake3-chained NDJSON journals, receipt envelopes, `.vxn` bundle format (ADR-0016) with its blake3 identity and vaerion.lock seal; and the golden fixtures that pin all of them.
+2. **What is reimplemented against those contracts:** the engine modules (kernel ports, journal writer, broker, store, gateway, runtime, package build/verify) and the daemon route table (ADR-0020 documents the mechanism and routes independently of the language).
+3. **Acceptance of the migration:** identical golden outputs — replay the committed journals and goldens, rebuild the reference bundle byte-identically, pass the parity suites (CLI/SDK, daemon/OpenAPI). A port that cannot reproduce the goldens is not the migration; it is a fork.
+4. **Trigger:** Founder ratification only. Until then every milestone ships on this substrate, and every milestone's artifacts remain contract-compatible with the migration boundary above.

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | Accepted |
+| Status | Superseded — by ADR-0018 (substrate) and ADR-0020 (daemon HTTP mechanism on the TypeScript substrate); the Rust runtime goals this record served remain attached to the ADR-0018 migration path |
 | Date | 2026-08-29 |
 | Supersedes | none |
 | Superseded by | none |

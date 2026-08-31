@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | Accepted |
+| Status | Ratified (Phase 1, 2026-08-30) — Accepted and enforced: byte-identical rebuild is test-proven, C4/C5/C7 apply, and `vae package verify` recomputes every digest |
 | Date | 2026-08-29 |
 | Supersedes | none |
 | Supersedes | none |

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | Accepted |
+| Status | Ratified (Phase 1, 2026-08-30) — Accepted and enforced: C7 confines the wire client to this single sanctioned site; loopback-only binding and pairing token are test-proven |
 | Date | 2026-08-29 |
 | Supersedes | none (mechanism of ADR-0011 §1–3 for the TS substrate; law preserved) |
 | Superseded by | none |

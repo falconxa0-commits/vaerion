@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | Draft |
+| Status | Accepted (Phase 1 finalization) — the reserved seams are a decision, and their being unimplemented is enforced: C1 (no undeclared network) and C7 (egress confinement) fail the verification run if any cloud seam gains transport primitives without a superseding ADR |
 | Date | 2026-08-29 |
 | Supersedes | none |
 | Superseded by | none |

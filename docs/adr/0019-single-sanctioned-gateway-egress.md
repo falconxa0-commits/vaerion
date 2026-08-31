@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Accepted (MS-3, under the Founder's Model Gateway directive) |
+| **Status** | Ratified (Phase 1, 2026-08-30) — Accepted and enforced: C7 proves the gateway transport is the single egress site; metering and secrets law test-covered |
 | **Date** | 2026-08-29 |
 | **Supersedes** | The MS-0-era reading of C1 ("the engine contains no network egress at all") |
 | **Related** | D-J (gateway is the single gate), D-K (zero telemetry), ADR-0011 (HTTP stack), ADR-0012 (cassettes), ADR-0013 (secrets) |
