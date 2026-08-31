@@ -348,3 +348,22 @@ Work Log:
 
 Stage Summary:
 - v0.1.7-rc2 is tagged, pushed, and packaged with a COMPLETE, tamper-proven trust chain. Honest ledger: the canonical store and the bootstrap private key are environment-provisioned and were re-provisioned/regenerated this phase (both disclosed); the UUID-message commit 03996c6 remains recorded as a blemish.
+
+---
+Task ID: ASC-XVIII-PHASE-0
+Agent: Auren — Principal Vaerion Architect + Repository Auditor (FOUNDATION AUDIT)
+Task: PHASE 0 — complete repository reality audit before any further work (ASCENSION XVIII). Measure structure, gates, product claims; identify gaps; produce an execution plan. No new features.
+
+Work Log:
+- Zero-trust start: treated the briefing's "known state" as unverified claims; re-measured everything on HEAD f3cab62 (main, clean at audit start).
+- Repository reality: 313 tracked files mapped (packages 132 / src 56 / docs 32 / brand 20 / spec 14 / tools 9 / public 9 / sdks 5 …); engine layer map L0–L4 confirmed via `vae dev --json` + layerlint (95 files, 453 runtime edges, 132 type-only exempt); git topology verified (tag v0.1.7-rc2 → 9d6cbd2 PHASE Ω commit, ancestor of HEAD; annotated, tagger Auren; version lockstep 0.1.7-rc2 in 4×package.json + CLI VERSION).
+- Gates re-run LIVE (tools/verify.ts): ALL 6 GREEN — typecheck-engine 3.6s, typecheck-sdk 3.1s, tests 290 pass/0 fail/1969 expectations/25 files, layerlint 29ms, constitutional 7 invariants C1–C7 / 67 codes, repo-lint 9.3s. Coverage re-measured: 86.00% lines / 90.84% branches (floors 0.86/0.74/0.86/0.90 held exactly).
+- Product probes: brand-render re-run → ZERO tree drift (byte-reproducibility independently re-proven); `vae dev --plain` structured; `vae dev --json` pure single-line NDJSON; exit-code contract proven (E1600→2 usage, help→0); dashboard live-rendered via agent-browser (seal, gates panel, inventory matches independent counts, footer, zero console errors, screenshot /tmp/vaerion-dashboard.png).
+- DISCREPANCIES found (environment-bound trust chain lost at the session boundary, 3rd occurrence): canonical bare store /home/z/vaerion-canonical.git ABSENT (ls-remote fails); gitignored dist/ artifact set ABSENT (original signed rc2 set unrecoverable — key also gone); keys/release-signing.key ABSENT (untracked by law). Plus honesty findings: dev.next_milestone stale (still points at completed PHASE Ω / rc2); dashboard snapshot 9h older than this audit's gate run; UUID-message commits 03996c6 + f3cab62 recorded (immutable); constitutional gate is C1–C7 — no automated docs-freshness invariant (corrected the record); background processes do not survive tool-call boundaries in this sandbox (operational).
+- Withdrawn finding recorded: suspected empty <li> on the dashboard was the auditor's own snapshot-slicing artifact — nextWork[0] is a full sentence; no defect.
+- Deliverable written: docs/ga/FOUNDATION-AUDIT-ASCENSION-XVIII.md (structure map §1, measured baseline §2, claims-vs-reality matrix §3, findings R-1..R-8 §4, execution plan P0–P5 + Founder-gated F-1..F-6 §5, recommendation §6).
+
+Stage Summary:
+- Code-level claims ALL CONFIRMED on live evidence: v0.1.7-rc2, six gates green, 290/290, coverage floors, Phase Ω brand/CLI/provenance present and reproducible. The PUBLIC BETA READY — v0.1.7-rc2 verdict is re-affirmed, not weakened.
+- Environment-bound trust chain (canonical store, signing key, dist/ artifact set) must be re-provisioned/re-packed — recovery operations, sequenced P3/P4; a fresh bootstrap key means a NEW manifest fingerprint (old sha256:9c6661f8… historical).
+- Execution plan handed over: P1 fix dev.next_milestone (+pinned expectation) → P2 status/dashboard regen → P3 canonical re-provision + adversarial probes → P4 dist-pack at tag with new key + full tamper-proof re-run → P5 full gate closure. Founder-gated F-1..F-6 unchanged.
