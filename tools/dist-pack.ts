@@ -123,40 +123,11 @@ const tarball = join(DIST, `${NAME}-source.tar.gz`);
 writeFileSync(tarball, a);
 console.log(`dist-pack: tarball reproducibility PROVEN (two builds byte-identical, ${a.length} bytes)`);
 
-// ---- 3. Manifest (canonical JSON, sha256 + blake3 per artifact) -------------
-const bundleSize = statSync(vxnDst).size;
-const manifest = {
-  release: VERSION,
-  commit: head,
-  artifacts: [
-    { name: `${NAME}-source.tar.gz`, bytes: a.length, sha256: sha256File(tarball), blake3: await blake3File(tarball) },
-    { name: "vaerion-demo.vxn", bytes: bundleSize, sha256: sha256File(vxnDst), blake3: await blake3File(vxnDst) },
-  ],
-  verification: { ok: verification.ok, gates: verification.gates },
-  manifestVersion: 1,
-};
-const manifestBytes = canon(manifest);
-const manifestPath = join(DIST, "MANIFEST.json");
-writeFileSync(manifestPath, manifestBytes);
-
-// SHA256SUMS in the standard `sha256sum --check` format
-const sums = manifest.artifacts.map((a2) => `${a2.sha256}  ${a2.name}`).join("\n") + "\n";
-writeFileSync(join(DIST, "SHA256SUMS"), sums);
-
-// ---- 4. Sign + self-verify ---------------------------------------------------
+// ---- 3. Signing key (needed for the VERIFY.md fingerprint) -------------------
 const { priv, pub, generated } = loadOrCreateSigningKey();
-const signature = edSign(null, manifestBytes, priv);
-const sigPath = join(DIST, "MANIFEST.json.sig");
-writeFileSync(sigPath, signature.toString("base64"));
-const sigOk = edVerify(null, manifestBytes, pub, signature);
-if (!sigOk) {
-  console.error("dist-pack: ABORT — signature failed self-verification.");
-  process.exit(1);
-}
 const pubFp = createHash("sha256").update(pub.export({ type: "spki", format: "der" })).digest("hex").slice(0, 32);
-console.log(`dist-pack: Ed25519 signature self-verified (public key fp sha256:${pubFp}…, ${generated ? "bootstrap key GENERATED this run" : "bootstrap key loaded"})`);
 
-// ---- 5. VERIFY.md + dist report ---------------------------------------------
+// ---- 4. VERIFY.md (bound by the manifest below) ------------------------------
 const verifyMd = `# Release verification — ${VERSION}
 
 Verify this release in under a minute:
@@ -167,22 +138,32 @@ sha256sum --check SHA256SUMS                       # integrity of every artifact
 # Ed25519 signature over MANIFEST.json (canonical JSON, sorted keys):
 #   public key: keys/release-signing.pub in the repository at commit ${head.slice(0, 12)}
 #   fingerprint: sha256:${pubFp}
-# verify with: openssl is not required — the bundled command is
+#   one-command verification:
 bun run tools/dist-verify.ts --manifest MANIFEST.json --sig MANIFEST.json.sig --pub ../keys/release-signing.pub
 \`\`\`
 
 | Artifact | Bytes | blake3 |
 |---|---|---|
-${manifest.artifacts.map((a2) => `| ${a2.name} | ${a2.bytes} | \`${a2.blake3.slice(0, 16)}…\` |`).join("\n")}
+${[
+  { name: `${NAME}-source.tar.gz`, bytes: a.length, blake3: await blake3File(tarball) },
+  { name: "vaerion-demo.vxn", bytes: statSync(vxnDst).size, blake3: await blake3File(vxnDst) },
+].map((a2) => `| ${a2.name} | ${a2.bytes} | \`${a2.blake3.slice(0, 16)}…\` |`).join("\n")}
 
 The source tarball is a deterministic git archive of commit ${head}
 (gzip -n, fixed content): rebuilding it from the same commit reproduces the
 same bytes. The reference bundle is the reproducible \`.vxn\` of
 examples/vaerion-demo (ADR-0016): \`vae package build\` twice from the same
 workspace produces byte-identical bundles.
+
+Trust-chain coverage: MANIFEST.json (signature-bound) carries sha256+blake3
+for EVERY file a consumer needs — the tarball, the reference bundle, this
+file, dist-report.json, and SHA256SUMS itself. SHA256SUMS then covers
+MANIFEST.json and its signature too (everything except itself), so the two
+lists overlap and no shipped file sits outside the signed set.
 `;
 writeFileSync(join(DIST, "VERIFY.md"), verifyMd);
 
+// ---- 5. dist-report (the pack run's own log; also manifest-bound) ------------
 const report = {
   tool: "tools/dist-pack.ts",
   release: VERSION,
@@ -191,15 +172,47 @@ const report = {
   gatesGreen: verification.ok,
   gates: verification.gates,
   reproducibleTarball: { proven: reproducible, bytes: a.length, method: "git archive | gzip -n, built twice, byte-compared" },
-  referenceBundle: { file: "vaerion-demo.vxn", bytes: bundleSize, blake3: manifest.artifacts[1]!.blake3 },
-  signature: { algorithm: "Ed25519", over: "MANIFEST.json (canonical JSON, sorted keys)", selfVerified: sigOk, publicKeyFingerprint: `sha256:${pubFp}`, keyProvenance: generated ? "bootstrap key generated this run (Founder key ceremony pending — RISK-LEDGER R-2)" : "bootstrap key loaded from keys/release-signing.key" },
-  artifacts: manifest.artifacts,
+  referenceBundle: { file: "vaerion-demo.vxn", bytes: statSync(vxnDst).size, blake3: await blake3File(vxnDst) },
+  signatureProvenance: "see VERIFY.md — the Ed25519 public key fingerprint and one-command verification",
 };
 writeFileSync(join(DIST, "dist-report.json"), JSON.stringify(report, null, 2) + "\n");
+
+// ---- 6. Manifest: canonical JSON binding EVERY consumer artifact -------------
+const manifest = {
+  release: VERSION,
+  commit: head,
+  artifacts: [
+    { name: `${NAME}-source.tar.gz`, bytes: a.length, sha256: sha256File(tarball), blake3: await blake3File(tarball) },
+    { name: "vaerion-demo.vxn", bytes: statSync(vxnDst).size, sha256: sha256File(vxnDst), blake3: await blake3File(vxnDst) },
+    { name: "VERIFY.md", bytes: statSync(join(DIST, "VERIFY.md")).size, sha256: sha256File(join(DIST, "VERIFY.md")), blake3: await blake3File(join(DIST, "VERIFY.md")) },
+    { name: "dist-report.json", bytes: statSync(join(DIST, "dist-report.json")).size, sha256: sha256File(join(DIST, "dist-report.json")), blake3: await blake3File(join(DIST, "dist-report.json")) },
+  ],
+  verification: { ok: verification.ok, gates: verification.gates },
+  manifestVersion: 2,
+};
+const manifestBytes = canon(manifest);
+const manifestPath = join(DIST, "MANIFEST.json");
+writeFileSync(manifestPath, manifestBytes);
+
+// ---- 7. Sign + self-verify ----------------------------------------------------
+const signature = edSign(null, manifestBytes, priv);
+const sigPath = join(DIST, "MANIFEST.json.sig");
+writeFileSync(sigPath, signature.toString("base64"));
+const sigOk = edVerify(null, manifestBytes, pub, signature);
+if (!sigOk) {
+  console.error("dist-pack: ABORT — signature failed self-verification.");
+  process.exit(1);
+}
+console.log(`dist-pack: Ed25519 signature self-verified (public key fp sha256:${pubFp}…, ${generated ? "bootstrap key GENERATED this run" : "bootstrap key loaded"})`);
+
+// ---- 8. SHA256SUMS last: covers EVERYTHING except itself ----------------------
+const sumTargets = ["vaerion-0.1.7-rc2-source.tar.gz", "vaerion-demo.vxn", "VERIFY.md", "dist-report.json", "MANIFEST.json", "MANIFEST.json.sig"];
+const sums = sumTargets.map((n) => `${sha256File(join(DIST, n))}  ${n}`).join("\n") + "\n";
+writeFileSync(join(DIST, "SHA256SUMS"), sums);
 
 run(["rm", "-f", join(DIST, ".tarball-a"), join(DIST, ".tarball-b")]);
 
 console.log(`\ndist-pack: COMPLETE — release artifacts in dist/
   ${NAME}-source.tar.gz (${a.length} bytes)
-  vaerion-demo.vxn (${bundleSize} bytes)
+  vaerion-demo.vxn (${statSync(vxnDst).size} bytes)
   SHA256SUMS, MANIFEST.json, MANIFEST.json.sig, VERIFY.md, dist-report.json`);

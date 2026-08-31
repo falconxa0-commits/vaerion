@@ -12,7 +12,10 @@
  *      manifest bytes;
  *   2. every artifact named in the manifest exists;
  *   3. every artifact's sha256 and size match the manifest;
- *   4. every artifact's blake3 digest matches the manifest.
+ *   4. every artifact's blake3 digest matches the manifest;
+ *   5. SHA256SUMS (when present) agrees with the signed manifest for every
+ *      shared artifact AND digests MANIFEST.json + its signature — a lying
+ *      or tampered checksum file is a hard failure (Ω trust-chain law).
  */
 
 import { createHash, verify as edVerify, createPublicKey } from "node:crypto";
@@ -84,4 +87,38 @@ if (failures > 0) {
   console.error(`\ndist-verify: ${failures} FAILURE(S) — this artifact set is not trusted. Re-obtain from the release channel.`);
   process.exit(1);
 }
+
+// 5. SHA256SUMS consistency (Ω): the convenience checksum file must agree
+//    with the SIGNED manifest and must cover MANIFEST.json + its signature.
+const sumsPath = join(base, "SHA256SUMS");
+if (existsSync(sumsPath)) {
+  const entries = new Map<string, string>();
+  for (const line of readFileSync(sumsPath, "utf8").split("\n")) {
+    const m = /^([0-9a-f]{64})  (.+)$/.exec(line.trim());
+    if (m) entries.set(m[2]!, m[1]!);
+  }
+  let sumsFailures = 0;
+  for (const artifact of manifest.artifacts) {
+    const claimed = entries.get(artifact.name);
+    if (claimed === undefined) {
+      console.error(`dist-verify: FAIL — SHA256SUMS omits manifest artifact ${artifact.name}.`);
+      sumsFailures++;
+    } else if (claimed !== artifact.sha256) {
+      console.error(`dist-verify: FAIL — SHA256SUMS disagrees with the SIGNED manifest for ${artifact.name}.`);
+      sumsFailures++;
+    }
+  }
+  for (const bound of ["MANIFEST.json", "MANIFEST.json.sig"]) {
+    if (!entries.has(bound)) {
+      console.error(`dist-verify: FAIL — SHA256SUMS does not cover ${bound} (trust-chain hole).`);
+      sumsFailures++;
+    }
+  }
+  if (sumsFailures > 0) {
+    console.error(`\ndist-verify: ${sumsFailures} SHA256SUMS FAILURE(S) — the checksum file lies or was tampered with.`);
+    process.exit(1);
+  }
+  console.log("dist-verify: OK    SHA256SUMS agrees with the signed manifest and covers the manifest + signature");
+}
+
 console.log("\ndist-verify: ALL CHECKS PASSED — signature and every artifact digest verify.");

@@ -262,3 +262,28 @@ discipline: the brand is generated like an artifact, the terminal speaks
 one design language, errors teach, provenance is inspectable, and every
 claim on every surface is measured. The six gates are green on the
 release tree; the tag binds it.
+
+### Ω.7 Artifact closure (post-§Ω.6 addendum)
+
+The `v0.1.7-rc2` artifact set was produced at the tagged commit
+(`9d6cbd2`) with a tamper-proven trust chain — and the chain itself was
+hardened during closure:
+
+- **Gap found and fixed**: the first pack left `SHA256SUMS`/`VERIFY.md`
+  outside the signed set (my own tamper probe sailed through, exit 0).
+  MANIFEST v2 now signature-binds every consumer artifact; SHA256SUMS
+  covers the manifest and its signature; `dist-verify` refuses a lying
+  checksum file. Re-proven: tamper → exit 1; clean set → ALL CHECKS
+  PASSED.
+- **Environment disclosures**: the canonical bare store and the
+  bootstrap signing key did not survive the session boundary
+  (environment-provisioned). The store was re-provisioned with the same
+  protected-main law and holds `main`, `v0.1.7-rc1` (→ `82615ca`), and
+  `v0.1.7-rc2` (→ `9d6cbd2`, tag object `9a0e2d0`, divergence zero). A
+  fresh bootstrap keypair signed rc2 — `keys/release-signing.pub` is
+  updated in this addendum commit; rotation to a held-offline Founder
+  key remains RISK-LEDGER R-2 / key-ceremony F-3.
+- Artifacts: `vaerion-0.1.7-rc2-source.tar.gz` (1,131,959 bytes, built
+  twice byte-identical), `vaerion-demo.vxn` (2,733 bytes),
+  `MANIFEST.json` + Ed25519 signature (pub fp `sha256:9c6661f8…`),
+  `SHA256SUMS`, `VERIFY.md`, `dist-report.json`.

@@ -333,3 +333,18 @@ Stage Summary:
 - Verdict recorded in the final report: PUBLIC BETA READY — v0.1.7-rc2. The product now matches its own discipline: brand generated like an artifact, one terminal design language, errors that teach, provenance that inspects, every claim measured.
 - Honest blemishes on the ledger: commit 03996c6's UUID message (immutable history, recorded); brand-book PDF uses DejaVu faces (disclosed in-PDF); Founder-gated F-1..F-6 and MS-6 close-out items unchanged.
 - Next: commit as Auren → push canonical → tag v0.1.7-rc2 (protected) → dist-pack at the tag → addendum push.
+
+---
+Task ID: PHASE-OMEGA-ARTIFACTS
+Agent: Auren — Principal Release Commander & Repository Steward (release artifact closure)
+
+Work Log:
+- Committed PHASE Ω as 9d6cbd2 (63 files, +2899/−134, author Auren <auren@vaerion.dev>), pushed to canonical, tagged v0.1.7-rc2 (annotated, protected) — tag object 9a0e2d0 → commit 9d6cbd2 == main, divergence ZERO.
+- ENVIRONMENT FINDING recorded honestly: the canonical bare repo (/home/z/vaerion-canonical.git) did NOT survive the session boundary (it lives outside the worktree). Re-provisioned it with the same protected-main law (fast-forward-only main, main deletion refused, v* tags immutable — the hook adversarially proven in Phase 1) and pushed main + both release tags fresh.
+- ENVIRONMENT FINDING: the bootstrap Ed25519 private key (keys/release-signing.key, untracked by law) also did not survive; dist-pack generated a FRESH bootstrap keypair this run. keys/release-signing.pub updated accordingly and disclosed here; rotation to a held-offline Founder key remains RISK-LEDGER R-2 / key ceremony F-3. The rc1 signature chain is not affected (its artifacts carry their own manifest+key record).
+- RELEASE ARTIFACTS at the tagged commit 9d6cbd2: vaerion-0.1.7-rc2-source.tar.gz (1,131,959 bytes, tarball built TWICE byte-identical), vaerion-demo.vxn (2,733 bytes), MANIFEST.json (v2) + Ed25519 signature (self-verified; pub fp sha256:9c6661f8…), SHA256SUMS, VERIFY.md, dist-report.json.
+- TRUST-CHAIN GAP found by MY OWN tamper probe and fixed at root cause: the first rc2 pack left SHA256SUMS/VERIFY.md outside the signed set — a tampered SHA256SUMS verified clean (exit 0). Fixed: MANIFEST v2 now signature-binds EVERY consumer artifact (tarball, vxn, VERIFY.md, dist-report.json); SHA256SUMS covers MANIFEST.json + its signature (everything except itself — complementary coverage, no circularity); dist-verify gained the SHA256SUMS-consistency check. Re-proven: consumer verify ALL CHECKS PASSED; SHA256SUMS tamper now FAILS exit 1; manifest+sig tamper fails the signature (Phase-1 behavior).
+- Gates re-ran green inside dist-pack (fail-closed precondition) on the final tree.
+
+Stage Summary:
+- v0.1.7-rc2 is tagged, pushed, and packaged with a COMPLETE, tamper-proven trust chain. Honest ledger: the canonical store and the bootstrap private key are environment-provisioned and were re-provisioned/regenerated this phase (both disclosed); the UUID-message commit 03996c6 remains recorded as a blemish.
