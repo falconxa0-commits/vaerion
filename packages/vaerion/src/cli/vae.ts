@@ -13,7 +13,7 @@ import { cmdDev, cmdExplain, cmdInit, cmdJournal, cmdDoctor, cmdPackage, cmdResu
 import { VaerionError } from "../kernel/errors.ts";
 import { isVaerionError } from "./workspace.ts";
 
-export const VERSION = "0.1.0-ms1";
+export const VERSION = "0.1.7-rc1";
 
 const MAIN_HELP = `vae — Vaerion engine command line (v${VERSION})
 

@@ -4,6 +4,19 @@ All changes to files under `spec/` are recorded here. Evolution is
 additive-only within a major version; removals require a major bump and a
 deprecation window. Every entry requires two approvals on the change itself.
 
+## 0.1.7-rc1 — 2026-08-30 (Phase 1 release alignment; additive only)
+
+Release-alignment change for the `v0.1.7-rc1` tag. Nothing removed, nothing
+renamed; no behavioral contract changes.
+
+- `openapi.json` — `info.version` aligned to the engine lockstep version
+  (0.1.7-rc1, regenerating the C4-synced document) and `info.license`
+  replaced the `UNLICENSED` identifier (pre-release stub) to the finalized
+  distribution license (`Apache-2.0`, SPDX identifier) per the Phase 1
+  legal-foundation decision.
+- All contract documents remain additive within v0.1; catalog and registry
+  versions are unchanged.
+
 ## 0.1.6 — 2026-08-30 (MS-6 packaging: reproducible .vxn bundles; additive only)
 
 Additive contract surface for reproducible packaging (MS-6, ADR-0016).
