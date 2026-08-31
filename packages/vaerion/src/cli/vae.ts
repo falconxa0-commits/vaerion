@@ -365,8 +365,10 @@ export async function runCli(argv: string[], io: CliIo, cwd: string): Promise<Cl
   }
 }
 
-/* bin shim: `bun run packages/vaerion/src/cli/vae.ts ...` */
-if (import.meta.main) {
+/* Distribution entrypoint — shared by the import.meta.main shim (repo) and
+ * the packaging launchers (npm bin/vae.js, PyPI console script, deb/brew
+ * shims). One io construction, one exit-code contract, every path. */
+export async function main(argv: string[]): Promise<number> {
   const io: CliIo = {
     out: (line) => console.log(line),
     err: (line) => console.error(line),
@@ -374,8 +376,13 @@ if (import.meta.main) {
     tty: process.stdout.isTTY === true,
     columns: process.stdout.columns,
   };
-  const result = await runCli(process.argv.slice(2), io, process.cwd());
-  process.exit(result.code);
+  const result = await runCli(argv, io, process.cwd());
+  return result.code;
+}
+
+/* bin shim: `bun run packages/vaerion/src/cli/vae.ts ...` */
+if (import.meta.main) {
+  process.exit(await main(process.argv.slice(2)));
 }
 
 // Re-export for programmatic consumers (SDK reuses runCli).
