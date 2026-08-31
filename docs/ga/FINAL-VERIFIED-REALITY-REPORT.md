@@ -129,3 +129,35 @@ engineering continuity.
 
 Ship the public beta of `v0.1.7-rc1` upon completion of F-1 and F-5.
 Repository wins. Evidence wins. Auren decides.
+
+---
+
+## 7. Release execution addendum (measured after the audit commit)
+
+The audit verdict above was frozen at commit `82615ca`. The release
+infrastructure was then executed and measured; this addendum records the
+post-audit facts:
+
+| Check | Measured result |
+|---|---|
+| Canonical remote | `canonical` → bare repository with a pre-receive protected-main hook |
+| Push of main | Accepted (fast-forward); `canonical/main` == local `main` == `82615ca` |
+| Tag `v0.1.7-rc1` | Annotated tag created on `82615ca`; pushed; `refs/tags/v0.1.7-rc1^{}` == `82615ca` — **tag points exactly at the verified release commit** |
+| Divergence | Zero (`git fetch canonical` → main and canonical/main identical) |
+| Force-push to main (adversarial) | **REJECTED** — `pre-receive hook declined` (non-fast-forward refused) |
+| Release-tag overwrite (adversarial) | **REJECTED** — `pre-receive hook declined` (tag immutability) |
+| Fast-forward push by another party (test artifact) | Accepted by design (normal development flow); rolled back via the administrator `git update-ref` path; final remote state re-verified identical to `82615ca` |
+| External network | `https://github.com` reachable (HTTP 200) — prior "no network" assumptions are stale; a real GitHub push still requires a repository URL + credentials from the Founder |
+| Final artifact set (at the tagged commit) | Tarball **592,667 bytes**, two builds byte-identical; `vaerion-demo.vxn` **2,733 bytes** blake3 `36c35c39…`; manifest binds `commit: 82615ca…`; Ed25519 self-verified; consumer `dist-verify` ALL CHECKS PASSED |
+
+F-1 refinement: the blocker is no longer "no network" — it is precisely
+"no GitHub repository URL + no credentials provisioned". Everything else
+about the release infrastructure is executable and has been executed.
+
+## 8. Final commit state
+
+| | |
+|---|---|
+| Release commit (tagged `v0.1.7-rc1`) | `82615ca` — audit commit |
+| Post-release record | the commit containing this addendum (documentation-only; the tag deliberately stays on the release commit) |
+| All Phase 1 commits | authored `Auren <auren@vaerion.dev>`; every commit gate-green |

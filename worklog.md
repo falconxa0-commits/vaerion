@@ -250,3 +250,20 @@ Stage Summary:
 - Verdict: PUBLIC BETA READY (v0.1.7-rc1). Zero critical security findings. All 10 objectives executed with measured evidence; every commit gate-green; all authored as Auren.
 - Founder-gated remaining: F-1 GitHub remote provisioning, F-2 full legal name insertion, F-3 key ceremony (bootstrap Ed25519 -> held-offline), F-4 ADR-0018 ratification, F-5 publish/announce/recruit (release train 3-5), F-6 real-provider cassettes.
 - Next release step (engineering): canonical local remote + protected-main hook + tag v0.1.7-rc1 + dist-pack re-run at the release commit; then push.
+
+---
+Task ID: PHASE-1-OBJ2
+Agent: Auren — Principal Release Commander (engineering execution record)
+Task: OBJECTIVE 2 execution — canonical remote, protected main, release tag v0.1.7-rc1, final artifact set.
+
+Work Log:
+- Environment re-measured: github.com REACHABLE (HTTP 200) — prior "no network" claims stale; real GitHub push still blocked on missing repository URL + credentials (F-1 refined).
+- Canonical remote created (bare, outside the worktree) with pre-receive protected-main hook: non-fast-forward on main refused, deletion of main refused, release tags (v*) immutable.
+- Pushed main (82615ca) + annotated tag v0.1.7-rc1 (tag object -> commit 82615ca verified: refs/tags/v0.1.7-rc1^{} == main). Divergence: ZERO.
+- Adversarial proofs: force-push to main REJECTED (hook declined); tag overwrite REJECTED (hook declined). A fast-forward tamper push by the adversary clone was ACCEPTED by design (normal dev flow) and rolled back via the administrator git update-ref path; final remote state re-verified identical to 82615ca.
+- Final dist-pack re-run AT the tagged commit: tarball 592,667 bytes (two builds byte-identical), vaerion-demo.vxn 2,733 bytes (blake3 36c35c39...), MANIFEST binds commit 82615ca..., Ed25519 self-verified, consumer dist-verify ALL CHECKS PASSED.
+- Report addendum (docs/ga/FINAL-VERIFIED-REALITY-REPORT.md §7-8) written; gates green at this commit; commit pushed to canonical after commit.
+
+Stage Summary:
+- Tag v0.1.7-rc1 points exactly at the verified release commit 82615ca; canonical remote protected and proven; artifact set bound to the tagged commit.
+- Phase 1 fully executed. Remaining: Founder-gated F-1..F-6 (remote URL+credentials, legal name, key ceremony, ADR-0018 ratification, publish/announce/recruit, provider cassettes).
