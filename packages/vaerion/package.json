@@ -2,7 +2,7 @@
   "name": "@vaerion/engine",
   "version": "0.1.0-ms1",
   "private": true,
-  "description": "Vaerion constitutional engine core — event spine, journal, broker contracts, research subsystem (MS-1).",
+  "description": "Vaerion constitutional engine core \u2014 event spine, journal, broker contracts, research subsystem (MS-1).",
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
@@ -23,5 +23,7 @@
   "devDependencies": {
     "@types/bun": "^1.3.0",
     "typescript": "^5"
-  }
+  },
+  "license": "Apache-2.0",
+  "author": "Auren"
 }

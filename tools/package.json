@@ -2,7 +2,7 @@
   "name": "@vaerion/tools",
   "version": "0.1.0-ms1",
   "private": true,
-  "description": "Vaerion verification tooling — layerlint, constitutional checks, verification runner.",
+  "description": "Vaerion verification tooling \u2014 layerlint, constitutional checks, verification runner.",
   "type": "module",
   "scripts": {
     "layerlint": "bun run ./layerlint.ts",
@@ -12,5 +12,7 @@
   },
   "dependencies": {
     "yaml": "^2.8.0"
-  }
+  },
+  "license": "Apache-2.0",
+  "author": "Auren"
 }

@@ -143,7 +143,7 @@ export function generateOpenApi(): Record<string, unknown> {
       summary: "The loopback daemon surface: the same contracts the CLI exercises, over HTTP/SSE.",
       description:
         "Generated from the daemon route table (ADR-0010 decision 4, ADR-0020). Every described route is implemented; every implemented route is described. Authentication is the first-run pairing token (Authorization: Bearer); only /health, /version and /openapi.json are open. The daemon binds loopback only and never makes outbound calls.",
-      license: { name: "Constitutional reference implementation", identifier: "UNLICENSED" },
+      license: { name: "Apache License 2.0", identifier: "Apache-2.0" },
     },
     servers: [{ url: "/", description: "This local daemon (loopback only)." }],
     components: {
