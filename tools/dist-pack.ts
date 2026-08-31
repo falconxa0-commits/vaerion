@@ -101,13 +101,27 @@ const vxnDst = join(DIST, "vaerion-demo.vxn");
 writeFileSync(vxnDst, readFileSync(vxnSrc));
 
 // ---- 2. Deterministic source tarball, built TWICE and byte-compared ---------
-const head = run(["git", "rev-parse", "HEAD"]).out;
-if (!/^[0-9a-f]{40}$/.test(head)) {
-  console.error("dist-pack: ABORT — could not resolve HEAD.");
+// The artifact set binds a git REF (default HEAD; --ref <ref> re-packs a
+// tagged release without moving the tag). Resolving the ref to its commit
+// keeps `git archive` output deterministic for the same commit.
+const refArg = (() => {
+  const i = process.argv.indexOf("--ref");
+  if (i < 0) return "HEAD";
+  const v = process.argv[i + 1];
+  if (!v || v.startsWith("--")) {
+    console.error("dist-pack: --ref requires a git ref argument.");
+    process.exit(1);
+  }
+  return v;
+})();
+const refCommit = run(["git", "rev-parse", "--verify", `${refArg}^{commit}`]).out;
+if (!/^[0-9a-f]{40}$/.test(refCommit)) {
+  console.error(`dist-pack: ABORT — could not resolve ref "${refArg}" to a commit.`);
   process.exit(1);
 }
-const tarA = run(["bash", "-o", "pipefail", "-c", `git archive --format=tar --prefix=${NAME}/ HEAD | gzip -n | cat > dist/.tarball-a`]);
-const tarB = run(["bash", "-o", "pipefail", "-c", `git archive --format=tar --prefix=${NAME}/ HEAD | gzip -n | cat > dist/.tarball-b`]);
+const head = refCommit;
+const tarA = run(["bash", "-o", "pipefail", "-c", `git archive --format=tar --prefix=${NAME}/ ${head} | gzip -n | cat > dist/.tarball-a`]);
+const tarB = run(["bash", "-o", "pipefail", "-c", `git archive --format=tar --prefix=${NAME}/ ${head} | gzip -n | cat > dist/.tarball-b`]);
 if (!tarA.ok || !tarB.ok) {
   console.error("dist-pack: ABORT — tarball build failed:\n" + tarA.out + "\n" + tarB.out);
   process.exit(1);
@@ -167,6 +181,7 @@ writeFileSync(join(DIST, "VERIFY.md"), verifyMd);
 const report = {
   tool: "tools/dist-pack.ts",
   release: VERSION,
+  ref: refArg,
   commit: head,
   generatedAt: new Date().toISOString(),
   gatesGreen: verification.ok,
@@ -180,6 +195,7 @@ writeFileSync(join(DIST, "dist-report.json"), JSON.stringify(report, null, 2) + 
 // ---- 6. Manifest: canonical JSON binding EVERY consumer artifact -------------
 const manifest = {
   release: VERSION,
+  ref: refArg,
   commit: head,
   artifacts: [
     { name: `${NAME}-source.tar.gz`, bytes: a.length, sha256: sha256File(tarball), blake3: await blake3File(tarball) },

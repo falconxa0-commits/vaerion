@@ -58,10 +58,11 @@ console.log("dist-verify: signature OK (Ed25519 over canonical manifest bytes)")
 
 const manifest = JSON.parse(manifestBytes.toString("utf8")) as {
   release: string;
+  ref?: string;
   commit: string;
   artifacts: Array<{ name: string; bytes: number; sha256: string; blake3: string }>;
 };
-console.log(`dist-verify: release ${manifest.release} @ commit ${manifest.commit.slice(0, 12)}…`);
+console.log(`dist-verify: release ${manifest.release} @ ${manifest.ref ?? "HEAD"} commit ${manifest.commit.slice(0, 12)}…`);
 
 let failures = 0;
 for (const artifact of manifest.artifacts) {
