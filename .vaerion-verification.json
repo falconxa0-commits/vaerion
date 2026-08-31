@@ -1,21 +1,21 @@
 {
-  "generatedAt": "2026-08-30T11:09:17.883Z",
+  "generatedAt": "2026-08-31T05:39:25.322Z",
   "ok": true,
   "gates": [
     {
       "gate": "typecheck-engine",
       "ok": true,
-      "durationMs": 3634
+      "durationMs": 3309
     },
     {
       "gate": "typecheck-sdk",
       "ok": true,
-      "durationMs": 2879
+      "durationMs": 2831
     },
     {
       "gate": "tests",
       "ok": true,
-      "durationMs": 2599
+      "durationMs": 2414
     },
     {
       "gate": "layerlint",
@@ -25,12 +25,12 @@
     {
       "gate": "constitutional-check",
       "ok": true,
-      "durationMs": 199
+      "durationMs": 240
     },
     {
       "gate": "repo-lint",
       "ok": true,
-      "durationMs": 9110
+      "durationMs": 8708
     }
   ]
 }

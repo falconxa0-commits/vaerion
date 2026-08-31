@@ -59,3 +59,8 @@ server.log
 # sandbox artifacts
 tool-results/
 .zscripts/
+
+# runtime-local artifacts (untracked in Phase 1 cleanup)
+/db
+/download
+/upload
