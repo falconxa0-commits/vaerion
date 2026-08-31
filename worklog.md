@@ -367,3 +367,25 @@ Stage Summary:
 - Code-level claims ALL CONFIRMED on live evidence: v0.1.7-rc2, six gates green, 290/290, coverage floors, Phase Ω brand/CLI/provenance present and reproducible. The PUBLIC BETA READY — v0.1.7-rc2 verdict is re-affirmed, not weakened.
 - Environment-bound trust chain (canonical store, signing key, dist/ artifact set) must be re-provisioned/re-packed — recovery operations, sequenced P3/P4; a fresh bootstrap key means a NEW manifest fingerprint (old sha256:9c6661f8… historical).
 - Execution plan handed over: P1 fix dev.next_milestone (+pinned expectation) → P2 status/dashboard regen → P3 canonical re-provision + adversarial probes → P4 dist-pack at tag with new key + full tamper-proof re-run → P5 full gate closure. Founder-gated F-1..F-6 unchanged.
+
+---
+Task ID: ASC-XVIII-PHASE-1
+Agent: Auren — Principal Vaerion Architect (PRODUCTIZATION ERA — Distribution & Installation)
+Task: ASCENSION XVIII Phase 1 — complete installation ecosystem (npm/PyPI/Homebrew/winget/macOS/Linux/universal installer) + audit-plan closure (R-1..R-4). First Law honored: no Phase Ω system touched; six gates green before and after.
+
+Work Log:
+- Reality confirmed: all six gates green at audit HEAD; toolchain inventoried (npm/python3/pip3/dpkg-deb/curl present; rpm/pwsh/hdiutil/brew absent — platform packaging authored but honestly marked UNVERIFIED).
+- COMMIT IDENTITY AUDIT (Founder's concern confirmed real): 15 commits Auren <auren@vaerion.dev>; 14 commits Z User <z@container>; 1 Vaerion Founder <founder@vaerion.local>; 1 falconxa0-commits. History NOT rewritten (protected-main law + Founder approval required — rewrite would break v0.1.7-rc1/rc2 tag bindings). All NEW commits authored Auren; config re-verified. Decision forwarded to Founder.
+- R-4 closed (a4206fe): dev.next_milestone advanced to post-Ω truth; pin strengthened (refuses the stale wording).
+- vae.ts exports main(argv) (1c6892f): the io construction moved behind one exported entrypoint; import.meta.main path unchanged — repo shim, npm bin, PyPI script, deb/brew shims all share it.
+- Phase 1 built (c91110c): packaging/{install.sh, npm/, python/, linux/, homebrew/, windows/, macos/} + packaging/README verification matrix + docs/INSTALL.md channel-map rewrite + README install lines.
+- VERIFIED live: npm tarball → npm install -g --prefix → vae version/dev --json/E1600 exit 2 (95 engine files in package); PyPI wheel → venv install → vae version + missing-Bun E1600 exit 2 (95 engine files + entry_points); universal installer e2e from the SIGNED release tarball (install → run → exit-code contract → current symlink → clean uninstall, nothing left behind); deb built via dpkg-deb + extraction checks pass. One real defect found and fixed at root: install.sh shim hardcoded the default $HOME prefix, ignoring --prefix (fixed: resolved prefix baked in, updates follow the current symlink).
+- UNVERIFIED (marked in file headers, need their host tooling): brew formula, winget manifests + install.ps1, dmg/pkg, rpm spec, AppImage final step. Release-time placeholders (formula sha256, winget InstallerUrl) documented in packaging/README.md.
+- Trust chain rebuilt (8790736): dist-pack gained --ref (binds the resolved commit of any ref; manifest+report record it); rc2 re-packed AT tag v0.1.7-rc2 with a FRESH bootstrap Ed25519 key (session-boundary loss, disclosed) — new fp sha256:82e77c8c…, old 9c6661f8… historical; tarball 1,131,959 bytes two-builds-identical (same size as historical pack); consumer dist-verify ALL CHECKS PASSED; tamper probes: modified artifact → exit 1, lying SHA256SUMS → exit 1.
+- R-1 closed: /home/z/vaerion-canonical.git re-provisioned with the pre-receive law (ff-only main, no main deletion, v* immutable); main + both tags pushed, divergence ZERO; adversarial probes RE-PROVEN: non-ff push REFUSED, tag overwrite REFUSED, main deletion REFUSED; remote state unchanged after probes. Phase 1 commits pushed (a4206fe→8790736 fast-forward accepted).
+- Gates re-run on the final tree: ALL 6 GREEN (typecheck 3.8/3.2s, tests 290/0/1969/25 files, layerlint 95 files, constitutional C1–C7/67 codes, eslint clean).
+
+Stage Summary:
+- Phase 1 COMPLETE as far as this environment can prove it: four channels fully verified end-to-end (npm, PyPI, universal installer, deb), trust chain rebuilt and tamper-proven, canonical store re-provisioned and adversarially re-proven, five channels authored with honest UNVERIFIED markers awaiting their host platforms.
+- Honest ledger: registry publishing (npm/PyPI/brew tap/winget) and the vaerion.dev installer URL are release-train steps gated on F-1/F-5; bootstrap key remains session-bound until the Founder key ceremony (F-3); commit-identity rewrite decision awaits Founder approval; native Windows/macOS verification needs their platforms.
+- Next: Phase 2 — empty laptop experience (bare `vae`, welcome, tour, doctor flow).
