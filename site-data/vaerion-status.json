@@ -1,112 +1,112 @@
 {
-  "generatedAt": "2026-08-31T06:08:46.966Z",
-  "engineVersion": "0.1.7-rc1",
+  "generatedAt": "2026-08-31T12:45:57.316Z",
+  "engineVersion": "0.1.7-rc2",
   "substrate": "TypeScript on Bun (ADR-0018 — provisional with recorded migration path; Founder ratification pending)",
   "verification": {
-    "generatedAt": "2026-08-31T06:07:41.189Z",
+    "generatedAt": "2026-08-31T12:45:51.224Z",
     "ok": true,
     "gates": [
       {
         "gate": "typecheck-engine",
         "ok": true,
-        "durationMs": 3932
+        "durationMs": 3768
       },
       {
         "gate": "typecheck-sdk",
         "ok": true,
-        "durationMs": 2868
+        "durationMs": 3233
       },
       {
         "gate": "tests",
         "ok": true,
-        "durationMs": 2554
+        "durationMs": 2754
       },
       {
         "gate": "layerlint",
         "ok": true,
-        "durationMs": 29
+        "durationMs": 31
       },
       {
         "gate": "constitutional-check",
         "ok": true,
-        "durationMs": 196
+        "durationMs": 206
       },
       {
         "gate": "repo-lint",
         "ok": true,
-        "durationMs": 8756
+        "durationMs": 9875
       }
     ]
   },
   "tests": {
     "suites": 25,
-    "assertedExpectations": 1858,
-    "totalTests": 278,
+    "assertedExpectations": 1969,
+    "totalTests": 290,
     "coverage": {
-      "lines": 86.07,
-      "branches": 90.87,
-      "floors": "bunfig.toml coverageThreshold (OBJ-Q6, ratcheted at MS-6 bundle close: 0.86/0.74/0.86/0.90)"
+      "lines": 86,
+      "branches": 90.84,
+      "floors": "bunfig.toml coverageThreshold (OBJ-Q6, ratcheted at MS-6 bundle close: 0.86/0.74/0.86/0.90; held at PHASE Ω close)"
     },
     "note": "counts from the latest full run of `bun test tests/ --coverage`"
   },
   "code": {
     "engine": {
-      "files": 94,
-      "lines": 16110
+      "files": 95,
+      "lines": 17496
     },
     "engineTests": {
       "files": 25,
-      "lines": 7008
+      "lines": 7349
     },
     "sdk": {
       "files": 3,
       "lines": 779
     },
     "tools": {
-      "files": 7,
-      "lines": 819
+      "files": 8,
+      "lines": 1131
     }
   },
   "contracts": {
     "specFiles": [
-      "spec/wit/vaerion-extension@0.1.0.wit",
-      "spec/events/registry.json",
       "spec/CHANGELOG-SPEC.md",
-      "spec/openapi.json",
-      "spec/errors.yaml",
-      "spec/README.md",
-      "spec/schemas/vaerion-yaml.schema.json",
-      "spec/schemas/broker-decision.schema.json",
       "spec/schemas/gate.schema.json",
-      "spec/schemas/capability-declaration.schema.json",
+      "spec/schemas/broker-decision.schema.json",
       "spec/schemas/journal-record.schema.json",
       "spec/schemas/receipt.schema.json",
+      "spec/schemas/evidence-record.schema.json",
+      "spec/schemas/vaerion-yaml.schema.json",
       "spec/schemas/envelope.schema.json",
-      "spec/schemas/evidence-record.schema.json"
+      "spec/schemas/capability-declaration.schema.json",
+      "spec/events/registry.json",
+      "spec/wit/vaerion-extension@0.1.0.wit",
+      "spec/openapi.json",
+      "spec/errors.yaml",
+      "spec/README.md"
     ],
     "adrCount": 21,
     "adrFiles": [
-      "docs/adr/0006-event-sourced-run-journals-checkpoint-chaining.md",
       "docs/adr/0001-monorepo-single-version-policy.md",
       "docs/adr/0005-tiered-intelligence-progressive-enhancement.md",
       "docs/adr/0011-tokio-axum-tower-stack.md",
-      "docs/adr/0010-loopback-daemon-pairing-token.md",
-      "docs/adr/0002-versioned-event-spine-envelope.md",
-      "docs/adr/0020-daemon-http-stack-ts-substrate.md",
-      "docs/adr/0014-stable-diagnostics-catalog-ecodes.md",
-      "docs/adr/0012-cassette-mockbrain-hermetic-evals.md",
-      "docs/adr/0018-engine-substrate-typescript-bun.md",
-      "docs/adr/0015-per-platform-exec-sandbox-matrix.md",
       "docs/adr/0017-reserved-cloud-seams.md",
-      "docs/adr/0007-strict-subset-yaml-vaeryaml-manifests.md",
+      "docs/adr/0018-engine-substrate-typescript-bun.md",
+      "docs/adr/0002-versioned-event-spine-envelope.md",
       "docs/adr/0008-sqlite-wal-fts5-vec-local-store.md",
-      "docs/adr/0019-single-sanctioned-gateway-egress.md",
-      "docs/adr/0004-centralized-permission-broker.md",
       "docs/adr/0009-wasi-p2-components-capability-broker.md",
-      "docs/adr/0003-contract-first-specs-drive-sdk-generation.md",
+      "docs/adr/0013-os-keychain-first-secrets-env-fallback.md",
       "docs/adr/0016-reproducible-vxn-bundles.md",
+      "docs/adr/0007-strict-subset-yaml-vaeryaml-manifests.md",
+      "docs/adr/0010-loopback-daemon-pairing-token.md",
+      "docs/adr/0004-centralized-permission-broker.md",
+      "docs/adr/0015-per-platform-exec-sandbox-matrix.md",
+      "docs/adr/0019-single-sanctioned-gateway-egress.md",
+      "docs/adr/0003-contract-first-specs-drive-sdk-generation.md",
+      "docs/adr/0014-stable-diagnostics-catalog-ecodes.md",
+      "docs/adr/0020-daemon-http-stack-ts-substrate.md",
+      "docs/adr/0012-cassette-mockbrain-hermetic-evals.md",
       "docs/adr/README.md",
-      "docs/adr/0013-os-keychain-first-secrets-env-fallback.md"
+      "docs/adr/0006-event-sourced-run-journals-checkpoint-chaining.md"
     ]
   },
   "milestones": [
@@ -157,7 +157,7 @@
       "name": "Packaging + Hardening",
       "status": "in_progress",
       "progress": 85,
-      "evidence": "PHASE 1 (2026-08-30): distribution packaging fail-closed tooling (tools/dist-pack.ts: deterministic git-archive tarball built twice + byte-compared, canonical MANIFEST.json with sha256+blake3, Ed25519-signed manifest with self-verification, tamper detection proven, consumer tools/dist-verify.ts), LICENSE Apache-2.0 + CONTRIBUTING, beta experience (README/QUICKSTART/INSTALL/TROUBLESHOOTING/BETA-ONBOARDING + examples/vaerion-demo executed end-to-end), security dossier (docs/security/ threat model + mitigations + 7-item risk ledger, zero critical), ADR finalization (docs/adr/README.md — no unclear decisions; ADR-0018 provisional with migration path), CI workflow (.github/workflows/verify.yml), version lockstep 0.1.7-rc1. REPRODUCIBLE BUNDLES (ADR-0016) COMPLETE: src/package/ deterministic .vxn format (magic VXN1, canonical JSON manifest, strictly ascending entry order, zstd pinned level 19, blake3 content identity); build = pure fold over declared inputs (config package.include + pin-verified extension artifacts auto-carried, E2100 refusal on mismatch) — no wall-clock, no ambient paths, byte-identical rebuilds proven by test; vaerion.lock generated canonical-JSON seal (config fingerprint + extension pins + bundle digest); verify = pure check with honest per-check findings (payload/entry digests E2201, pin swap E2202, non-canonical E2200, bad magic E2203, stale lock E2205) — content NEVER executed; CLI `vae package build|verify` (additive ninth command) with --dry-run purity + journaled package.built/package.verified runs + receipts; doctor package-lock cross-check (E2205); config package block (spec 0.1.6: errors E2200–E2206, events package.built/verified); exit-code mapping E2204→usage, verification failures→partial; +28 tests (unit format law + integration build/verify/tamper matrix/doctor), coverage ratcheted to measured 86.07/90.87. REMAINING (honest): native single-binary installers, performance double-check, accessibility sweep; release-train publish steps are Founder-gated."
+      "evidence": "PHASE 1 (2026-08-30): distribution packaging fail-closed tooling (tools/dist-pack.ts: deterministic git-archive tarball built twice + byte-compared, canonical MANIFEST.json with sha256+blake3, Ed25519-signed manifest with self-verification, tamper detection proven, consumer tools/dist-verify.ts), LICENSE Apache-2.0 + CONTRIBUTING, beta experience (README/QUICKSTART/INSTALL/TROUBLESHOOTING/BETA-ONBOARDING + examples/vaerion-demo executed end-to-end), security dossier (docs/security/ threat model + mitigations + 7-item risk ledger, zero critical), ADR finalization (docs/adr/README.md — no unclear decisions; ADR-0018 provisional with migration path), CI workflow (.github/workflows/verify.yml), version lockstep 0.1.7-rc1. REPRODUCIBLE BUNDLES (ADR-0016) COMPLETE: src/package/ deterministic .vxn format (magic VXN1, canonical JSON manifest, strictly ascending entry order, zstd pinned level 19, blake3 content identity); build = pure fold over declared inputs (config package.include + pin-verified extension artifacts auto-carried, E2100 refusal on mismatch) — no wall-clock, no ambient paths, byte-identical rebuilds proven by test; vaerion.lock generated canonical-JSON seal (config fingerprint + extension pins + bundle digest); verify = pure check with honest per-check findings (payload/entry digests E2201, pin swap E2202, non-canonical E2200, bad magic E2203, stale lock E2205) — content NEVER executed; CLI `vae package build|verify` (additive ninth command) with --dry-run purity + journaled package.built/package.verified runs + receipts; doctor package-lock cross-check (E2205); config package block (spec 0.1.6: errors E2200–E2206, events package.built/verified); exit-code mapping E2204→usage, verification failures→partial; +28 tests (unit format law + integration build/verify/tamper matrix/doctor), coverage ratcheted to measured 86.07/90.87. REMAINING (honest): native single-binary installers, performance double-check, accessibility sweep; release-train publish steps are Founder-gated. PHASE Ω (2026-08-31): product refinement pass — brand system (tools/brand-render.ts generates the seal/monogram/wordmark/editions byte-reproducibly; brand/BRAND-BOOK.md; brand book PDF; web face + favicon rebranded), terminal design language (src/cli/ui.ts: TTY-gated rich rendering — panels, tables, badges, receipts, educated error blocks with E-code + fix + docs pointer, quiet spinners; plain/--json contracts byte-stable and pinned by tests), the additive `vae provenance` command (artifact evidence with recomputed digests), honest dev surface (ADR-0018 Provisional wording, current milestone position), docs (README refresh, FAQ, quickstart provenance step), version lockstep 0.1.7-rc2 + spec 0.1.7-rc2 changelog + golden re-bless. +12 tests (290 total, 1969 expectations); coverage floors held (measured 86.00 lines / 90.84 branches)."
     },
     {
       "id": "GA",
@@ -177,7 +177,7 @@
     "ModelPlanner success path needs a recorded real-provider cassette for end-to-end golden coverage (environment has no provider network access)."
   ],
   "nextWork": [
-    "Release train steps 3-5 (publish, announce, key ceremony) — Founder-gated at remote provisioning; v0.1.7-rc1 artifacts are reproducible via tools/dist-pack.ts.",
+    "Release train steps 3-5 (publish, announce, key ceremony) — Founder-gated at remote provisioning; v0.1.7-rc2 artifacts are reproducible via tools/dist-pack.ts.",
     "MS-6 remaining exit criteria: native single-binary installers, performance double-check, accessibility sweep; then the daemon packages route group (wire parity, spec/openapi regen).",
     "Provision the GitHub remote + enable Actions (workflow ready: .github/workflows/verify.yml) and provision the RELEASE_SIGNING_KEY secret.",
     "Beta program: BETA-ONBOARDING.md S1-S4 feedback collection begins at public announcement.",

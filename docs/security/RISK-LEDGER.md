@@ -1,4 +1,4 @@
-# Remaining-Risk Ledger — v0.1.7-rc1
+# Remaining-Risk Ledger — v0.1.7-rc2
 
 The honest ledger of security exposures that remain after the mitigations
 in `MITIGATIONS.md`. Severity: **critical** (ships nothing) / **high** /

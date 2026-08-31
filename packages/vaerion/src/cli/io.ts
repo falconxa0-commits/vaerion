@@ -8,6 +8,11 @@
 export interface CliIo {
   out(line: string): void;
   err(line: string): void;
+  /** Unbuffered single-line write (TTY progress only; absent in tests/pipes). */
+  raw?(s: string): void;
+  /** Whether stdout is an interactive terminal (rich rendering gate). */
+  tty?: boolean;
+  columns?: number;
 }
 
 export const ExitCode = {

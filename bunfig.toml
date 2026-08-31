@@ -11,3 +11,4 @@ coverage = true
 # Floors only move up (OBJ-Q6).
 coverageThreshold = { lines = 0.86, functions = 0.74, statements = 0.86, branches = 0.90 }
 coverageSkipTestFiles = true
+

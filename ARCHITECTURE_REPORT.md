@@ -207,3 +207,27 @@ are documented additive commands on the same five-guarantee law). Build and
 verify open REAL run journals (`package.built` / `package.verified` events,
 receipts) — packaging is journaled like every other engine action, with
 `--dry-run` computing the full fold in memory and writing nothing.
+
+---
+
+## Ω. PHASE Ω addendum (2026-08-31 — v0.1.7-rc2)
+
+The refinement pass respected every architectural boundary:
+
+- **Layer law holds** — `src/cli/ui.ts` is L4 presentation importing only
+  L0 kernel modules (`redact`, `errors` catalog, `clock`); layerlint GREEN.
+- **One clock law holds** — even spinner durations read the sanctioned
+  `SystemClock`; the constitutional C2 scan caught a `Date.now()` during
+  the pass and the fix was made at the root, not in the linter.
+- **One rendering pipeline** — every command composes the same
+  components through `Renderer`; there is no free-hand console output in
+  the CLI surface. The rich dispatch keys on the same stable `command`
+  field the machine contract uses — presentation and contract cannot
+  drift apart.
+- **Profile isolation** — `resolveProfile` is the single decision point
+  (json > VAE_UI override > TTY && !NO_COLOR && TERM!=dumb && !CI);
+  `--json` never paints, pipes never paint, and the tests pin both.
+- **Additive surface** — `provenance` extends the CLI the same way
+  `serve` and `package` did: journaled-where-side-effects-exist,
+  read-only-otherwise, taught in help, mirrored in `dev`'s command
+  surface, and documented in the spec changelog.

@@ -1,6 +1,6 @@
 {
   "name": "@vaerion/engine",
-  "version": "0.1.7-rc1",
+  "version": "0.1.7-rc2",
   "private": true,
   "description": "Vaerion constitutional engine core \u2014 event spine, journal, broker contracts, research subsystem (MS-1).",
   "type": "module",

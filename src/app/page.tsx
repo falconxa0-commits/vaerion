@@ -1,5 +1,6 @@
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -34,27 +35,37 @@ function loadStatus(): Status | null {
 }
 
 // The dashboard is a status tool: it must always reflect the latest
-// regenerated site-data/vaerion-status.json — never a stale prerender.
+// regenerated site-data/vaerion-status.json — never a stale prerender,
+// and never a module-scope cache: the read happens per render.
 export const dynamic = "force-dynamic";
 
-const status = loadStatus();
-
 export default function Home() {
+  const status = loadStatus();
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-10">
         {/* Hero */}
         <header className="space-y-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <Badge variant="outline" className="border-emerald-600/40 text-emerald-700 dark:text-emerald-400">
-              <ShieldCheck className="w-3.5 h-3.5 mr-1" aria-hidden />
-              ALL VERIFICATION GATES GREEN
-            </Badge>
-            {status && (
-              <Badge variant="outline" className="border-zinc-400/40 text-zinc-600 dark:text-zinc-400">
-                engine {status.engineVersion}
+          <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+            <Image
+              src="/icon-192.png"
+              alt="Vaerion seal"
+              width={64}
+              height={64}
+              priority
+              className="h-16 w-16 shrink-0 rounded-xl ring-1 ring-[#C9A227]/40 dark:ring-[#E3B341]/40"
+            />
+            <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
+              <Badge variant="outline" className="border-[#3F9B6E]/40 text-emerald-700 dark:text-[#3F9B6E]">
+                <ShieldCheck className="w-3.5 h-3.5 mr-1" aria-hidden />
+                ALL VERIFICATION GATES GREEN
               </Badge>
-            )}
+              {status && (
+                <Badge variant="outline" className="border-[#C9A227]/40 text-zinc-600 dark:text-zinc-400">
+                  engine {status.engineVersion}
+                </Badge>
+              )}
+            </div>
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">
             Vaerion
@@ -62,6 +73,7 @@ export default function Home() {
               AI-native development engine — constitutional foundation &amp; runtime spine
             </span>
           </h1>
+          <div className="h-px w-16 bg-[#C9A227]/60 dark:bg-[#E3B341]/50" aria-hidden="true" />
           <p className="max-w-3xl text-zinc-600 dark:text-zinc-400 leading-relaxed">
             Local-first, deterministic, hash-chained. The Event Spine, the append-only
             journal, the broker contracts, and the research subsystem are built and
@@ -78,7 +90,7 @@ export default function Home() {
             {status && <span className="text-sm text-zinc-500 dark:text-zinc-400">{status.overallProgress}% of MS-0 → GA</span>}
           </div>
           <div className="h-3 w-full rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden" role="progressbar" aria-valuenow={status?.overallProgress ?? 0} aria-valuemin={0} aria-valuemax={100}>
-            <div className="h-full bg-emerald-600 rounded-full" style={{ width: `${status?.overallProgress ?? 0}%` }} />
+            <div className="h-full bg-[#3F9B6E] rounded-full" style={{ width: `${status?.overallProgress ?? 0}%` }} />
           </div>
           {status && (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 pt-2">
@@ -95,7 +107,7 @@ export default function Home() {
                   </CardHeader>
                   <CardContent className="p-4 pt-0">
                     <div className="h-1.5 w-full rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
-                      <div className={`h-full rounded-full ${m.status === "complete" ? "bg-emerald-600" : m.status === "in_progress" ? "bg-amber-500" : "bg-zinc-400"}`} style={{ width: `${m.progress}%` }} />
+                      <div className={`h-full rounded-full ${m.status === "complete" ? "bg-[#3F9B6E]" : m.status === "in_progress" ? "bg-[#C98A1F]" : "bg-zinc-400"}`} style={{ width: `${m.progress}%` }} />
                     </div>
                     <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2 line-clamp-4">{m.evidence}</p>
                   </CardContent>
@@ -125,7 +137,7 @@ export default function Home() {
                   <span className="flex items-center gap-2">
                     <span className="text-xs text-zinc-500">{g.durationMs}ms</span>
                     {g.ok ? (
-                      <Badge className="bg-emerald-600 hover:bg-emerald-600">GREEN</Badge>
+                      <Badge className="bg-[#3F9B6E] hover:bg-[#3F9B6E]">GREEN</Badge>
                     ) : (
                       <Badge variant="destructive">RED</Badge>
                     )}
@@ -199,8 +211,9 @@ export default function Home() {
 
       <footer className="mt-auto border-t border-zinc-200 dark:border-zinc-800">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-500 dark:text-zinc-400 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <span>Vaerion — Build with discipline. Build with receipts. Build with verification. Build Vaerion.</span>
+          <span>Vaerion · evidence over promises</span>
           <span className="font-mono">{status?.substrate ?? "TypeScript on Bun (ADR-0018)"}</span>
+          <span>v{status?.engineVersion ?? "—"} · Apache-2.0 · Founder: Auren</span>
         </div>
       </footer>
     </div>

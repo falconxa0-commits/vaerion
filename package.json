@@ -1,6 +1,6 @@
 {
   "name": "vaerion",
-  "version": "0.1.7-rc1",
+  "version": "0.1.7-rc2",
   "private": true,
   "workspaces": [
     "packages/*",

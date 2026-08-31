@@ -64,6 +64,7 @@ process that produced it.
 
 ```sh
 vae package build                          # → .vaerion/package/vaerion-demo.vxn + vaerion.lock
+vae provenance .vaerion/package/vaerion-demo.vxn   # the evidence, recomputed from the bytes
 vae package build --out second.vxn    # build it again
 vae package verify .vaerion/package/vaerion-demo.vxn
 ```

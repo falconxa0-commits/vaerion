@@ -32,7 +32,7 @@ import { blake3HexOf } from "../packages/vaerion/src/kernel/hash.ts";
 
 const ROOT = resolve(import.meta.dir, "..");
 const DIST = join(ROOT, "dist");
-const VERSION = "0.1.7-rc1";
+const VERSION = "0.1.7-rc2";
 const NAME = `vaerion-${VERSION}`;
 
 function run(cmd: string[], opts: { cwd?: string } = {}): { ok: boolean; out: string } {

@@ -1,4 +1,4 @@
-# Vaerion Threat Model — v0.1.7-rc1 (Phase 1)
+# Vaerion Threat Model — v0.1.7-rc2 (Phase 1)
 
 Scope: the shipped v0.1 surface — the `vae` CLI, the loopback API daemon,
 the TypeScript SDK, the extension host, the model gateway, and the

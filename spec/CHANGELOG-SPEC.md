@@ -4,6 +4,21 @@ All changes to files under `spec/` are recorded here. Evolution is
 additive-only within a major version; removals require a major bump and a
 deprecation window. Every entry requires two approvals on the change itself.
 
+## 0.1.7-rc2 — 2026-08-31 (PHASE Ω luxury edition; additive only)
+
+Release-alignment change for the `v0.1.7-rc2` tag. Nothing removed, nothing
+renamed; no behavioral contract changes.
+
+- `openapi.json` — `info.version` aligned to the engine lockstep version
+  (0.1.7-rc2, regenerated via the sanctioned generator; C4 byte-sync holds).
+- CLI surface gained the additive `provenance` command (artifact evidence:
+  .vxn digest recomputation, lock seal cross-check, export derivation,
+  release-manifest display). Machine (`--json`) shapes follow the existing
+  per-command result objects; the daemon route surface is untouched, so no
+  spec documents change.
+- All contract documents remain additive within v0.1; catalog and registry
+  versions are unchanged.
+
 ## 0.1.7-rc1 — 2026-08-30 (Phase 1 release alignment; additive only)
 
 Release-alignment change for the `v0.1.7-rc1` tag. Nothing removed, nothing

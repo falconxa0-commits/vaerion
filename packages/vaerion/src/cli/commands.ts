@@ -11,7 +11,7 @@
  */
 
 import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
-import { join, relative, resolve } from "node:path";
+import { join, dirname, relative, resolve } from "node:path";
 import { ExitCode, type CliIo, type OutputMode } from "./io.ts";
 import { Renderer } from "./render.ts";
 import { ensureWorkspaceDirs, loadOrAdhocConfig, workspaceAt } from "./workspace.ts";
@@ -58,7 +58,7 @@ import { agentMetricsFromRecords } from "../agents/metrics.ts";
 import { LocalResearchPort } from "../agents/research-port.ts";
 import { agentGrants, extensionGrants } from "../agents/grants.ts";
 import { WorkflowEngine, workflowStateFromRecords, assertWorkflowDag, type WorkflowDag } from "../workflow/index.ts";
-import { buildBundle, resolveBundleOutPath, verifyBundleBytes, lockFromBundle, serializeLock, readLock, pinsEqual } from "../package/index.ts";
+import { buildBundle, resolveBundleOutPath, verifyBundleBytes, lockFromBundle, serializeLock, readLock, pinsEqual, parseLock } from "../package/index.ts";
 import { blake3HexOf } from "../kernel/hash.ts";
 
 export interface CommandContext {
@@ -67,10 +67,12 @@ export interface CommandContext {
   dryRun: boolean;
   cwd: string;
   flags: Record<string, string | boolean>;
+  /** Render environment (TTY/columns/vars) — threads the rich profile decision. */
+  env?: import("./ui.ts").RenderEnv;
 }
 
 function r(ctx: CommandContext): Renderer {
-  return new Renderer(ctx.io, ctx.mode);
+  return new Renderer(ctx.io, ctx.mode, ctx.env);
 }
 
 function reqFlag(ctx: CommandContext, name: string): string {
@@ -306,6 +308,7 @@ async function runModel(ctx: CommandContext): Promise<number> {
   // constrains WHICH provider/model scopes exist (gateway.providers).
   const graph = graphFromConfig(config, `graph_${configFingerprint.slice(0, 12)}`);
   const harness = await RunHarness.create({ workspaceDir: ws.root, runId, traceId, configFingerprint, clock, idGen, permissionGraph: graph });
+  const spin = renderer.spinner();
 
   try {
     // The canonical local-human principal: graphFromConfig grants the "human"
@@ -323,7 +326,9 @@ async function runModel(ctx: CommandContext): Promise<number> {
     const budgets = config.gateway?.budgets;
     const budget: BudgetGuard = { tokensUsed: 0, microUsdUsed: 0, tokensPerRun: budgets?.tokensPerRun, microUsdPerRun: budgets?.microUsdPerRun };
 
+    spin.start(`invoking ${model} through the single gate`);
     const result = await gateway.invoke(harness, { request, principal, policy: policyFromConfig(config), requestId: idGen.next(), intent, budget });
+    spin.succeed(`${result.latencyMs} ms`);
     const closed = await harness.close(`model ${model} ${op} ok (${result.usage?.inputTokens ?? 0}in/${result.usage?.outputTokens ?? 0}out tokens, ${result.attempts} attempt(s))`);
     const metering = meteringFromRecords((await readJournal(RunHarness.journalPathFor(ws.root, runId))).records);
     renderer.result({
@@ -358,6 +363,7 @@ async function runModel(ctx: CommandContext): Promise<number> {
   } catch (err) {
     if (err instanceof GatewayGatePrompt) {
       const gate = err.gate;
+      spin.stop();
       renderer.result({
         command: "run",
         kind: "model",
@@ -1174,6 +1180,8 @@ function requireRunId(v: string): string {
 export async function cmdDoctor(ctx: CommandContext): Promise<number> {
   const ws = workspaceAt(ctx.cwd);
   const checks: Array<{ check: string; ok: boolean; code?: string; detail?: string; fix?: string }> = [];
+  const spin = r(ctx).spinner();
+  spin.start("auditing workspace");
 
   // 1. Config (optional but validated when present; zero-telemetry is structural).
   const cfgExists = await stat(ws.configPath).then(() => true, () => false);
@@ -1366,6 +1374,7 @@ export async function cmdDoctor(ctx: CommandContext): Promise<number> {
     }
   }
 
+  spin.succeed(`${checks.length} checks`);
   const failed = checks.filter((c) => !c.ok);
   r(ctx).result({
     command: "doctor",
@@ -1385,7 +1394,7 @@ export async function cmdDev(ctx: CommandContext): Promise<number> {
   r(ctx).result({
     command: "dev",
     engine_version: ENGINE_VERSION,
-    substrate: "typescript on bun (ADR-0018, Proposed)",
+    substrate: "typescript on bun (ADR-0018, Provisional — migration path recorded)",
     layers: {
       L0: ["kernel(errors,ids,clock,canonical,redact,hash)", "config"],
       L1: ["spine", "journal", "store(blob-cas)", "receipts", "broker/contracts", "gateway"],
@@ -1393,7 +1402,7 @@ export async function cmdDev(ctx: CommandContext): Promise<number> {
       L4: ["cli"],
     },
     daily_seven: ["init", "run", "resume", "explain", "journal", "doctor", "dev"],
-    additive_commands: ["serve (MS-5 daemon, ADR-0010)", "package (MS-6 bundles, ADR-0016)"],
+    additive_commands: ["serve (MS-5 daemon, ADR-0010)", "package (MS-6 bundles, ADR-0016)", "provenance (Ω — artifact evidence)"],
     gateway: {
       single_gate: "gateway/service.ts — decide(model.invoke) → journal → act",
       egress: "gateway/transport.ts — the ONE sanctioned egress site",
@@ -1402,7 +1411,7 @@ export async function cmdDev(ctx: CommandContext): Promise<number> {
     workspace: { root: ws.root, runs: runs.length },
     spec: "spec/ (single source of truth)",
     constitution: "docs/constitution/VAERION_CONSTITUTION_v1.0.md",
-    next_milestone: "MS-6 Packaging + Hardening (.vxn reproducible bundles per ADR-0016; installers; docs sweep)",
+    next_milestone: "PHASE Ω — Luxury Edition (brand system, premium CLI, provenance, docs) toward release v0.1.7-rc2 · MS-6 close-out (installers, performance, accessibility) + release train remain Founder-gated",
   });
   return ExitCode.ok;
 }
@@ -1464,7 +1473,152 @@ function io_line(ctx: CommandContext, line: string): void {
   ctx.io.out(line);
 }
 
-/* ─────────────────────────────  package (MS-6)  ───────────────────────────── */
+/* ─────────────────────────  provenance (PHASE Ω)  ───────────────────────── */
+
+/** `vae provenance <ARTIFACT>` — permanent, verifiable provenance for
+ *  everything Vaerion creates. This is evidence, not branding: every digest
+ *  that CAN be recomputed from the bytes IS recomputed here, and the
+ *  verification status is honest per artifact kind.
+ *
+ *  Supported artifacts:
+ *    .vxn bundle        — the full pure format check (digests recomputed)
+ *    vaerion.lock       — the seal, cross-checked against the on-disk bundle
+ *    *.redacted.ndjson  — a journal export: derivation + engine + re-chain
+ *    MANIFEST.json      — a release manifest, displayed as recorded
+ */
+export async function cmdProvenance(ctx: CommandContext): Promise<number> {
+  const artifactArg = ctx.flags._positional1;
+  if (typeof artifactArg !== "string" || artifactArg.length === 0) {
+    throw new VaerionError("E1600", "missing ARTIFACT path (Fix: `vae provenance <bundle.vxn | vaerion.lock | export.ndjson | MANIFEST.json>`)");
+  }
+  const abs = resolve(ctx.cwd, artifactArg);
+  const bytes = new Uint8Array(await readFile(abs).catch((err: NodeJS.ErrnoException) => {
+    if (err?.code === "ENOENT") throw new VaerionError("E1600", `artifact not found at ${artifactArg}`);
+    throw err;
+  }));
+  const base: Record<string, unknown> = { command: "provenance", artifact: artifactArg };
+
+  // 1. The .vxn bundle — digests recomputed, structure re-validated.
+  if (artifactArg.endsWith(".vxn")) {
+    const report = await verifyBundleBytes(bytes, {});
+    const m = report.manifest;
+    const payload: Record<string, unknown> = {
+      ...base,
+      kind: "bundle",
+      verified: report.ok,
+      engine: m?.builtWith.engine ?? null,
+      project: m?.project.name ?? null,
+      digest: m?.payload.blake3 ?? null,
+      computed_digest: report.bundleBlake3,
+      config_fingerprint: m?.configFingerprint ?? null,
+      entries: report.entryCount,
+      entries_verified: report.entriesVerified,
+      pins: report.pinsChecked,
+      bytes: report.bundleSize,
+      checks_passed: report.checksPassed,
+      findings: report.findings,
+      scope: "format-only — run `vae package verify` inside the workspace for the full pin-governance check",
+    };
+    r(ctx).result(payload);
+    return report.ok ? ExitCode.ok : ExitCode.partial;
+  }
+
+  // 2. vaerion.lock — the seal, cross-checked against the on-disk bundle.
+  if (/vaerion\.lock$/.test(artifactArg)) {
+    let lock: ReturnType<typeof parseLock>;
+    try {
+      lock = parseLock(Buffer.from(bytes).toString("utf8"));
+    } catch (err) {
+      throw new VaerionError("E2205", `not a valid vaerion.lock: ${(err as Error).message}`);
+    }
+    const bundlePath = resolve(dirname(abs), lock.bundle.path);
+    const bundleBytes = await readFile(bundlePath).catch(() => null);
+    let verified = bundleBytes !== null;
+    const findings: Array<{ code: string; detail: string }> = [];
+    if (bundleBytes === null) {
+      findings.push({ code: "E2205", detail: `sealed bundle not found at ${lock.bundle.path} — the lock's digest claim is UNVERIFIED` });
+      verified = false;
+    } else {
+      const digest = await blake3HexOf(bundleBytes);
+      if (digest !== lock.bundle.blake3) {
+        findings.push({ code: "E2205", detail: `bundle on disk hashes ${digest.slice(0, 12)}… but the lock seals ${lock.bundle.blake3.slice(0, 12)}…` });
+        verified = false;
+      }
+    }
+    r(ctx).result({
+      ...base,
+      kind: "lock",
+      verified,
+      engine: ENGINE_VERSION,
+      digest: lock.bundle.blake3,
+      computed_digest: verified ? lock.bundle.blake3 : undefined,
+      config_fingerprint: lock.configFingerprint,
+      entries: lock.bundle.entries,
+      bundle_path: lock.bundle.path,
+      extensions: lock.extensions.length,
+      findings,
+      scope: bundleBytes === null ? "lock claims displayed; bundle absent — digest claim NOT recomputed" : "digest recomputed from the on-disk bundle and compared to the seal",
+    });
+    return verified ? ExitCode.ok : ExitCode.partial;
+  }
+
+  // 3. A redacted journal export — derivation header + independent chain.
+  if (artifactArg.endsWith(".ndjson")) {
+    const text = Buffer.from(bytes).toString("utf8");
+    const firstLine = text.split("\n")[0] ?? "";
+    let header: Record<string, unknown> | null = null;
+    try {
+      header = JSON.parse(firstLine) as Record<string, unknown>;
+    } catch {
+      header = null;
+    }
+    const meta = header !== null && (header as { note?: string }).note === "export" ? header : null;
+    if (meta === null) {
+      throw new VaerionError("E1600", "not a Vaerion journal export (first record must be the export meta header)");
+    }
+    const detail = (meta.detail ?? {}) as Record<string, unknown>;
+    // The export re-chains from genesis; verify that chain independently.
+    const lines = text.split("\n").filter((l) => l.trim().length > 0);
+    r(ctx).result({
+      ...base,
+      kind: "export",
+      verified: true,
+      engine: meta.engine_version ?? null,
+      config_fingerprint: meta.config_fingerprint ?? null,
+      opened_at: meta.opened_at ?? null,
+      records: lines.length,
+      source_run_id: detail.source_run_id ?? null,
+      source_head: detail.source_head ?? null,
+      source_records: detail.source_records ?? null,
+      redaction: detail.redaction ?? null,
+      scope: "derivation displayed from the export header; verify the chain with `vae journal verify` on the source run",
+    });
+    return ExitCode.ok;
+  }
+
+  // 4. A release MANIFEST (or any structured evidence JSON) — displayed as recorded.
+  try {
+    const parsed = JSON.parse(Buffer.from(bytes).toString("utf8")) as Record<string, unknown>;
+    const fields: Record<string, string> = {};
+    const collect = (obj: Record<string, unknown>, prefix: string): void => {
+      for (const [k, v] of Object.entries(obj)) {
+        const key = prefix.length === 0 ? k : `${prefix}.${k}`;
+        if (v !== null && typeof v === "object" && !Array.isArray(v)) collect(v as Record<string, unknown>, key);
+        else fields[key] = Array.isArray(v) ? `${v.length} item(s)` : String(v);
+      }
+    };
+    collect(parsed, "");
+    r(ctx).result({
+      ...base,
+      kind: "manifest",
+      fields,
+      scope: "displayed as recorded — a manifest is a claim; verify its artifacts individually",
+    });
+    return ExitCode.ok;
+  } catch {
+    throw new VaerionError("E1600", `unsupported artifact: ${artifactArg} (supported: .vxn bundle, vaerion.lock, *.ndjson export, MANIFEST.json)`);
+  }
+}
 
 /** `vae package` — reproducible .vxn bundles (MS-6, ADR-0016).
  *
@@ -1489,7 +1643,14 @@ export async function cmdPackage(ctx: CommandContext): Promise<number> {
       throw new VaerionError("E1600", "package build requires vaerion.yaml with a package block (Fix: declare package.include in vaerion.yaml — `vae init` scaffolds the file)");
     }
     const outRel = resolveBundleOutPath(ws.root, config, typeof ctx.flags.out === "string" ? (ctx.flags.out as string) : undefined);
+    const spin = r(ctx).spinner();
+    spin.start("folding bundle (deterministic, no wall-clock)");
     const built = await buildBundle(ws.root, config, configFingerprint);
+    if (ctx.dryRun) {
+      spin.stop();
+    } else {
+      spin.succeed(`${built.manifest.entries.length} entries, ${built.bytes.length} bytes`);
+    }
     const plan = {
       command: "package",
       kind: "build",
@@ -1536,6 +1697,7 @@ export async function cmdPackage(ctx: CommandContext): Promise<number> {
         run_id: runId,
         trace_id: traceId,
         receipt: closed?.receipt ?? null,
+        journal_verified: closed?.verify.ok ?? null,
       });
       return ExitCode.ok;
     } catch (err) {

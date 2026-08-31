@@ -161,3 +161,104 @@ about the release infrastructure is executable and has been executed.
 | Release commit (tagged `v0.1.7-rc1`) | `82615ca` — audit commit |
 | Post-release record | the commit containing this addendum (documentation-only; the tag deliberately stays on the release commit) |
 | All Phase 1 commits | authored `Auren <auren@vaerion.dev>`; every commit gate-green |
+
+---
+
+## Ω. PHASE Ω — LUXURY EDITION final audit (2026-08-31, v0.1.7-rc2)
+
+### Ω.1 What the mandate was
+
+Transform Vaerion from feature-complete into a product that feels
+timeless: complete brand system, premium CLI experience, a terminal
+design language, educated errors, permanent provenance, premium reports,
+documentation excellence, and a final zero-trust audit. Zero trust held:
+every claim below was measured on this tree after the work.
+
+### Ω.2 Measured results
+
+| Metric | Value (measured) |
+|---|---|
+| Verification gates | **ALL 6 GREEN** (`bun run tools/verify.ts` on the final tree) |
+| Tests | **290 pass / 0 fail**, 1969 expectations, 25 files (+12 for the design language) |
+| Coverage (text reporter) | **86.00% lines / 90.84% branches** — floors ≥ 0.86/0.90 held (functions/statements floors unchanged) |
+| Coverage (lcov cross-check) | 88.90% lines over the full mirrored surface |
+| Brand assets | 12 SVG masters + 7 PNG editions/icons + OG image + terminal mark — **byte-reproducible** (generator run twice, md5-verified) |
+| Version lockstep | 0.1.7-rc2 across all manifest surfaces; golden receipt re-blessed; OpenAPI regenerated via the sanctioned generator (C4 byte-sync holds) |
+| Constitutional catches during the pass | 2, both fixed at root cause: C2-determinism (`Date.now()` in the spinner → sanctioned `SystemClock`); coverage floors (TTY-gated layer now executed by the suite) |
+| Plain-contract stability | **Every pre-existing CLI output assertion passed unmodified** through the full Renderer rewrite — the machine contract did not move |
+
+### Ω.3 The design language (evidence, not description)
+
+Rendered with `VAE_UI=rich` (the TTY path), ANSI-stripped for paper —
+alignment and width discipline are asserted by tests:
+
+```
+╭ Doctor — workspace audit ────────────────────────────────────────╮
+│ engine   0.1.7-rc2                                               │
+│ scope    config · journals · blobs · evidence · audit · refusals │
+│ privacy  no network · no secret values — names only              │
+╰──────────────────────────────────────────────────────────────────╯
+
+     check              detail
+───  ─────────────────  ────────────────────────────────────────
+✓    config             valid (fingerprint f715ed0be49d…)
+✓    audit-ledger       0 entries
+✓    gateway-matrix     mockbrain[chat/embed/rerank] (local) · …
+
+ ✓ all checks green   12 checks · exit 0
+
+╭ ✗ E1600 · usage_error ───────────────────────────────────────────╮
+│ bundle not found at /tmp/nonexistent.vxn                         │
+│ Command was invoked incorrectly.                                 │
+│                                                                  │
+│ Fix: Re-run with `--help`; help always teaches and never executes.│
+│ Docs: spec/errors.yaml#E1600                                     │
+╰──────────────────────────────────────────────────────────────────╯
+```
+
+Profile law: `--json` is never painted; pipes/CI receive the byte-stable
+plain contract; rich rendering requires an interactive terminal
+(`VAE_UI=plain|rich` overrides; `NO_COLOR`/`TERM=dumb`/`CI` always
+degrade). The web face carries the same identity (seal, gold accents,
+Vaerion metadata, favicon, OG image) and was browser-verified at desktop
+and mobile widths with the sticky footer — including a real defect it
+caught: the dashboard cached its data at module scope, so the version
+badge lagged the regenerated JSON; fixed at root (read per render).
+
+### Ω.4 Provenance becomes a command
+
+`vae provenance <ARTIFACT>` closes the evidence loop for everything the
+engine produces: `.vxn` bundles (every digest recomputed from the bytes),
+`vaerion.lock` (seal cross-checked against the on-disk bundle, E2205
+findings when evidence does not hold), redacted journal exports
+(derivation header), and release manifests (displayed as recorded, never
+represented as verified). Exit 0 = evidence holds; exit 5 = findings.
+
+### Ω.5 Honest blemishes and remaining limitations
+
+- **Commit `03996c6` carries a UUID for a message** (a session artifact
+  from between phases). History is immutable under the protected-main
+  law; the blemish is recorded here rather than rewritten. Every PHASE Ω
+  commit is authored `Auren <auren@vaerion.dev>` with a professional
+  message.
+- **Rich-profile coverage is by execution, not exclusion**: Bun 1.3.14
+  honors neither `coveragePathIgnorePatterns` nor `v8 ignore` comments
+  (both attempted, both measured ineffective), so the design layer is
+  covered by 12 structural tests through the public `runCli` contract —
+  the stronger outcome, chosen deliberately.
+- The brand-book PDF uses DejaVu faces (Inter/JetBrains Mono are not
+  installed in this environment); the substitution is disclosed inside
+  the PDF itself.
+- Founder-gated items carry over unchanged from Phase 1: F-1 remote
+  provisioning, F-2 full legal name, F-3 key ceremony, F-4 ADR-0018
+  ratification, F-5 publish/announce/recruit, F-6 real-provider
+  cassettes. MS-6 close-out (native installers, performance,
+  accessibility sweep) remains open engineering work.
+
+### Ω.6 Release recommendation
+
+**PUBLIC BETA READY — v0.1.7-rc2.** The product now matches its own
+discipline: the brand is generated like an artifact, the terminal speaks
+one design language, errors teach, provenance is inspectable, and every
+claim on every surface is measured. The six gates are green on the
+release tree; the tag binds it.

@@ -303,3 +303,344 @@ describe("SDK gateway surface (machine parity with the CLI)", () => {
     expect(matrix.find((m) => m.provider === "anthropic")!.secretName).toBe("ANTHROPIC_API_KEY");
   });
 });
+
+/* ─────────────────────────  PHASE Ω — design language  ─────────────────────
+ * The rich (TTY) rendering layer is engine surface and must be EXECUTED by
+ * the suite like everything else (coverage-floor law, OBJ-Q6). These tests
+ * drive the real runCli through the rich profile and assert the design
+ * system's structural invariants — alignment, width discipline, exit-code
+ * parity with plain mode, and the absolute isolation of --json from paint.
+ * The plain-mode bytes remain pinned by the pre-existing tests above.     */
+
+const RICH_COLUMNS = 100;
+
+function richIo() {
+  const out: string[] = [];
+  const err: string[] = [];
+  return {
+    out: (l: string): void => void out.push(l),
+    err: (l: string): void => void err.push(l),
+    raw: (): void => undefined,
+    tty: true,
+    columns: RICH_COLUMNS,
+    lines: { out, err },
+  };
+}
+
+async function withRichEnv<T>(fn: () => Promise<T>): Promise<T> {
+  const prev = process.env.VAE_UI;
+  process.env.VAE_UI = "rich";
+  try {
+    return await fn();
+  } finally {
+    if (prev === undefined) delete process.env.VAE_UI;
+    else process.env.VAE_UI = prev;
+  }
+}
+
+/** Plain pipes are the byte-stable machine contract; this pins that the
+ *  rich profile NEVER leaks into them (VAE_UI=plain ≡ default plain). */
+async function withPlainEnv<T>(fn: () => Promise<T>): Promise<T> {
+  const prev = process.env.VAE_UI;
+  process.env.VAE_UI = "plain";
+  try {
+    return await fn();
+  } finally {
+    if (prev === undefined) delete process.env.VAE_UI;
+    else process.env.VAE_UI = prev;
+  }
+}
+
+/** Visible length (ANSI-free) — the alignment assertions measure this. */
+function visible(s: string): number {
+  return s.replace(/\u001b\[[0-9;]*m/g, "").length;
+}
+
+/** Every panel block in `lines` must be width-disciplined: border rows all
+ *  share one visible length, and no row exceeds the terminal width. */
+function assertPanelsDisciplined(lines: string[], label: string): void {
+  let block: string[] = [];
+  const flush = (): void => {
+    if (block.length >= 2 && block[0]!.startsWith("╭") && block[block.length - 1]!.startsWith("╰")) {
+      const widths = new Set(block.map(visible));
+      expect(widths.size).toBe(1);
+      expect(block[0]!.startsWith("╭─") || block[0]!.startsWith("╭ ")).toBe(true);
+    }
+    for (const l of block) expect(visible(l)).toBeLessThanOrEqual(RICH_COLUMNS);
+    block = [];
+  };
+  for (const line of lines) {
+    if (line.startsWith("│") || line.startsWith("╭") || line.startsWith("╰")) block.push(line);
+    else flush();
+  }
+  flush();
+  expect(lines.length).toBeGreaterThan(0);
+  void label;
+}
+
+describe("PHASE Ω design language (rich profile, TTY-gated)", () => {
+  test("banner + help frame render on a TTY; plain pipes get the raw text", async () => {
+    await withRichEnv(async () => {
+      const rich = richIo();
+      const r1 = await runCli(["--help"], rich, process.cwd());
+      expect(r1.code).toBe(ExitCode.ok);
+      expect(rich.lines.out.join("\n")).toContain("V A E R I O N");
+      assertPanelsDisciplined(rich.lines.out, "help");
+
+      const plain: string[] = [];
+      const r2 = await withPlainEnv(async () =>
+        runCli(["--help"], { out: (l) => plain.push(l), err: () => undefined }, process.cwd()),
+      );
+      expect(r2.code).toBe(ExitCode.ok);
+      expect(plain.join("\n")).not.toContain("V A E R I O N");
+      expect(plain.join("\n")).toContain("vae — Vaerion engine command line");
+    });
+  });
+
+  test("doctor rich report: aligned table, disciplined panels, exit parity with plain", async () => {
+    const ws = await makeWorkspace(CONFIG_YAML);
+    await withRichEnv(async () => {
+      const rich = richIo();
+      const r = await runCli(["doctor"], rich, ws);
+      expect(r.code).toBe(ExitCode.ok);
+      assertPanelsDisciplined(rich.lines.out, "doctor");
+      const joined = rich.lines.out.join("\n");
+      expect(joined).toContain("Doctor — workspace audit");
+      expect(joined).toContain("all checks green");
+
+      const plain: string[] = [];
+      const rp = await withPlainEnv(async () =>
+        runCli(["doctor"], { out: (l) => plain.push(l), err: () => undefined }, ws),
+      );
+      expect(rp.code).toBe(r.code);
+      expect(plain[0]).toBe("command: doctor");
+    });
+  });
+
+  test("dev rich report: banner, engine/gateway/position panels", async () => {
+    const ws = await makeWorkspace(CONFIG_YAML);
+    await withRichEnv(async () => {
+      const rich = richIo();
+      const r = await runCli(["dev"], rich, ws);
+      expect(r.code).toBe(ExitCode.ok);
+      assertPanelsDisciplined(rich.lines.out, "dev");
+      const joined = rich.lines.out.join("\n");
+      expect(joined).toContain("V A E R I O N");
+      expect(joined).toContain("Gateway — the single gate");
+      expect(joined).toContain("PHASE Ω");
+    });
+  });
+
+  test("run demo dry-run rich: plan panel, zero side effects; json untouched by paint", async () => {
+    const ws = await makeWorkspace(CONFIG_YAML);
+    await mkdir(join(ws, "sources"), { recursive: true });
+    await writeFile(join(ws, "sources", "doc.md"), "# demo source — deterministic by construction\n", "utf8");
+    await withRichEnv(async () => {
+      const rich = richIo();
+      const r = await runCli(["run", "demo", "--sources", "sources", "--dry-run"], rich, ws);
+      expect(r.code).toBe(ExitCode.ok);
+      assertPanelsDisciplined(rich.lines.out, "dry-run");
+      expect(rich.lines.out.join("\n")).toContain("zero side effects");
+
+      const jsonLines: string[] = [];
+      const rj = await runCli(["run", "demo", "--sources", "sources", "--dry-run", "--json"], { out: (l) => jsonLines.push(l), err: () => undefined }, ws);
+      expect(rj.code).toBe(ExitCode.ok);
+      for (const line of jsonLines) expect(() => JSON.parse(line) as unknown).not.toThrow();
+      expect((JSON.parse(jsonLines[jsonLines.length - 1]!) as Record<string, unknown>).dry_run).toBe(true);
+    });
+  });
+
+  test("errors render as educated blocks in rich; code + Fix preserved", async () => {
+    await withRichEnv(async () => {
+      const rich = richIo();
+      const r = await runCli(["journal", "verify", "not-a-run-id"], rich, process.cwd());
+      expect(r.code).toBe(ExitCode.usage);
+      const joined = rich.lines.err.join("\n");
+      expect(joined).toContain("E1600");
+      expect(joined).toContain("Fix:");
+      expect(joined).toContain("spec/errors.yaml#E1600");
+    });
+  });
+
+  test("package build + provenance rich: receipt, digest, lock evidence chain", async () => {
+    const ws = await makeWorkspace(`${CONFIG_YAML}
+package:
+  include:
+    - docs
+`);
+    await mkdir(join(ws, "docs"), { recursive: true });
+    await writeFile(join(ws, "docs", "note.md"), "# provenance demo\n", "utf8");
+    await withRichEnv(async () => {
+      const rich = richIo();
+      const r = await runCli(["package", "build"], rich, ws);
+      expect(r.code).toBe(ExitCode.ok);
+      assertPanelsDisciplined(rich.lines.out, "package build");
+      const joined = rich.lines.out.join("\n");
+      expect(joined).toContain("Bundle built");
+      expect(joined).toContain("receipt");
+      expect(joined).toContain("journal verified");
+
+      const prov = richIo();
+      const rp = await runCli(["provenance", ".vaerion/package/gateway-cli.vxn"], prov, ws);
+      expect(rp.code).toBe(ExitCode.ok);
+      const pJoined = prov.lines.out.join("\n");
+      expect(pJoined).toContain("Provenance — permanent artifact evidence");
+      expect(pJoined).toContain("verified from the artifact itself");
+
+      const lockProv = richIo();
+      const rl = await runCli(["provenance", "vaerion.lock"], lockProv, ws);
+      expect(rl.code).toBe(ExitCode.ok);
+      expect(lockProv.lines.out.join("\n")).toContain("kind");
+
+      const plain: string[] = [];
+      const rpp = await withPlainEnv(async () =>
+        runCli(["provenance", "vaerion.lock"], { out: (l) => plain.push(l), err: () => undefined }, ws),
+      );
+      expect(rpp.code).toBe(ExitCode.ok);
+      expect(plain[0]).toBe("command: provenance");
+    });
+  });
+
+  test("run model rich: the single-gate invocation renders its receipt", async () => {
+    const ws = await makeWorkspace(CONFIG_YAML);
+    await withRichEnv(async () => {
+      const rich = richIo();
+      const r = await runCli(["run", "model", "--model", "mockbrain/mock-1", "--prompt", "hello vaerion", "--seed", "42"], rich, ws);
+      expect(r.code).toBe(ExitCode.ok);
+      assertPanelsDisciplined(rich.lines.out, "run model");
+      const joined = rich.lines.out.join("\n");
+      expect(joined).toContain("Model invocation — through the single gate");
+      expect(joined).toContain("mockbrain/mock-1");
+      expect(joined).toContain("Response");
+      expect(joined).toContain("journal verified");
+    });
+  });
+
+  test("explain rich: the narrative folds into panels; verified subtitle honest", async () => {
+    const ws = await makeWorkspace(CONFIG_YAML);
+    await mkdir(join(ws, "sources"), { recursive: true });
+    await writeFile(join(ws, "sources", "doc.md"), "# explain demo source\n", "utf8");
+    await withRichEnv(async () => {
+      const run = richIo();
+      const rr = await runCli(["run", "research", "--sources", "sources", "--query", "deterministic"], run, ws);
+      expect(rr.code).toBe(ExitCode.ok);
+      const runIdLine = run.lines.out.find((l) => l.includes("crn_run_"));
+      expect(runIdLine).toBeDefined();
+      const runId = /crn_run_[A-Z0-9]+/.exec(runIdLine!)![0];
+
+      const rich = richIo();
+      const r = await runCli(["explain", runId], rich, ws);
+      expect(r.code).toBe(ExitCode.ok);
+      assertPanelsDisciplined(rich.lines.out, "explain");
+      const joined = rich.lines.out.join("\n");
+      expect(joined).toContain("Run explanation — folded from the journal");
+      expect(joined).toContain("chain verified");
+      expect(joined).toContain("Narrative");
+    });
+  });
+  test("run agent rich: the supervised loop renders steps, spend, receipt", async () => {
+    const ws = await makeWorkspace(CONFIG_YAML);
+    await withRichEnv(async () => {
+      const rich = richIo();
+      const r = await runCli(
+        ["run", "agent", "--goal", "note the law", "--planner", "inline", "--plan-json", '[{"kind":"note","text":"write the note"},{"kind":"model","model":"mockbrain/mock-1","messages":[{"role":"user","content":"summarize the law"}]},{"kind":"note","text":"done"}]'],
+        rich,
+        ws,
+      );
+      expect(r.code).toBe(ExitCode.ok);
+      assertPanelsDisciplined(rich.lines.out, "run agent");
+      const joined = rich.lines.out.join("\n");
+      expect(joined).toContain("Agent run");
+      expect(joined).toContain("planner");
+      expect(joined).toContain("journal verified");
+    });
+  });
+
+  test("resume rich on a closed run: the restored-state panel is honest", async () => {
+    const ws = await makeWorkspace(CONFIG_YAML);
+    await mkdir(join(ws, "sources"), { recursive: true });
+    await writeFile(join(ws, "sources", "doc.md"), "# resume demo source\n", "utf8");
+    await withRichEnv(async () => {
+      const run = richIo();
+      const rr = await runCli(["run", "research", "--sources", "sources", "--query", "resume"], run, ws);
+      expect(rr.code).toBe(ExitCode.ok);
+      const runIdLine = run.lines.out.find((l) => l.includes("crn_run_"));
+      const runId = /crn_run_[A-Z0-9]+/.exec(runIdLine!)![0];
+
+      const rich = richIo();
+      const r = await runCli(["resume", runId], rich, ws);
+      expect(r.code).toBe(ExitCode.ok);
+      assertPanelsDisciplined(rich.lines.out, "resume restored");
+      const joined = rich.lines.out.join("\n");
+      expect(joined).toContain("Restored");
+      expect(joined).toContain("closed");
+    });
+  });
+  test("human gate rich: the awaiting panel renders authority, options, hint", async () => {
+    const ws = await makeWorkspace(`schemaVersion: "0.1"
+project:
+  name: gate-cli
+  description: "PHASE Ω gate surface"
+policy:
+  rules:
+    - id: prompt-research
+      principalKinds: [research]
+      domain: research.index
+      scope: "*"
+      effect: prompt
+      rationale: "human authority checkpoint"
+telemetry:
+  enabled: false
+`);
+    await mkdir(join(ws, "sources"), { recursive: true });
+    await writeFile(join(ws, "sources", "doc.md"), "# gate demo source\n", "utf8");
+    await withRichEnv(async () => {
+      const rich = richIo();
+      const r = await runCli(["run", "demo", "--sources", "sources"], rich, ws);
+      expect(r.code).toBe(ExitCode.ok);
+      assertPanelsDisciplined(rich.lines.out, "gate");
+      const joined = rich.lines.out.join("\n");
+      expect(joined).toContain("Human gate — awaiting your authority");
+      const runIdLine = rich.lines.out.find((l) => l.includes("crn_run_"));
+      const runId = /crn_run_[A-Z0-9]+/.exec(runIdLine!)![0];
+
+      const review = richIo();
+      const rv = await runCli(["resume", runId], review, ws);
+      expect(rv.code).toBe(ExitCode.ok);
+      expect(review.lines.out.join("\n")).toContain("awaiting your authority");
+    });
+  });
+  test("gate denial rich: the human refusal closes the run with evidence", async () => {
+    const ws = await makeWorkspace(`schemaVersion: "0.1"
+project:
+  name: gate-deny
+  description: "PHASE Ω denial surface"
+policy:
+  rules:
+    - id: prompt-research
+      principalKinds: [research]
+      domain: research.index
+      scope: "*"
+      effect: prompt
+      rationale: "human authority checkpoint"
+telemetry:
+  enabled: false
+`);
+    await mkdir(join(ws, "sources"), { recursive: true });
+    await writeFile(join(ws, "sources", "doc.md"), "# denial demo source\n", "utf8");
+    await withRichEnv(async () => {
+      const rich = richIo();
+      const r = await runCli(["run", "demo", "--sources", "sources"], rich, ws);
+      expect(r.code).toBe(ExitCode.ok);
+      const runIdLine = rich.lines.out.find((l) => l.includes("crn_run_"));
+      const runId = /crn_run_[A-Z0-9]+/.exec(runIdLine!)![0];
+
+      const deny = richIo();
+      const rd = await runCli(["resume", runId, "--answer", '{"approved":false}'], deny, ws);
+      expect(rd.code).toBe(ExitCode.brokerDenied);
+      const joined = deny.lines.out.join("\n");
+      expect(joined).toContain("Gate denied");
+      expect(joined).toContain("receipt");
+    });
+  });
+});

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Vaerion seal (monochrome)">
+  <rect x="52" y="52" width="408" height="408" rx="92" fill="none" stroke="currentColor" stroke-width="24"/>
+  <line x1="150" y1="140" x2="362" y2="140" stroke="currentColor" stroke-width="18"/>
+  <path d="M150,196 L256,376 L362,196" fill="none" stroke="currentColor" stroke-width="40" stroke-linejoin="miter"/>
+</svg>

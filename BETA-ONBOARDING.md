@@ -1,4 +1,4 @@
-# Vaerion Beta Onboarding — v0.1.7-rc1
+# Vaerion Beta Onboarding — v0.1.7-rc2
 
 Welcome. You are evaluating a **public beta** of Vaerion: a local-first,
 AI-native development engine built around one versioned event spine,

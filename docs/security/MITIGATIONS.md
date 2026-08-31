@@ -1,4 +1,4 @@
-# Mitigation Record — v0.1.7-rc1
+# Mitigation Record — v0.1.7-rc2
 
 Each row maps a threat-model adversary to the implemented control and the
 evidence that the control holds. Evidence classes: **T** = automated test

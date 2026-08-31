@@ -9,11 +9,14 @@
  */
 
 import { ExitCode, type CliIo } from "./io.ts";
-import { cmdDev, cmdExplain, cmdInit, cmdJournal, cmdDoctor, cmdPackage, cmdResume, cmdRun, cmdServe, type CommandContext } from "./commands.ts";
+import { cmdDev, cmdExplain, cmdInit, cmdJournal, cmdDoctor, cmdPackage, cmdProvenance, cmdResume, cmdRun, cmdServe, type CommandContext } from "./commands.ts";
 import { VaerionError } from "../kernel/errors.ts";
 import { isVaerionError } from "./workspace.ts";
+import { Renderer, setBannerVersion } from "./render.ts";
+import { Ansi, banner, errorBlock, type RenderEnv } from "./ui.ts";
 
-export const VERSION = "0.1.7-rc1";
+export const VERSION = "0.1.7-rc2";
+setBannerVersion(VERSION);
 
 const MAIN_HELP = `vae — Vaerion engine command line (v${VERSION})
 
@@ -67,6 +70,11 @@ Command surface (the Daily Seven + additive commands):
                              the pure check: digests recomputed, pins
                              compared, content NEVER executed; honest
                              per-check findings report
+  provenance ARTIFACT        permanent provenance for anything Vaerion
+                             created — .vxn bundle (digests recomputed),
+                             vaerion.lock (seal vs on-disk bundle), a
+                             redacted journal export, or a release
+                             MANIFEST. Evidence, not branding.
 
 Global flags:
   --json                     stable NDJSON output (machine mode, guaranteed)
@@ -197,6 +205,21 @@ vae package verify BUNDLE [--dry-run]
   failure — the digest-swap defense), and reports an honest per-check
   findings list. It NEVER executes package content. Exit 0 verified;
   exit 5 with E2206 + findings when the bundle must be refused.`,
+  provenance: `vae provenance ARTIFACT
+
+  Permanent provenance for anything Vaerion created — evidence, not
+  branding. Every digest that CAN be recomputed from the bytes IS
+  recomputed here, and the verification status is honest per kind:
+
+    .vxn bundle         the full pure format check — payload + entry
+                        digests recomputed and compared to the manifest
+    vaerion.lock        the seal, cross-checked against the on-disk bundle
+                        (E2205 findings when evidence does not hold)
+    *.ndjson export     the derivation header: source run + head hash,
+                        engine, config fingerprint, redaction version
+    MANIFEST.json       a release manifest, displayed as recorded
+
+  Exit 0 when the evidence holds; exit 5 with findings when it does not.`,
 };
 
 interface ParsedArgs {
@@ -251,20 +274,31 @@ export interface CliResult {
 /** In-process CLI entry (used by tests and the bin shim alike). */
 export async function runCli(argv: string[], io: CliIo, cwd: string): Promise<CliResult> {
   const parsed = parseArgs(argv);
+  const envOf = (): RenderEnv => ({ tty: io.tty === true, columns: io.columns, vars: process.env });
 
   // Guarantee #1 — help first, always, before any side effect.
   if (parsed.flags.help === true) {
     const topic = parsed.command;
-    io.out(topic && COMMAND_HELP[topic] ? COMMAND_HELP[topic] : MAIN_HELP);
+    new Renderer(io, "plain", envOf()).helpFrame(
+      topic && COMMAND_HELP[topic] ? COMMAND_HELP[topic] : MAIN_HELP,
+    );
     return { code: ExitCode.ok };
   }
 
+  const mode = parsed.flags.json === true ? "json" : "plain";
+  const renderer = new Renderer(io, mode, envOf());
+
   if (!parsed.command) {
-    io.err("E1600 no command given. Fix: run `vae --help` (help always teaches).");
+    if (renderer.rich) {
+      const a = new Ansi(true);
+      for (const line of banner(a, VERSION, renderer.width)) io.out(line);
+      io.out("");
+      for (const line of errorBlock(a, { code: "E1600", message: "no command given.", fix: "run `vae --help` (help always teaches)." }, renderer.width)) io.err(line);
+    } else {
+      io.err("E1600 no command given. Fix: run `vae --help` (help always teaches).");
+    }
     return { code: ExitCode.usage };
   }
-
-  const mode = parsed.flags.json === true ? "json" : "plain";
   const dryRun = parsed.flags["dry-run"] === true;
   const cwdFlag = typeof parsed.flags.cwd === "string" ? (parsed.flags.cwd as string) : cwd;
   const ctx: CommandContext = {
@@ -272,6 +306,7 @@ export async function runCli(argv: string[], io: CliIo, cwd: string): Promise<Cl
     mode,
     dryRun,
     cwd: cwdFlag,
+    env: envOf(),
     flags: {
       ...parsed.flags,
       _positional1: parsed.positional[0] ?? "",
@@ -291,15 +326,26 @@ export async function runCli(argv: string[], io: CliIo, cwd: string): Promise<Cl
       case "dev": code = await cmdDev(ctx); break;
       case "serve": code = await cmdServe(ctx); break;
       case "package": code = await cmdPackage(ctx); break;
-      case "version": io.out(`vae ${VERSION}`); code = ExitCode.ok; break;
+      case "provenance": code = await cmdProvenance(ctx); break;
+      case "version":
+        if (renderer.rich) {
+          for (const line of banner(new Ansi(true), VERSION, renderer.width)) io.out(line);
+        } else {
+          io.out(`vae ${VERSION}`);
+        }
+        code = ExitCode.ok;
+        break;
       default:
-        io.err(`E1600 unknown command: ${parsed.command}. Fix: run \`vae --help\` for the Daily Seven.`);
+        if (renderer.rich) {
+          for (const line of errorBlock(new Ansi(true), { code: "E1600", message: `unknown command: ${parsed.command}`, fix: "run `vae --help` for the Daily Seven." }, renderer.width)) io.err(line);
+        } else {
+          io.err(`E1600 unknown command: ${parsed.command}. Fix: run \`vae --help\` for the Daily Seven.`);
+        }
         return { code: ExitCode.usage };
     }
     return { code };
   } catch (err) {
     if (isVaerionError(err)) {
-      const renderer = new (await import("./render.ts")).Renderer(io, mode);
       renderer.error(err);
       const code =
         err.code === "E1600" || err.code === "E1700" || err.code === "E1701" || err.code === "E2204"
@@ -324,6 +370,9 @@ if (import.meta.main) {
   const io: CliIo = {
     out: (line) => console.log(line),
     err: (line) => console.error(line),
+    raw: (s) => process.stdout.write(s),
+    tty: process.stdout.isTTY === true,
+    columns: process.stdout.columns,
   };
   const result = await runCli(process.argv.slice(2), io, process.cwd());
   process.exit(result.code);
