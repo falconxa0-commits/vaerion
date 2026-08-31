@@ -1,10 +1,11 @@
-# VERIFICATION_REPORT — Vaerion MS-0 → MS-6
+# VERIFICATION_REPORT — Vaerion MS-0 → MS-6 → Phase 1 (v0.1.7-rc1)
 
 | | |
 |---|---|
 | **Date** | 2026-08-30 |
 | **Command** | `bun run tools/verify.ts` |
-| **Result** | **ALL 6 GATES GREEN** (re-run on the MS-6 bundle-build tree) |
+| **Result** | **ALL 6 GATES GREEN** (re-run on the Phase 1 release tree, version lockstep 0.1.7-rc1) |
+| **Release scope note** | Phase 1 added no engine behavior; it changed the lockstep version, the OpenAPI license identifier (Apache-2.0), the re-blessed golden receipt (`engine_version`), and the release/CI tooling — the six gates cover every one of those surfaces, and `tools/dist-pack.ts` re-runs this suite as a fail-closed packaging precondition. |
 
 ---
 

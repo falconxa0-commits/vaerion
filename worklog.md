@@ -228,3 +228,25 @@ Stage Summary:
 - Key artifacts: src/package/ (5 modules), `vae package`, vaerion.lock law, spec 0.1.6, 28 new tests, ratcheted floors, updated reports + dashboard.
 - Remaining MS-6 exit criteria: installers, docs sweep, accessibility, performance double-check; natural follow-on: daemon packages route group (wire parity + openapi regen).
 - BLOCKED (environmental, exact reason recorded): GitHub push — no remote configured and no credential provisioned in this sandbox. The Founder must either provide a remote URL + transient credential or ratify local-only development. Nothing else is blocked.
+
+---
+Task ID: PHASE-1
+Agent: Auren — Principal Release Commander (engineering execution record)
+Task: VAERION PHASE 1 — PUBLIC BETA ACTIVATION + FOUNDER IDENTITY FINALIZATION (10 objectives), opened with a zero-trust reality recovery.
+
+Work Log:
+- STEP 0 (zero-trust recovery): measured HEAD e3eed6a (16 commits, fsck clean); NO remote/tags; authors 14x "Z User". FALSIFIED inherited claims: docs/ga/ dossier absent (GO-NO-GO, BETA-ONBOARDING, RELEASE-CHECKLIST, SECURITY-HARDENING, FINAL-ARCHITECTURE-REVIEW, KNOWN-LIMITATIONS existed NOWHERE), dist-pack tooling absent, README/LICENSE absent, examples had no Vaerion demo. Baseline gates re-measured GREEN (278/1858/25, layerlint 94/446, constitutional 7/67).
+- OBJ 8+9 (commit 7397db1): git identity -> Auren <auren@vaerion.dev>; untracked .env, db/custom.db, .zscripts/, download/; gitignored /db /download /upload; root package renamed nextjs_tailwind_shadcn_ts -> vaerion (lock refreshed, no dep changes).
+- OBJ 1 (63d9da3): LICENSE Apache-2.0 (C 2026 Auren); CONTRIBUTING.md; license metadata on all 4 manifests; OpenAPI license UNLICENSED -> Apache-2.0 regenerated via sanctioned generator (C4 holds).
+- OBJ 7 (edfa193): ADR finalization — 0011 Superseded, 0017 Accepted, 0016/0019/0020 Ratified with enforcement evidence, 0018 explicitly PROVISIONAL with recorded migration path; docs/adr/README.md decision register (no unclear decisions).
+- OBJ 6 (10a5bca): docs/security/ THREAT-MODEL (4 boundaries, 5 adversaries, 7 properties), MITIGATIONS (adversary->control->evidence), RISK-LEDGER (R-1..R-7, zero critical) — grounded in measured code.
+- OBJ 5 (54dfbd8): README, QUICKSTART, INSTALL, TROUBLESHOOTING, BETA-ONBOARDING (S1-S4 + severity ladder), examples/vaerion-demo EXECUTED end-to-end: doctor green, run demo journaled+receipted (17 records), package build twice byte-identical (cmp-proven, blake3 683a908b...), verify 0 findings. Doc defect found by execution: --out rejects absolute/dot paths (E2204); docs corrected.
+- OBJ 4 (ce8a4f6): tools/dist-pack.ts (fail-closed: re-runs 6 gates; deterministic tarball built twice byte-compared 577,438 B; canonical MANIFEST.json sha256+blake3; Ed25519 signature self-verified; bootstrap key, public key committed, private untracked) + tools/dist-verify.ts (consumer verify; TAMPER TEST PASSED: 1-byte flip -> FAIL exit 1, restored -> PASS) + docs/ga/RELEASE-VERIFICATION.md.
+- Version lockstep (573a573): 0.1.0-ms1 -> 0.1.7-rc1 at 10 surfaces; golden re-blessed (VAE_BLESS=1); status.ts now imports ENGINE_VERSION (drift class killed); spec changelog 0.1.7-rc1; C3 flagged my own wording -> reworded (check works).
+- OBJ 3 (87ada8b): .github/workflows/verify.yml — same verify.ts entrypoint, fail on violation, frozen-lockfile, pinned Bun 1.3.14, uploads verification record; tag job produces signed artifacts with RELEASE_SIGNING_KEY secret. YAML-validated; Actions execution awaits remote (environment-blocked, recorded).
+- OBJ 10 (this commit): full audit reruns before EVERY commit; version lockstep cross-verified by script (10 surfaces CONSISTENT); stale-reference hunt clean; dashboard/reports refreshed (overall 86%, MS-6 85%); FINAL VERIFIED REALITY REPORT at docs/ga/FINAL-VERIFIED-REALITY-REPORT.md.
+
+Stage Summary:
+- Verdict: PUBLIC BETA READY (v0.1.7-rc1). Zero critical security findings. All 10 objectives executed with measured evidence; every commit gate-green; all authored as Auren.
+- Founder-gated remaining: F-1 GitHub remote provisioning, F-2 full legal name insertion, F-3 key ceremony (bootstrap Ed25519 -> held-offline), F-4 ADR-0018 ratification, F-5 publish/announce/recruit (release train 3-5), F-6 real-provider cassettes.
+- Next release step (engineering): canonical local remote + protected-main hook + tag v0.1.7-rc1 + dist-pack re-run at the release commit; then push.

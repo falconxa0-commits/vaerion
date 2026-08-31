@@ -1,40 +1,40 @@
 {
-  "generatedAt": "2026-08-31T06:03:27.987Z",
+  "generatedAt": "2026-08-31T06:08:46.966Z",
   "engineVersion": "0.1.7-rc1",
   "substrate": "TypeScript on Bun (ADR-0018 — provisional with recorded migration path; Founder ratification pending)",
   "verification": {
-    "generatedAt": "2026-08-31T06:01:01.689Z",
+    "generatedAt": "2026-08-31T06:07:41.189Z",
     "ok": true,
     "gates": [
       {
         "gate": "typecheck-engine",
         "ok": true,
-        "durationMs": 3477
+        "durationMs": 3932
       },
       {
         "gate": "typecheck-sdk",
         "ok": true,
-        "durationMs": 2856
+        "durationMs": 2868
       },
       {
         "gate": "tests",
         "ok": true,
-        "durationMs": 2394
+        "durationMs": 2554
       },
       {
         "gate": "layerlint",
         "ok": true,
-        "durationMs": 27
+        "durationMs": 29
       },
       {
         "gate": "constitutional-check",
         "ok": true,
-        "durationMs": 199
+        "durationMs": 196
       },
       {
         "gate": "repo-lint",
         "ok": true,
-        "durationMs": 8628
+        "durationMs": 8756
       }
     ]
   },
@@ -64,7 +64,7 @@
     },
     "tools": {
       "files": 7,
-      "lines": 817
+      "lines": 819
     }
   },
   "contracts": {
@@ -164,21 +164,23 @@
       "name": "General Availability",
       "status": "pending",
       "progress": 0,
-      "evidence": "Post-hardening."
+      "evidence": "PUBLIC BETA READY declared at Phase 1 close (v0.1.7-rc1): legal foundation (Apache-2.0), signed reproducible release artifacts, CI pipeline, security dossier, beta experience executed; GA requires the risk-ledger exit criteria, release-train Founder steps, and the GO decision."
     }
   ],
   "overallProgress": 86,
   "risks": [
-    "Substrate: TypeScript-on-Bun reference implementation awaits Founder ADR-0018 ratification before shipping milestones.",
+    "Substrate: TypeScript-on-Bun reference implementation is explicitly PROVISIONAL (ADR-0018, Phase 1 finalization) with a recorded migration path; Founder ratification pending.",
+    "Release signing uses the bootstrap Ed25519 key; rotation to a held-offline key is Founder-gated (docs/security/RISK-LEDGER.md R-2).",
+    "Exec-sandbox hardening matrix (ADR-0015 full profiles) and per-run token scoping are open engineering items (RISK-LEDGER R-1/R-5).",
     "Journal per-record fsync trades durability for throughput; batching decision needed before agent-scale testing.",
     "Provider price table is build-time data (2026-08); provider drift is a data update with a reviewed contract change.",
-    "Breaker state is per-process (deliberately not journaled); the daemon executes runs serially per workspace so breaker/audit chains stay sound, but multi-process daemon federation still needs an ADR.",
-    "ModelPlanner success path needs a recorded real-provider cassette for end-to-end golden coverage (MockBrain output is not plan JSON by design)."
+    "ModelPlanner success path needs a recorded real-provider cassette for end-to-end golden coverage (environment has no provider network access)."
   ],
   "nextWork": [
-    "MS-6 remaining exit criteria: installers, docs sweep, accessibility, performance double-check; then the daemon packages route group (wire parity, spec/openapi regen) now that the packaging subsystem exists.",
-    "Record real-provider planning cassettes through scripts/record-cassettes.ts when network access is available.",
-    "Ratify or amend ADR-0018 (substrate) and re-baseline shipping goals accordingly.",
+    "Release train steps 3-5 (publish, announce, key ceremony) — Founder-gated at remote provisioning; v0.1.7-rc1 artifacts are reproducible via tools/dist-pack.ts.",
+    "MS-6 remaining exit criteria: native single-binary installers, performance double-check, accessibility sweep; then the daemon packages route group (wire parity, spec/openapi regen).",
+    "Provision the GitHub remote + enable Actions (workflow ready: .github/workflows/verify.yml) and provision the RELEASE_SIGNING_KEY secret.",
+    "Beta program: BETA-ONBOARDING.md S1-S4 feedback collection begins at public announcement.",
     "Coverage: per-module ratchets on top of the total-based floors (mechanical follow-up)."
   ]
 }
