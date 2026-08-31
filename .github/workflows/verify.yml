@@ -1,0 +1,92 @@
+# Vaerion CI — the verification pipeline.
+#
+# Every push and pull request re-runs the ENTIRE six-gate verification
+# suite via tools/verify.ts — the same single entrypoint the maintainers
+# run locally. The job fails on any violation (non-zero gate exit):
+#   typecheck-engine · typecheck-sdk · tests (coverage floors) ·
+#   layerlint · constitutional-check · repo-lint
+# and uploads the measured verification record.
+#
+# On a `v*` tag push, a second job re-runs the gates and produces the
+# signed release artifact set (tools/dist-pack.ts, fail-closed) and
+# uploads it. The release signing key is provisioned from the
+# RELEASE_SIGNING_KEY secret (PEM PKCS8); without the secret the packager
+# generates a bootstrap key and the report says so (key ceremony: RISK-LEDGER R-2).
+
+name: verify
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    name: six-gate verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout (full history — the repository is the evidence)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun (pinned — the verified substrate)
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.14"
+
+      - name: Install (frozen lockfile — supply-chain law)
+        run: bun install --frozen-lockfile
+
+      - name: Run the full verification suite (all six gates; fails on any violation)
+        run: bun run tools/verify.ts
+
+      - name: Upload the measured verification record
+        uses: actions/upload-artifact@v4
+        with:
+          name: vaerion-verification-${{ github.run_id }}
+          path: |
+            .vaerion-verification.json
+          if-no-files-found: error
+
+  release:
+    name: signed release artifacts
+    needs: verify
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.14"
+
+      - name: Install (frozen lockfile)
+        run: bun install --frozen-lockfile
+
+      - name: Provision the release signing key (secret → untracked key file)
+        if: env.RELEASE_SIGNING_KEY != ''
+        env:
+          RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
+        run: |
+          mkdir -p keys
+          printf '%s' "$RELEASE_SIGNING_KEY" > keys/release-signing.key
+          chmod 600 keys/release-signing.key
+
+      - name: Package the release (fail-closed; re-runs all gates internally)
+        run: bun run tools/dist-pack.ts
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: vaerion-release-${{ github.ref_name }}
+          path: dist/
+          if-no-files-found: error
