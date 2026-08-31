@@ -1411,7 +1411,7 @@ export async function cmdDev(ctx: CommandContext): Promise<number> {
     workspace: { root: ws.root, runs: runs.length },
     spec: "spec/ (single source of truth)",
     constitution: "docs/constitution/VAERION_CONSTITUTION_v1.0.md",
-    next_milestone: "PHASE Ω — Luxury Edition (brand system, premium CLI, provenance, docs) toward release v0.1.7-rc2 · MS-6 close-out (installers, performance, accessibility) + release train remain Founder-gated",
+    next_milestone: "ASCENSION XVIII — Productization Era: distribution & installers (npm/PyPI/Homebrew/winget/dmg/deb/AppImage/universal), empty-laptop experience, ecosystem · PHASE Ω complete at v0.1.7-rc2 · MS-6 close-out (performance, accessibility) + release train remain Founder-gated",
   });
   return ExitCode.ok;
 }
