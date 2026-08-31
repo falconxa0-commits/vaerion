@@ -42,6 +42,16 @@ architectural, not procedural:
 
 ## Quickstart (15 minutes)
 
+Install (every channel delivers the same engine — full map in
+`docs/INSTALL.md`, packaging in `packaging/`):
+
+```sh
+npm install -g vaerion        # or: pip install vaerion
+# or the universal installer: curl -fsSL https://vaerion.dev/install | sh
+```
+
+Or from source:
+
 ```sh
 git clone <repository-url> vaerion && cd vaerion
 bun install

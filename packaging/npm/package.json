@@ -1,0 +1,36 @@
+{
+  "name": "vaerion",
+  "version": "0.1.7-rc2",
+  "description": "Vaerion — the AI-native development engine: deterministic runtime, broker-governed autonomy, hash-chained journals, receipts, and permanent provenance. Evidence, not branding.",
+  "license": "Apache-2.0",
+  "author": "Auren <auren@vaerion.dev>",
+  "type": "module",
+  "bin": {
+    "vae": "bin/vae.js"
+  },
+  "files": [
+    "bin/",
+    "engine/",
+    "README.md"
+  ],
+  "engines": {
+    "bun": ">=1.2.0"
+  },
+  "keywords": [
+    "ai",
+    "agents",
+    "determinism",
+    "audit",
+    "provenance",
+    "journal",
+    "broker",
+    "local-first",
+    "cli",
+    "reproducible-builds"
+  ],
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "hash-wasm": "^4.12.0",
+    "yaml": "^2.8.0"
+  }
+}

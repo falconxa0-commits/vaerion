@@ -1,0 +1,11 @@
+# Winget manifest — version manifest (ManifestVersion 1.6.0, three-file set).
+#
+# PackageIdentifier `Vaerion.Vaerion` is a PLACEHOLDER pending the public
+# repository/registry provisioning (Founder-gated, risk-ledger F-1/F-5).
+# VERIFICATION STATUS: authored on Linux; winget unavailable here.
+# Platform marker: UNVERIFIED — WINGET.
+PackageIdentifier: Vaerion.Vaerion
+PackageVersion: 0.1.7-rc2
+DefaultLocale: en-US
+ManifestType: version
+ManifestVersion: 1.6.0

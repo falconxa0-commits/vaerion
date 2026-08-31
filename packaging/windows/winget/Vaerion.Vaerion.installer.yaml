@@ -1,0 +1,30 @@
+# Winget manifest — installer manifest (portable zip; signature prep in
+# packaging/macos/SIGNING-PREP.md applies to Windows Authenticode too and
+# is Founder-gated via the key ceremony).
+# Platform marker: UNVERIFIED — WINGET.
+PackageIdentifier: Vaerion.Vaerion
+PackageVersion: 0.1.7-rc2
+Channel: stable
+Installers:
+  - Architecture: x64
+    InstallerType: zip
+    InstallerUrl: https://vaerion.dev/dist/vaerion-0.1.7-rc2-windows-x64.zip # release-time
+    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000 # release-time
+    NestedInstallerType: portable
+    NestedInstallerFiles:
+      - RelativeFilePath: vaerion/vae.exe
+        PortableCommandAlias: vae
+    UpgradeBehavior: uninstallPrevious
+  - Architecture: arm64
+    InstallerType: zip
+    InstallerUrl: https://vaerion.dev/dist/vaerion-0.1.7-rc2-windows-arm64.zip # release-time
+    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000 # release-time
+    NestedInstallerType: portable
+    NestedInstallerFiles:
+      - RelativeFilePath: vaerion/vae.exe
+        PortableCommandAlias: vae
+    UpgradeBehavior: uninstallPrevious
+Commands:
+  - vae
+ManifestType: installer
+ManifestVersion: 1.6.0

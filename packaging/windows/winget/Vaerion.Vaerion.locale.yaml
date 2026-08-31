@@ -1,0 +1,26 @@
+# Winget manifest — default locale.
+# Platform marker: UNVERIFIED — WINGET.
+PackageIdentifier: Vaerion.Vaerion
+PackageVersion: 0.1.7-rc2
+PackageLocale: en-US
+Publisher: Vaerion
+PublisherUrl: https://vaerion.dev
+PackageName: Vaerion
+PackageShortDescription: AI-native development engine — deterministic, auditable, local-first.
+PackageDescription: |-
+  Vaerion is an AI-native development engine: a deterministic runtime with
+  broker-governed autonomy, hash-chained journals, receipts, and permanent
+  provenance for everything it creates. Evidence, not branding.
+License: Apache-2.0
+LicenseUrl: https://www.apache.org/licenses/LICENSE-2.0
+Copyright: Copyright (c) Vaerion contributors
+ShortDescription: AI-native development engine — deterministic, auditable, local-first.
+Tags:
+  - ai
+  - agents
+  - determinism
+  - audit
+  - provenance
+  - cli
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0
