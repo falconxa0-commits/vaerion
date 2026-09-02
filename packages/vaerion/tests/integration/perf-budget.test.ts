@@ -66,6 +66,7 @@ describe("evaluatePerfReport — fail-closed evaluation", () => {
       schema: PERF_REPORT_SCHEMA,
       engineVersion: ENGINE_VERSION,
       passed: true,
+      host: "test/fixture",
       metrics: [metric({ op: "a" }), metric({ op: "b" })],
     };
     const verdict = evaluatePerfReport(report);
@@ -78,6 +79,7 @@ describe("evaluatePerfReport — fail-closed evaluation", () => {
       schema: PERF_REPORT_SCHEMA,
       engineVersion: ENGINE_VERSION,
       passed: false,
+      host: "test/fixture",
       metrics: [metric({ op: "journal.append", measuredMs: 123.456, budgetMs: 100, passed: false }), metric({ op: "blob.roundtrip" })],
     };
     const verdict = evaluatePerfReport(report);
@@ -113,6 +115,19 @@ describe("PERF_BUDGETS — the typed budget contracts of record", () => {
       expect(b.iterations).toBeGreaterThan(0);
     }
   });
+
+  test("PORTABILITY (v1.6 A6): the fs-bound ceiling holds on every sanctioned host", () => {
+    // The GitHub ubuntu-latest runner measured journal.append at 452.95 ms
+    // (median of 5) at the v0.1.10-rc1 tag run — the 400 ms ceiling, calibrated
+    // only on the sandbox host, breached there and turned 6/6 CI runs red with
+    // every other gate green. The budget of record (900 ms) must never be
+    // lowered below 1.9x that measured runner median — a silent reduction
+    // would re-break the sanctioned CI host. Raising it is a recorded
+    // amendment; lowering it below this floor is a defect.
+    const CI_RUNNER_MEASURED_MEDIAN_MS = 452.95;
+    const append = PERF_BUDGETS.find((b) => b.op === "journal.append")!;
+    expect(append.budgetMs).toBeGreaterThanOrEqual(Math.ceil(1.9 * CI_RUNNER_MEASURED_MEDIAN_MS));
+  });
 });
 
 /* ─────────────────────────  the real harness (integration)  ───────────────────────── */
@@ -140,11 +155,17 @@ describe("measureEnginePerf — one deterministic harness over the real engine",
     const second = await measureEnginePerf({ scratchRoot });
     expect(second.schema).toBe(report.schema);
     expect(second.engineVersion).toBe(report.engineVersion);
+    expect(second.host).toBe(report.host); // the measuring host is part of the deterministic shape
     expect(second.metrics.map((m) => m.op)).toEqual(report.metrics.map((m) => m.op));
     expect(second.metrics.map((m) => m.iterations)).toEqual(report.metrics.map((m) => m.iterations));
     for (let i = 0; i < second.metrics.length; i++) {
       expect(second.metrics[i]!.measuredMs).toBeGreaterThan(0);
     }
+  });
+
+  test("the report carries its measuring host (v1.6 A6: budget governance knows WHICH host measured)", () => {
+    expect(typeof report.host).toBe("string");
+    expect(report.host).toMatch(/^[a-z0-9]+\/[a-z0-9_]+$/); // "<platform>/<arch>"
   });
 
   test("rich-plain-JSON contract: round-trips exactly; every number finite; no NaN/Infinity", () => {

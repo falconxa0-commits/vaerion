@@ -51,6 +51,11 @@ jobs:
           name: vaerion-verification-${{ github.run_id }}
           path: |
             .vaerion-verification.json
+          # The CI truth law (v1.6 A6, Phase 11): the record path is a DOTFILE,
+          # and upload-artifact@v4 (>= 4.4.0) excludes hidden files by default —
+          # the historical root cause of 6/6 red CI runs on otherwise-green
+          # trees. This flag is load-bearing; pinned by ci-truth contract tests.
+          include-hidden-files: true
           if-no-files-found: error
 
   release:

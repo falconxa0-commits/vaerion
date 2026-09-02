@@ -68,3 +68,6 @@ tool-results/
 # release signing keys — the private key NEVER enters version control
 /keys/*.key
 /dist/
+
+# Gate diagnostics (verify.ts full gate logs — generated, never committed)
+.vaerion-logs/

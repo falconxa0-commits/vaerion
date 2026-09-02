@@ -39,8 +39,28 @@ function countLines(dir: string, filter: (p: string) => boolean): { files: numbe
 }
 
 const verification = existsSync(join(ROOT, ".vaerion-verification.json"))
-  ? (JSON.parse(readFileSync(join(ROOT, ".vaerion-verification.json"), "utf8")) as { ok: boolean; gates: Array<{ gate: string; ok: boolean; durationMs: number }>; generatedAt: string })
+  ? (JSON.parse(readFileSync(join(ROOT, ".vaerion-verification.json"), "utf8")) as {
+      ok: boolean;
+      gates: Array<{ gate: string; ok: boolean; durationMs: number }>;
+      generatedAt: string;
+      measured?: { testsPassed: number; testsFailed: number; expectations: number; testFiles: number };
+    })
   : { ok: false, gates: [], generatedAt: null };
+
+// The constitution of record is DERIVED (highest ratified version present) —
+// never a hand-copied literal (v1.6 A6: generated surfaces derive from reality;
+// a literal here went stale at every amendment).
+const CONSTITUTION_FILE = walk(join(ROOT, "docs", "constitution"))
+  .map((p) => p.split("/").pop() ?? p)
+  .filter((f) => /^VAERION_CONSTITUTION_v\d+\.\d+\.md$/.test(f))
+  .sort((a, b) => {
+    const va = a.match(/v(\d+)\.(\d+)/)!; const vb = b.match(/v(\d+)\.(\d+)/)!;
+    return Number(va[1]) - Number(vb[1]) || Number(va[2]) - Number(vb[2]);
+  })
+  .at(-1);
+if (!CONSTITUTION_FILE) throw new Error("status: no ratified constitution found under docs/constitution");
+const CONSTITUTION_VERSION = `v${CONSTITUTION_FILE.match(/v(\d+\.\d+)/)![1]}`;
+const CONSTITUTION_PATH = join(ROOT, "docs", "constitution", CONSTITUTION_FILE);
 
 const engine = countLines(join(ROOT, "packages", "vaerion", "src"), (p) => p.endsWith(".ts"));
 const engineTests = countLines(join(ROOT, "packages", "vaerion", "tests"), (p) => p.endsWith(".ts"));
@@ -69,12 +89,14 @@ const milestones = [
 // contains TWO legitimate "Phase 8" rows (the out-of-order git/CI phase of the
 // earlier program and the A4 accessibility law), so phase numbers alone are
 // NOT unique keys. The browser audit (Phase 8) caught the duplicate-key defect.
-const phaseLedger: Array<{ id: string; phase: string; status: string; evidence: string }> = [];
+const phaseLedger: Array<{ id: string; phase: string; era: string; status: string; evidence: string }> = [];
 try {
-  const constitution = readFileSync(join(ROOT, "docs", "constitution", "VAERION_CONSTITUTION_v1.6.md"), "utf8");
+  const constitution = readFileSync(CONSTITUTION_PATH, "utf8");
   let row = 0;
-  for (const m of constitution.matchAll(/^\| ([^|]+) \| (ASCENSION XVIII|PHASE Ω) \| (✅ complete|▶ in flight|❌ NOT complete) \| (.+?) \|$/gm)) {
-    phaseLedger.push({ id: `dt-${row++}`, phase: m[1]!.trim(), status: m[3]!.trim(), evidence: m[4]!.trim() });
+  // Tolerant of any era column value — the ledger gains rows at every phase
+  // boundary and the parser must never need an amendment to keep parsing.
+  for (const m of constitution.matchAll(/^\| ([^|]+) \| ([^|]+) \| (✅ complete|▶ in flight|❌ NOT complete) \| (.+?) \|$/gm)) {
+    phaseLedger.push({ id: `dt-${row++}`, phase: m[1]!.trim(), era: m[2]!.trim(), status: m[3]!.trim(), evidence: m[4]!.trim() });
   }
 } catch {
   // Constitution unreadable: measured absence — the section renders empty.
@@ -107,12 +129,24 @@ const commandCenter = await measureCenter({
   repoRoot: ROOT,
 });
 
+// Measured test counts come from the verification record (v1.6 A6: the ONE
+// measured source — hand-copied counters went stale twice in past campaigns).
+// Fail-closed: a record without measured counts is a defect to fix at the
+// record, never to paper over here.
+if (!verification.measured) {
+  throw new Error(
+    "status: the verification record carries no measured test counts — run `bun tools/verify.ts` so the record is the measured truth",
+  );
+}
+const measuredTests = verification.measured;
+
 const status = {
   generatedAt: new Date().toISOString(),
   engineVersion: ENGINE_VERSION,
   substrate: "TypeScript on Bun (ADR-0018 — provisional with recorded migration path; Founder ratification pending)",
   verification,
-  tests: { suites: 35, assertedExpectations: 2752, totalTests: 443, coverage: { lines: 86.52, branches: 90.60, floors: "bunfig.toml coverageThreshold (OBJ-Q6, ratcheted at MS-6 bundle close: 0.86/0.74/0.86/0.90; held at every ASCENSION phase close)" }, note: "counts from the latest full run of `bun test tests/ --coverage`" },
+  constitution: { file: CONSTITUTION_FILE, version: CONSTITUTION_VERSION },
+  tests: { suites: measuredTests.testFiles, assertedExpectations: measuredTests.expectations, totalTests: measuredTests.testsPassed, testsFailed: measuredTests.testsFailed, coverage: { lines: 86.52, branches: 90.60, floors: "bunfig.toml coverageThreshold (OBJ-Q6, ratcheted at MS-6 bundle close: 0.86/0.74/0.86/0.90; held at every ASCENSION phase close)" }, note: "counts measured by the tests gate and written into .vaerion-verification.json by verify.ts (the ONE measured source)" },
   code: { engine, engineTests, sdk, tools },
   contracts: { specFiles, adrCount: adrFiles.length, adrFiles },
   milestones,
@@ -143,6 +177,60 @@ const status = {
 const OUT = join(ROOT, "site-data");
 mkdirSync(OUT, { recursive: true });
 writeFileSync(join(OUT, "vaerion-status.json"), JSON.stringify(status, null, 2) + "\n");
+
+/**
+ * The roadmap report of record — GENERATED from this measured status object
+ * (constitution v1.6 A6, Phase 11). History: the report was hand-maintained,
+ * was last regenerated in the v1.3 era, and recommended twice-completed work —
+ * a blocker-7 (truthful reports) violation and a standing duplicate of the
+ * measured status data. Deterministic: no wall-clock inputs, byte-identical
+ * for the same measured inputs (pinned by ci-truth contract tests).
+ */
+function renderRoadmapProgress(s: typeof status): string {
+  const gates = s.verification.gates;
+  const gatesGreen = gates.filter((g) => g.ok).length;
+  const lines: string[] = [
+    "# Vaerion — Roadmap Progress",
+    "",
+    "> **GENERATED** by `tools/status.ts` from the measured status of record — never hand-edited",
+    `> (constitution ${s.constitution.version} A6, Phase 11: the roadmap report of record is generated from the`,
+    "> ONE measured status source). Regenerate with `bun tools/status.ts`; hand edits are defects.",
+    "",
+    `- Engine version of record: \`${s.engineVersion}\``,
+    `- Constitution of record: \`${s.constitution.version}\` (Amendment Log §11)`,
+    `- Verification record: ${s.verification.ok ? "GREEN" : "RED"} — ${gatesGreen}/${gates.length} gates ok (\`.vaerion-verification.json\`)`,
+    `- Measured tests: ${s.tests.totalTests} pass · ${s.tests.testsFailed} fail · ${s.tests.assertedExpectations} expectations · ${s.tests.suites} files`,
+    `- Coverage floors: ${s.tests.coverage.floors}`,
+    "",
+    "## Milestone board (§7)",
+    "",
+    "| MS | Name | Status | Progress |",
+    "|---|---|---|---|",
+    ...s.milestones.map((m) => `| ${m.id} | ${m.name} | ${m.status} | ${m.progress}% |`),
+    "",
+    "## Phase ledger (D-T — the constitution of record)",
+    "",
+    "| Phase | Era | Status |",
+    "|---|---|---|",
+    ...s.phaseLedger.map((r) => `| ${r.phase} | ${r.era} | ${r.status} |`),
+    "",
+    "## Recommended next work (priority order)",
+    "",
+    ...s.nextWork.map((w, i) => `${i + 1}. ${w}`),
+    "",
+    "## Technical risks (top)",
+    "",
+    ...s.risks.map((r, i) => `${i + 1}. ${r}`),
+    "",
+    "---",
+    "",
+    "*Progress measured, not narrated: every line traces to `tools/status.ts` inputs — `.vaerion-verification.json`, the milestone board of record, and the D-T phase ledger in the constitution of record. Generated, never narrated.*",
+    "",
+  ];
+  return lines.join("\n");
+}
+
+writeFileSync(join(ROOT, "ROADMAP_PROGRESS.md"), renderRoadmapProgress(status), "utf8");
 
 if (!process.env.VAE_STATUS_QUIET) {
   console.log(JSON.stringify({ ok: true, overallProgress: status.overallProgress, verificationOk: verification.ok, engineFiles: engine.files }, null, 2));

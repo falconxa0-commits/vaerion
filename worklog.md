@@ -638,3 +638,38 @@ Work Log:
 Stage Summary:
 - THE FOUNDER'S GA CAMPAIGN IS COMPLETE AND SYNCHRONIZED: local main == canonical main == GitHub main (`a288ec4`); release `v0.1.10-rc1` tagged at the lockstep commit, packed, Ed25519-signed, consumer-verified; MS-6 reconciled complete; GA rehearsed and pending Founder GO — the one remaining decision is human authority (P4).
 - Honest ledger: GitHub-side branch protection and a real Actions run remain NEVER EXECUTED (Founder-gated); the bootstrap key remains session-bound until F-3; the chat-exposed PAT should be rotated; brew/winget/dmg/rpm remain authored-UNVERIFIED (host-gated).
+
+---
+Task ID: ASC-XIX-LAW
+Agent: Auren — Principal Vaerion Architect (ASCENSION XIX — the law moves first)
+Task: ASCENSION XIX STEP 0 reality recovery + the A6 constitution amendment (v1.5 → v1.6) before any implementation, per the Founder's LEAP PROGRAM directive.
+
+Work Log:
+- STEP 0 MEASURED (nothing assumed): working repo = /home/z/my-project, main `ffb3e5e` clean (1 verification-record chore ahead of canonical+github at `9ae839a`); five tags identical local↔canonical↔github; constitution v1.5 RATIFIED; EIGHT gates GREEN locally (443/0/2755/35); dist-verify ALL CHECKS PASSED; token verified as `falconxa0-commits` (repo scope; stored 0600 OUTSIDE the repo — blocker 3 honored).
+- REALITY CORRECTION: the inherited "real Actions run NEVER EXECUTED" is STALE — GitHub Actions executed SIX runs, ALL RED (measured via API). Three root causes proven at log level: (1) upload-artifact@v4 excludes hidden files by default — `.vaerion-verification.json` never uploads, so green trees fail at upload; (2) `journal.append` 400ms budget breached at 452.95ms on the sanctioned CI runner (host-relative budget calibrated only on the sandbox); (3) verify.ts kept only the last 40 lines of a failing gate's output — bun's coverage table alone exceeds that window, so CI could not NAME its failure. A tag-push run also proved (2)+(3); a main-push run proved (1) with every gate green.
+- FURTHER DEFECTS MEASURED: ROADMAP_PROGRESS.md last regenerated at Phase 6 (constitution v1.3) recommending twice-completed work (blocker 7); GitHub main branch protection absent (measured 404) while D-Q covered only canonical.
+- A6 RATIFIED FIRST (constitution v1.6, commit `6ea63a5`): D-Q superseded by the synchronization protection law (canonical hook properties extended to every synchronized remote; measured probes; D-S labels; required checks staged fail-closed — "a check that cannot run is not a check"); Phases 11–14 ratified with binding definitions (CI truth, remote protection, CI execution, program close). NO other register text moved; surface unchanged at 17 commands.
+- Live references moved to v1.6 (vae.ts, ui.ts, commands.ts, status.ts) + pin test moved and extended (A6/D-Q pins, v1.5 history retained-unmodified).
+
+Stage Summary:
+- The law of record is v1.6 BEFORE implementation (§9.3). The four-phase program of record: Phase 11 CI truth law → Phase 12 remote protection law → Phase 13 CI execution law → Phase 14 program close.
+- Honest ledger: GA remains rehearsed and PENDING FOUNDER GO (P4) — untouched by this campaign.
+
+---
+Task ID: ASC-XIX-PHASE-11
+Agent: Auren — Principal Vaerion Architect (THE CI TRUTH LAW — the production operations campaign, phase 1 of 4)
+Task: ASCENSION XIX Phase 11 (ratified under Constitution v1.6 A6, commit 6ea63a5) — the verification pipeline made true in artifact, in failure, in portability, and in the roadmap report of record.
+
+Work Log:
+- THE RECORD UPLOAD FIXED AT ROOT: .github/workflows/verify.yml record-upload step gains `include-hidden-files: true` — upload-artifact@v4 (>=4.4.0) excludes hidden files by default and `.vaerion-verification.json` is a dotfile; this was THE root cause of 6/6 red CI runs on otherwise-green trees (proven at log level from run 33684166229: "No files were found with the provided path").
+- RED GATES NAME THEIR FAILURES: tools/gate-output.ts (pure, deterministic, line-anchored failure markers — passing tests whose names contain "error" can never fill the excerpt) + verify.ts persists EVERY gate's full output to .vaerion-logs/<gate>.log (gitignored) and prints the failure excerpt FROM THE FULL OUTPUT on red — the v1.5-era last-40-lines window (which bun's coverage table alone overflows) is dead. Proven live: the bootstrap run's RED gate named all six failures with received/expected detail.
+- PERF PORTABILITY (v1.6 A6): journal.append budget re-based 400→900 ms — the GitHub ubuntu-latest runner measured 452.95 ms (median of 5) at the v0.1.10-rc1 tag run; the sandbox-only calibration was a portability defect, now recorded in the module (per-host medians of record) and pinned by a floor test (never lowered below 1.9x the runner median); the perf report gains the additive `host` field ("<platform>/<arch>") so budget governance knows WHICH host measured (P3 additive-only, determinism-pinned).
+- ONE MEASURED SOURCE FOR COUNTS: verify.ts parses the tests-gate summary into the record (`measured: {testsPassed, testsFailed, expectations, testFiles}`); tools/status.ts now DERIVES the test counters from the record (fail-closed throw when absent) — the hand-copied counters that went stale twice in past campaigns (2752 vs measured 2755) are a dead class; the constitution path in status.ts is now DERIVED (highest ratified version present), killing another literal.
+- THE ROADMAP REPORT IS GENERATED: tools/status.ts renders ROADMAP_PROGRESS.md from the measured status object (milestone board, D-T ledger, next work, risks) — the hand-maintained report (last touched at Phase 6, v1.3 era) that recommended twice-completed work is closed as a defect class; the two real risks absent from the stale file (zstd toolchain determinism, per-process breaker state) are preserved in the risks of record; regeneration is deterministic (no wall-clock inputs).
+- BOOTSTRAP DEADLOCK ROOT-CAUSED, NOT PAPERED OVER: record-freshness pins and the rehearsal departure condition read the PREVIOUS run's record — a red record could never self-heal. verify.ts now marks the tests gate with VAE_VERIFY_RUNNING=1; under the marker, freshness pins defer to the LIVE gates (the live run writes the record at the end); standalone and CI runs still pin the committed record fail-closed (green + measured). The REAL departure condition stays in tools/rehearsal.ts at train time.
+- TESTS: +18 (tests/integration/ci-truth.test.ts: workflow shape + D-R single entrypoint + the load-bearing hidden-file inclusion + failureExcerpt laws + measured-record pins + generated-report provenance; perf-budget.test.ts: host field + portability floor). Full suite: 461 pass / 0 fail / 2812 expectations / 36 files.
+- EIGHT GATES GREEN on the final tree (typecheck ×2, tests 461/0/2812/36, layerlint, constitutional C1–C7/81 codes, perf-budget, a11y-structural, repo-lint). ROADMAP_PROGRESS.md + site-data regenerated from the GREEN record; D-T ledger row 11 appended (operational).
+
+Stage Summary:
+- The verification pipeline now tells the truth in every direction: green trees UPLOAD their record, red gates NAME their failures, budgets HOLD on every sanctioned host, and the roadmap report is GENERATED measured truth. Three of the six measured campaign defects are closed at root (D1 upload, D2 portability, D3 diagnostics) plus D4 (stale report) — the counter-staleness class is dead by construction.
+- Next: Phase 12 — the remote protection law (D-Q on GitHub main: measured branch protection + adversarial probes).

@@ -1,25 +1,25 @@
 {
-  "generatedAt": "2026-09-02T21:15:51.077Z",
+  "generatedAt": "2026-09-02T22:31:33.578Z",
   "engineVersion": "0.1.10-rc1",
   "substrate": "TypeScript on Bun (ADR-0018 — provisional with recorded migration path; Founder ratification pending)",
   "verification": {
-    "generatedAt": "2026-09-02T21:13:38.359Z",
+    "generatedAt": "2026-09-02T22:31:33.291Z",
     "ok": true,
     "gates": [
       {
         "gate": "typecheck-engine",
         "ok": true,
-        "durationMs": 3770
+        "durationMs": 4009
       },
       {
         "gate": "typecheck-sdk",
         "ok": true,
-        "durationMs": 3070
+        "durationMs": 3227
       },
       {
         "gate": "tests",
         "ok": true,
-        "durationMs": 6231
+        "durationMs": 5596
       },
       {
         "gate": "layerlint",
@@ -29,52 +29,63 @@
       {
         "gate": "constitutional-check",
         "ok": true,
-        "durationMs": 203
+        "durationMs": 220
       },
       {
         "gate": "perf-budget",
         "ok": true,
-        "durationMs": 276
+        "durationMs": 283
       },
       {
         "gate": "a11y-structural",
         "ok": true,
-        "durationMs": 26
+        "durationMs": 23
       },
       {
         "gate": "repo-lint",
         "ok": true,
-        "durationMs": 10562
+        "durationMs": 10056
       }
-    ]
+    ],
+    "measured": {
+      "testsPassed": 461,
+      "testsFailed": 0,
+      "expectations": 2812,
+      "testFiles": 36
+    }
+  },
+  "constitution": {
+    "file": "VAERION_CONSTITUTION_v1.6.md",
+    "version": "v1.6"
   },
   "tests": {
-    "suites": 35,
-    "assertedExpectations": 2752,
-    "totalTests": 443,
+    "suites": 36,
+    "assertedExpectations": 2812,
+    "totalTests": 461,
+    "testsFailed": 0,
     "coverage": {
       "lines": 86.52,
       "branches": 90.6,
       "floors": "bunfig.toml coverageThreshold (OBJ-Q6, ratcheted at MS-6 bundle close: 0.86/0.74/0.86/0.90; held at every ASCENSION phase close)"
     },
-    "note": "counts from the latest full run of `bun test tests/ --coverage`"
+    "note": "counts measured by the tests gate and written into .vaerion-verification.json by verify.ts (the ONE measured source)"
   },
   "code": {
     "engine": {
       "files": 104,
-      "lines": 21068
+      "lines": 21084
     },
     "engineTests": {
-      "files": 35,
-      "lines": 10104
+      "files": 36,
+      "lines": 10343
     },
     "sdk": {
       "files": 3,
       "lines": 779
     },
     "tools": {
-      "files": 11,
-      "lines": 1881
+      "files": 12,
+      "lines": 2091
     }
   },
   "contracts": {
@@ -182,78 +193,91 @@
     {
       "id": "dt-0",
       "phase": "Ω + artifacts",
+      "era": "PHASE Ω",
       "status": "✅ complete",
       "evidence": "tag `v0.1.7-rc2`; commits `9d6cbd2`, `6ab6068`; six gates green"
     },
     {
       "id": "dt-1",
       "phase": "0",
+      "era": "ASCENSION XVIII",
       "status": "✅ complete",
       "evidence": "commit `34b015d`; `docs/ga/FOUNDATION-AUDIT-ASCENSION-XVIII.md`"
     },
     {
       "id": "dt-2",
       "phase": "1",
+      "era": "ASCENSION XVIII",
       "status": "✅ complete",
       "evidence": "commits `1c6892f`→`f8f341e`; four install channels verified; trust chain rebuilt; worklog `ASC-XVIII-PHASE-1`"
     },
     {
       "id": "dt-3",
       "phase": "8",
+      "era": "ASCENSION XVIII",
       "status": "✅ complete",
       "evidence": "commits `68ef1e5`→`9d3dad8`; tag `v0.1.8-rc1`; six gates green (335/0/2191/26); worklog `ASC-XVIII-PHASE-8` + `ASC-XVIII-PHASE-8-OPS`"
     },
     {
       "id": "dt-4",
       "phase": "2",
+      "era": "ASCENSION XVIII",
       "status": "✅ complete",
       "evidence": "commits `1a810d8`, `39027c4`; six gates green (352/0/2302/27); worklog `ASC-XVIII-PHASE-2`; Constitution v1.2 (A2)"
     },
     {
       "id": "dt-5",
       "phase": "3",
+      "era": "ASCENSION XVIII",
       "status": "✅ complete",
       "evidence": "commit `c16de89`; six gates green (363/0/2362/28); worklog `ASC-XVIII-PHASE-3`; one L2 identity module + `vae account` (A3)"
     },
     {
       "id": "dt-6",
       "phase": "4",
+      "era": "ASCENSION XVIII",
       "status": "✅ complete",
       "evidence": "commit `af5608d`; six gates green (377/0/2441/29); worklog `ASC-XVIII-PHASE-4`; the ONE shared research pipeline + `vae ai` (A3)"
     },
     {
       "id": "dt-7",
       "phase": "5",
+      "era": "ASCENSION XVIII",
       "status": "✅ complete",
       "evidence": "commit `60c2d3e`; six gates green (388/0/2498/30); worklog `ASC-XVIII-PHASE-5`; the deterministic template registry + `vae init --template` + E1203 (A3)"
     },
     {
       "id": "dt-8",
       "phase": "6",
+      "era": "ASCENSION XVIII",
       "status": "✅ complete",
       "evidence": "six gates green (397/0/2538/31); worklog `ASC-XVIII-PHASE-6`; the ONE center fold + `vae center` + the web face command-center section (A3); release tag + version lockstep land at program close"
     },
     {
       "id": "dt-9",
       "phase": "7",
+      "era": "ASCENSION XVIII",
       "status": "✅ complete",
       "evidence": "one deterministic perf harness (src/perf/perf.ts: seven engine-critical operations, typed budget contracts, median-of-N) + verify.ts gate 6 \"perf-budget\" (D-R); SEVEN gates green (410/0/2664/32); worklog `ASC-XVIII-PHASE-7`; executes the §7 MS-6 performance double-check"
     },
     {
       "id": "dt-10",
       "phase": "8",
+      "era": "ASCENSION XVIII",
       "status": "✅ complete",
       "evidence": "nine deterministic a11y invariants (tools/a11y-check.ts) + verify.ts gate 7 \"a11y-structural\" (D-R); CLI color accessibility behavior-pinned; browser-measured audit docs/ga/ACCESSIBILITY-AUDIT.md; 3 defects fixed at root; EIGHT gates green (431/0/2710/34); worklog `ASC-XVIII-PHASE-8-ACC`"
     },
     {
       "id": "dt-11",
       "phase": "9",
+      "era": "ASCENSION XVIII",
       "status": "✅ complete",
       "evidence": "ONE rehearsal runner (tools/rehearsal.ts: nine fixed steps, fail-closed D-R departure, scratch-only side effects); the REAL train PASSED end-to-end at v0.1.9-rc1 (trust chain ALL CHECKS PASSED; installed vae lockstep verified); report docs/ga/RELEASE-TRAIN-REHEARSAL.md; D-N gap fixed (`version --json` NDJSON); EIGHT gates green (443/0/2752/35); worklog `ASC-XVIII-PHASE-9`"
     },
     {
       "id": "dt-12",
       "phase": "10",
+      "era": "ASCENSION XVIII",
       "status": "✅ complete",
       "evidence": "the burndown (docs/ga/BURNDOWN.md) + the GO/NO-GO dossier (docs/ga/GO-NO-GO.md) archived; §7 reconciled by A5; program close: version lockstep 0.1.10-rc1, tag `v0.1.10-rc1`, artifact trust chain, canonical + GitHub synchronization (§11 synchronization ledger)"
     }
@@ -262,10 +286,11 @@
     "measured": true,
     "ready": false,
     "verdict": "BLOCKED",
-    "passed": 10,
+    "passed": 8,
     "total": 12,
     "blockers": [
-      "git-tree-clean: working tree dirty: 0 staged, 3 unstaged, 0 untracked"
+      "git-tree-clean: working tree dirty: 0 staged, 11 unstaged, 2 untracked",
+      "release-tag-binding: HEAD is not exactly at a v* release tag"
     ]
   },
   "commandCenter": {
@@ -329,12 +354,16 @@
       "measured": true,
       "ready": false,
       "verdict": "BLOCKED",
-      "passed": 10,
+      "passed": 8,
       "total": 12,
       "blockers": [
         {
           "check": "git-tree-clean",
-          "detail": "working tree dirty: 0 staged, 3 unstaged, 0 untracked"
+          "detail": "working tree dirty: 0 staged, 11 unstaged, 2 untracked"
+        },
+        {
+          "check": "release-tag-binding",
+          "detail": "HEAD is not exactly at a v* release tag"
         }
       ]
     },
@@ -346,12 +375,15 @@
     "Exec-sandbox hardening matrix (ADR-0015 full profiles) and per-run token scoping are open engineering items (RISK-LEDGER R-1/R-5).",
     "Journal per-record fsync trades durability for throughput; batching decision needed before agent-scale testing.",
     "Provider price table is build-time data (2026-08); provider drift is a data update with a reviewed contract change.",
-    "ModelPlanner success path needs a recorded real-provider cassette for end-to-end golden coverage (environment has no provider network access)."
+    "ModelPlanner success path needs a recorded real-provider cassette for end-to-end golden coverage (environment has no provider network access).",
+    "zstd byte-determinism holds for the pinned level (19) on the current toolchain; a toolchain bump could change bytes — the format version in the magic is the escape hatch (never a silent rebuild).",
+    "Per-process breaker state is deliberately not journaled (the failures are); multi-process sharing is a daemon concern needing an ADR.",
+    "Coverage floors are total-based; per-module ratchets are mechanical follow-up, and totals only move up."
   ],
   "nextWork": [
-    "THE GA CAMPAIGN (Phases 7–10) is COMPLETE under Constitution v1.5 (A5): MS-6 reconciled complete, the burndown + GO/NO-GO dossier archived, GA rehearsed and PENDING FOUNDER GO — the Founder gates (F-2 legal name, F-3 key ceremony, F-4 substrate ratification, F-5 publish, F-6 real-provider cassettes) are the remaining path to full GA.",
-    "MS-6 remaining exit criteria: native single-binary installers (host-gated: brew/winget/dmg/rpm authored in Phase 1, awaiting their platforms); then the daemon packages route group (wire parity, spec/openapi regen).",
-    "Program close (Phase 10): version lockstep, release tag, artifact trust chain, canonical + GitHub synchronization, and the GO/NO-GO dossier.",
+    "ASCENSION XIX — THE PRODUCTION OPERATIONS CAMPAIGN (Phases 11–14) is ratified under Constitution v1.6 (A6): the CI truth law (the workflow uploads its measured record, red gates NAME their failure, perf budgets hold on every sanctioned host, the roadmap report is GENERATED from this measured status source), the remote protection law (D-Q branch protection + adversarial probes on GitHub main), the CI execution law (a measured green remote run, then the elevated required check), and the program close (version lockstep 0.1.11-rc1 + synchronization).",
+    "GA remains rehearsed and PENDING FOUNDER GO (P4); the Founder gates (F-2 legal name, F-3 key ceremony, F-4 substrate ratification, F-5 publish, F-6 real-provider cassettes) are the remaining path to full GA.",
+    "MS-6 leftovers: native single-binary installers (host-gated: brew/winget/dmg/rpm authored in Phase 1, awaiting their platforms); the daemon packages route group (wire parity, spec/openapi regen).",
     "Release train steps (publish, announce, key ceremony) — Founder-gated; artifacts are reproducible via tools/dist-pack.ts at the release tag.",
     "Coverage: per-module ratchets on top of the total-based floors (mechanical follow-up)."
   ]

@@ -34,7 +34,7 @@
 
 import { join } from "node:path";
 import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { arch, platform, tmpdir } from "node:os";
 import { FixedClock, SeededRng } from "../kernel/clock.ts";
 import { SeededIdGen, crn } from "../kernel/ids.ts";
 import { JournalWriter, ENGINE_VERSION } from "../journal/writer.ts";
@@ -65,12 +65,24 @@ export interface PerfBudget {
 /**
  * The budgets of record. Changing a value is a conscious engineering act:
  * the shape test pins ids/order/iterations, and the gate fails closed on
- * any breach. Values carry generous headroom over the calibration host so
- * the gate stays green on loaded hardware while still catching
- * order-of-magnitude regressions.
+ * any breach.
+ *
+ * PORTABILITY (constitution v1.6 A6, Phase 11): the budgets of record must
+ * hold on EVERY sanctioned verification host (D-R names CI a sanctioned
+ * surface), not only the calibration host. Recorded calibration medians for
+ * `journal.append` (fsync-bound, the most host-sensitive operation):
+ *   - sandbox calibration host: ~35–60 ms
+ *   - GitHub ubuntu-latest runner (v0.1.10-rc1 tag run): 452.95 ms
+ * The 400 ms ceiling held only on the calibration host — the CI run was RED
+ * with every gate otherwise green. The budget of record (900 ms) carries
+ * ≥ 1.9x headroom over the slowest sanctioned host median while still
+ * catching order-of-magnitude regressions (a 10x CI regression is ~4.5 s,
+ * five times the ceiling). Wall-clock values stay host-relative and honestly
+ * labeled (D-S); the metric SHAPE — op ids, order, schema, iterations — is
+ * deterministic and pinned by tests.
  */
 export const PERF_BUDGETS: readonly PerfBudget[] = [
-  { op: "journal.append", budgetMs: 400, iterations: 5 },
+  { op: "journal.append", budgetMs: 900, iterations: 5 },
   { op: "journal.verify", budgetMs: 300, iterations: 5 },
   { op: "journal.replay", budgetMs: 60, iterations: 25 },
   { op: "broker.evaluate", budgetMs: 40, iterations: 25 },
@@ -95,6 +107,9 @@ export interface PerfReport {
   readonly schema: typeof PERF_REPORT_SCHEMA;
   readonly engineVersion: string;
   readonly passed: boolean;
+  /** The host that measured this report ("<platform>/<arch>") — budget
+   *  governance needs to know WHICH host measured (v1.6 A6 portability law). */
+  readonly host: string;
   readonly metrics: readonly PerfMetric[];
 }
 
@@ -321,6 +336,7 @@ export async function measureEnginePerf(opts: MeasureEnginePerfOptions): Promise
       schema: PERF_REPORT_SCHEMA,
       engineVersion: ENGINE_VERSION,
       passed: metrics.every((m) => m.passed),
+      host: `${platform()}/${arch()}`,
       metrics,
     };
   } finally {

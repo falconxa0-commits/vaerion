@@ -1,52 +1,66 @@
-# ROADMAP_PROGRESS — Vaerion
+# Vaerion — Roadmap Progress
 
-| | |
-|---|---|
-| **Date** | 2026-09-02 (ASCENSION XVIII Phase 6 — program complete) |
-| **Overall progress** | **86%** of the milestone arc (MS-0 → GA) — measured: milestone board average, `tools/status.ts` → `site-data/vaerion-status.json`; MS-6 at 85% (reproducible bundles + distribution packaging + docs sweep done; native installers / performance double-check / accessibility sweep remain) |
-| **Verification** | ALL 6 GATES GREEN (`VERIFICATION_REPORT.md`) — 397 tests / 2538 expectations / 31 files; floors held (86/74/86/90) |
-| **Release** | **v0.1.8-rc1** (ASCENSION XVIII Phase 8 — git/CI/constitution synchronization) version lockstep; the constitutional release evaluator: `vae release readiness` (measured only, fail-closed) |
-| **Phase ledger (D-T)** | Phases Ω, 0, 1, 8, 2, 3, 4, 5, **6** complete — **the Founder four-phase program (3–6) is COMPLETE** (identity · ai · init-templates · command-center; Constitution v1.3 A3); phase 7 awaits Founder re-issue or cancellation |
+> **GENERATED** by `tools/status.ts` from the measured status of record — never hand-edited
+> (constitution v1.6 A6, Phase 11: the roadmap report of record is generated from the
+> ONE measured status source). Regenerate with `bun tools/status.ts`; hand edits are defects.
 
----
+- Engine version of record: `0.1.10-rc1`
+- Constitution of record: `v1.6` (Amendment Log §11)
+- Verification record: GREEN — 8/8 gates ok (`.vaerion-verification.json`)
+- Measured tests: 461 pass · 0 fail · 2812 expectations · 36 files
+- Coverage floors: bunfig.toml coverageThreshold (OBJ-Q6, ratcheted at MS-6 bundle close: 0.86/0.74/0.86/0.90; held at every ASCENSION phase close)
 
-## Milestone board
+## Milestone board (§7)
 
-| MS | Name | Status | Progress | Evidence / remaining |
-|---|---|---|---|---|
-| MS-0 | Skeleton and Law-in-Repo | ✅ **complete** | 100% | Constitution materialized; spec/ contracts; ADR archive (now 0001–0020); verification infrastructure; zero placeholder files. |
-| MS-1 | Runtime Spine | ✅ **complete** | 100% | Event Spine; NDJSON+blake3 journal with verify/replay/recovery/redacted-export; single-writer law; blob CAS; receipts; chaos suite green; research subsystem; CLI Daily Seven; TS SDK parity. |
-| MS-2 | Permission Broker | ✅ **complete** | 100% | BrokerEngine (shape → ceiling → policy, fail-closed at every layer); permission-graph ceiling from `vaerion.yaml`; per-source decisions; redacted `action` on journaled decisions; durable gates with `decision_id` links (runs pause, never auto-close); elevation flow; hash-chained Refusal Log surfaced in `explain` + `doctor` + SDK; policy files; human review loop; spec 0.1.1. |
-| MS-3 | Model Gateway | ✅ **complete** | 100% | `GatewayService` single gate (decide `model.invoke` → journal → act); provider adapters **anthropic / openai / ollama** + **MockBrain** (ADR-0012); normalized `StreamFrame` contract; 4 committed cassettes through the real fingerprint pipeline; retry with deterministic full-jitter backoff; per-provider circuit breaker (E1705); integer micro-USD pricing + order-free metering fold (R-MG3); budgets pre/post; secrets boundary (ADR-0013); R-MG5 outbound+journal redaction; CLI `run model` + `explain` metering + `doctor` matrix + `dev`; SDK parity; spec 0.1.2; ADR-0019 single sanctioned egress. |
-| MS-4 | Intelligence + Agents | ✅ **complete** | 100% | AgentRuntime supervisor loop over journaled decisions (bounded retries, fatal broker refusals, durable-gate pauses with restart-safe elevation authority, loud E1804 ceiling); InlinePlanner + ModelPlanner through the gateway single gate (E1800); tool invocation pipeline (E1801/E1802, blake3 receipts); reasoning sessions (journaled scratchpads, deterministic folding); Workflow DAG engine (E1803 fail-closed, Kahn+lexicographic, blob-CAS outputs, crash-safe resume); eval harness (hermetic runs, VAE_BLESS golden governance, E1805 drift refusal); agent metrics folded from journal metering only; research integration (One Context Path + E1806 citation enforcement); CLI + SDK parity; spec 0.1.3. |
-| MS-5 | Surfaces | ✅ **complete** | 100% | CLI Daily Seven + `serve` (additive eighth command); local API daemon (ADR-0010/0020: loopback Bun.serve, pairing-token authn, generated openapi byte-synced by C4, SSE journal-cursor replay, gate answer/continue over the wire, receipted cancellation, serial run queue); SDK parity over the wire (single sanctioned client site, E2006); extension kit alpha (ADR-0009 R-2: WIT world locked at spec/wit/, sha256-pinned subprocess host with EMPTY-environment spawn, broker bridge with extension principals, adversarial protocol suite, spec 0.1.5). Deferred by documented decision: sessions/intel/packages route groups await their subsystems. |
-| MS-6 | Packaging + Hardening | 🔄 **in progress** | 85% | **REPRODUCIBLE BUNDLES COMPLETE (ADR-0016)**: `.vxn` deterministic format (magic VXN1, canonical manifest, canonical entry order, zstd pinned level 19, blake3 identity); build = pure fold over declared inputs + pin-verified extension artifacts (E2100 refusal, auto-carry, no wall-clock/ambient paths — byte-identical rebuilds test-proven); `vaerion.lock` generated canonical-JSON seal (config fingerprint + extension pins + bundle digest); verify = pure check with honest per-check findings (E2200/E2201/E2202/E2203/E2205, E2206 summary; content NEVER executed); CLI `vae package build|verify` (additive ninth command, journaled + receipted, --dry-run pure); doctor package-lock cross-check; config `package` block; spec 0.1.6 (E2200–E2206, package.built/verified events); +28 tests; floors ratcheted (86.07/90.87). **PHASE 1 (2026-08-30) ADDED:** distribution packaging (tools/dist-pack.ts — deterministic tarball built twice + byte-compared, canonical sha256+blake3 MANIFEST, Ed25519-signed, tamper detection proven; consumer tools/dist-verify.ts), LICENSE Apache-2.0 + CONTRIBUTING, beta experience (README/QUICKSTART/INSTALL/TROUBLESHOOTING/BETA-ONBOARDING + executed demo workspace), security dossier (docs/security/), ADR finalization (docs/adr/README.md), CI pipeline (.github/workflows/verify.yml), version lockstep 0.1.7-rc1. **PHASE Ω (2026-08-31) ADDED:** brand system (byte-reproducible seal/monogram/wordmark/editions via tools/brand-render.ts, BRAND-BOOK + PDF, web face + favicon), the terminal design language (src/cli/ui.ts — TTY-gated panels/tables/badges/receipts/educated errors/spinners; plain+json contracts byte-stable), the additive `vae provenance` artifact-evidence command, docs (README/FAQ/QUICKSTART), +12 tests, floors held. **REMAINING (honest): native single-binary installers, performance double-check, accessibility sweep; release-train publish steps are Founder-gated.** |
-| GA | General Availability | ⏳ pending | 0% | Burndown + rehearsal. |
+| MS | Name | Status | Progress |
+|---|---|---|---|
+| MS-0 | Skeleton and Law-in-Repo | complete | 100% |
+| MS-1 | Runtime Spine | complete | 100% |
+| MS-2 | Permission Broker | complete | 100% |
+| MS-3 | Model Gateway | complete | 100% |
+| MS-4 | Intelligence + Agents | complete | 100% |
+| MS-5 | Surfaces | complete | 100% |
+| MS-6 | Packaging + Hardening | complete | 100% |
+| GA | General Availability | pending | 95% |
 
-## Estimated completion (engineering estimate, not a promise)
+## Phase ledger (D-T — the constitution of record)
 
-- ~~MS-4~~: complete.
-- ~~MS-5~~: complete (daemon, HTTP/SSE, wire-parity SDK, extension kit alpha).
-- **MS-6**: bundles ✅ (this sprint) → installers → docs sweep → accessibility → performance double-check — then the GA burndown.
-- Natural follow-on objective within MS-6: the daemon **packages route group** (wire parity + openapi regen) — the packaging subsystem now exists.
-
-## Technical risks (top)
-
-1. **Substrate ratification (ADR-0018)** — still Proposed. Mitigation: contracts and golden fixtures remain byte-stable and substrate-neutral.
-2. **zstd byte-determinism across toolchain versions** — the pinned level (19) is deterministic for a fixed toolchain and the rebuild test proves byte equality on the current substrate; a zstd version bump could change bytes, so the format version in the magic is the escape hatch (never a silent rebuild).
-3. **Journal throughput** — per-record fsync buys durability at a latency cost; batching needs a ratified ADR.
-4. **Price table drift** — build-time data (2026-08); provider changes are data updates with a reviewed contract change, never code drift.
-5. **Per-process breaker state** — deliberately not journaled (the failures are); multi-process sharing is a daemon concern needing an ADR.
-6. **Coverage floors are total-based** — per-module ratchets are mechanical follow-up; totals only move up (86.07/90.87 as of MS-6 bundles).
+| Phase | Era | Status |
+|---|---|---|
+| Ω + artifacts | PHASE Ω | ✅ complete |
+| 0 | ASCENSION XVIII | ✅ complete |
+| 1 | ASCENSION XVIII | ✅ complete |
+| 8 | ASCENSION XVIII | ✅ complete |
+| 2 | ASCENSION XVIII | ✅ complete |
+| 3 | ASCENSION XVIII | ✅ complete |
+| 4 | ASCENSION XVIII | ✅ complete |
+| 5 | ASCENSION XVIII | ✅ complete |
+| 6 | ASCENSION XVIII | ✅ complete |
+| 7 | ASCENSION XVIII | ✅ complete |
+| 8 | ASCENSION XVIII | ✅ complete |
+| 9 | ASCENSION XVIII | ✅ complete |
+| 10 | ASCENSION XVIII | ✅ complete |
 
 ## Recommended next work (priority order)
 
-1. **ASCENSION program close** — version lockstep 0.1.9-rc1, release tag, artifact pack, canonical + GitHub synchronization (remote provisioned: falconxa0-commits/vaerion, strict-ancestor main).
-2. **MS-6 installers + docs sweep** — then accessibility + performance double-check, completing the exit criteria.
-3. **Daemon packages route group** (wire parity; spec/openapi regen) — Machine Parity law for the new subsystem.
-4. **Record real-provider planning cassettes** (scripts/record-cassettes.ts) when network access exists.
-5. **Ratify ADR-0018** (substrate) and re-baseline shipping goals.
+1. ASCENSION XIX — THE PRODUCTION OPERATIONS CAMPAIGN (Phases 11–14) is ratified under Constitution v1.6 (A6): the CI truth law (the workflow uploads its measured record, red gates NAME their failure, perf budgets hold on every sanctioned host, the roadmap report is GENERATED from this measured status source), the remote protection law (D-Q branch protection + adversarial probes on GitHub main), the CI execution law (a measured green remote run, then the elevated required check), and the program close (version lockstep 0.1.11-rc1 + synchronization).
+2. GA remains rehearsed and PENDING FOUNDER GO (P4); the Founder gates (F-2 legal name, F-3 key ceremony, F-4 substrate ratification, F-5 publish, F-6 real-provider cassettes) are the remaining path to full GA.
+3. MS-6 leftovers: native single-binary installers (host-gated: brew/winget/dmg/rpm authored in Phase 1, awaiting their platforms); the daemon packages route group (wire parity, spec/openapi regen).
+4. Release train steps (publish, announce, key ceremony) — Founder-gated; artifacts are reproducible via tools/dist-pack.ts at the release tag.
+5. Coverage: per-module ratchets on top of the total-based floors (mechanical follow-up).
+
+## Technical risks (top)
+
+1. Substrate: TypeScript-on-Bun reference implementation is explicitly PROVISIONAL (ADR-0018, Phase 1 finalization) with a recorded migration path; Founder ratification pending.
+2. Release signing uses the bootstrap Ed25519 key; rotation to a held-offline key is Founder-gated (docs/security/RISK-LEDGER.md R-2).
+3. Exec-sandbox hardening matrix (ADR-0015 full profiles) and per-run token scoping are open engineering items (RISK-LEDGER R-1/R-5).
+4. Journal per-record fsync trades durability for throughput; batching decision needed before agent-scale testing.
+5. Provider price table is build-time data (2026-08); provider drift is a data update with a reviewed contract change.
+6. ModelPlanner success path needs a recorded real-provider cassette for end-to-end golden coverage (environment has no provider network access).
+7. zstd byte-determinism holds for the pinned level (19) on the current toolchain; a toolchain bump could change bytes — the format version in the magic is the escape hatch (never a silent rebuild).
+8. Per-process breaker state is deliberately not journaled (the failures are); multi-process sharing is a daemon concern needing an ADR.
+9. Coverage floors are total-based; per-module ratchets are mechanical follow-up, and totals only move up.
 
 ---
 
-*Progress measured, not narrated: every number traces to the verification gates or the file inventory in `tools/status.ts` → `site-data/vaerion-status.json`.*
+*Progress measured, not narrated: every line traces to `tools/status.ts` inputs — `.vaerion-verification.json`, the milestone board of record, and the D-T phase ledger in the constitution of record. Generated, never narrated.*
