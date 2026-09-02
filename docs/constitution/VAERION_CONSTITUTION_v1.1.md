@@ -235,4 +235,24 @@ double-check, accessibility sweep remain); GA pending.
 | 0 | ASCENSION XVIII | ✅ complete | commit `34b015d`; `docs/ga/FOUNDATION-AUDIT-ASCENSION-XVIII.md` |
 | 1 | ASCENSION XVIII | ✅ complete | commits `1c6892f`→`f8f341e`; four install channels verified; trust chain rebuilt; worklog `ASC-XVIII-PHASE-1` |
 | 2–7 | ASCENSION XVIII | ❌ NOT complete | **zero repository evidence** (no commands, no spec entries, no tests, no worklog records) — claims from prior sessions falsified by the repository |
-| 8 | ASCENSION XVIII | ▶ this phase | Git, CI & Constitution synchronization (this amendment; `repo`/`ci`/`release` commands; D-P–D-T enforcement) |
+| 8 | ASCENSION XVIII | ✅ complete | commits `68ef1e5`→`9d3dad8`; tag `v0.1.8-rc1`; six gates green (335/0/2191/26); worklog `ASC-XVIII-PHASE-8` + `ASC-XVIII-PHASE-8-OPS` |
+
+### Synchronization ledger (D-Q + D-S — the operational record of every synchronization audit)
+
+Remote reality is measured, never assumed. This ledger is appended by the
+Founder's GitHub-synchronization directive; every claim below is a measurement
+taken on the dated audit, honestly labeled.
+
+| Date (UTC) | Remote | Commit of record | Tag of record | Measured evidence |
+|---|---|---|---|---|
+| 2026-09-02 | `canonical` — `/home/z/vaerion-canonical.git` | `9d3dad8` — local HEAD == remote `main`, divergence 0/0 | `v0.1.8-rc1` — tag object `7d75198` identical on both sides | `git fetch` clean; ahead/behind measured `0 0`; D-Q pre-receive hook present and law-verified (ff-only `main`, no deletion, `v*` immutable); release trust chain re-verified live (`dist-verify` → signature OK Ed25519, ALL CHECKS PASSED, exit 0); git tag is annotated (`Auren <auren@vaerion.dev>`), **not** git-cryptographically signed — the artifact-level Ed25519 manifest signature is the signature of record |
+
+**GitHub status (measured 2026-09-02; D-S labels).** The repository carries no
+GitHub remote (`git remote -v` lists only `canonical`), the `gh` CLI is not
+installed, and no `GITHUB_TOKEN`/`GH_TOKEN` credentials exist in the environment.
+GitHub synchronization is **NEVER EXECUTED** — root cause, measured: missing
+remote + missing authentication. The only measured GitHub surface is network
+reachability (`https://github.com` → HTTP 200). A GitHub remote and credentials
+are Founder-gated provisioning; until then `canonical` is the sole
+synchronization authority of record, and no GitHub claim may be made beyond this
+paragraph (Honesty Law).

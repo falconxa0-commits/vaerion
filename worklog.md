@@ -426,3 +426,23 @@ Work Log:
 Stage Summary:
 - The pack, the tag, the canonical store, and the readiness evaluator now agree on one version (0.1.8-rc1) with zero hardcoded copies outside the engine's own constant.
 - Bootstrap signing key: LOADED from the Phase-1-era key file this run (it survived this boundary); fp recorded in dist/VERIFY.md.
+
+---
+Task ID: SYNC-GITHUB-1
+Agent: Auren — Principal Release Commander (GitHub synchronization audit — Founder directive "SYNCHRONIZE WITH GITHUB FIRST")
+Task: Measure GitHub reality before any further phase work; synchronize; never fake success; record the synchronization in the Constitution's operational ledger.
+
+Work Log:
+- STEP 0 measured, nothing assumed: local HEAD `9d3dad8` (main, clean tree, author `Auren <auren@vaerion.dev>`); tags `v0.1.7-rc1`, `v0.1.7-rc2`, `v0.1.8-rc1`; remotes: ONLY `canonical` → `/home/z/vaerion-canonical.git`.
+- GitHub surfaces measured: `gh` CLI NOT installed; zero `GH_`/`GITHUB_` env credentials; no GitHub URLs in global gitconfig; `https://github.com` network-reachable (HTTP 200) — reachability only. VERDICT (D-S): GitHub synchronization **NEVER EXECUTED**; root cause measured: missing remote + missing authentication. Founder-gated provisioning. No success faked (Honesty Law).
+- canonical reality measured: `git fetch` clean; main divergence **0/0** (local HEAD == canonical/main == `9d3dad8`); release tag `v0.1.8-rc1` identical both sides (tag obj `7d75198` → peeled `66c994f`); pre-receive hook law-verified (ff-only main, no main deletion, `v*` immutable — D-Q). Local-only historical tags `v0.1.7-rc1/rc2` = the documented fresh-provisioning state (ASC-XVIII-PHASE-8-OPS), not drift.
+- Release trust chain re-verified live: `dist-verify --manifest dist/MANIFEST.json --sig dist/MANIFEST.json.sig --pub keys/release-signing.pub` → signature OK (Ed25519 over canonical manifest bytes), release `0.1.8-rc1 @ v0.1.8-rc1 commit 66c994f`, every artifact sha256+blake3 OK, SHA256SUMS agrees, ALL CHECKS PASSED exit 0.
+- Tag signature honesty: `v0.1.8-rc1` is annotated (tagger Auren), **not** git-cryptographically signed; the artifact-level Ed25519 manifest signature is the signature of record.
+- Constitution (STEP 3): Phase 8 phase-ledger row reconciled `▶ this phase` → `✅ complete` (D-T boundary reconciliation); new §11 **Synchronization ledger** records the dated audit (remote, commit, tag, measured evidence, GitHub status with D-S labels). No law text changed — no version increment (§9 amendment protocol not triggered; register, blockers, milestones untouched).
+- Six gates re-run on the amended tree — ALL GREEN: typecheck-engine 3.7s, typecheck-sdk 3.1s, tests 335/0/2191/26, layerlint 99 files/461 edges, constitutional C1–C7/80 codes, repo-lint clean.
+- Committed as `Auren <auren@vaerion.dev>`; pushed to `canonical` (fast-forward, D-Q hook enforced); post-push `ls-remote` re-measurement recorded in the final report to the Founder.
+
+Stage Summary:
+- `canonical`: **SYNCHRONIZED** — proven by measurement (0/0 divergence, identical release tag, hook law verified, post-push re-measurement).
+- GitHub: **NOT SYNCHRONIZED — NEVER EXECUTED** — impossible in this environment (missing remote + credentials, both measured); provisioning is Founder-gated; no GitHub claim is made beyond the measured surfaces.
+- Constitution operational ledger now records synchronization audits; Phase 8 reconciled to complete.
