@@ -707,32 +707,34 @@ describe("repo / ci / release CLI contracts (Five Guarantees)", () => {
 /* ───────────────────────────  law & lockstep regression  ─────────────────────────── */
 
 describe("constitution and version lockstep regression (Phase 8)", () => {
-  test("the ratified constitution is v1.4 with the GA campaign and the honest phase ledger", async () => {
+  test("the ratified constitution is v1.5 with the GA gate reconciled and the honest phase ledger", async () => {
     const root = join(import.meta.dir, "..", "..", "..", "..");
-    const constitution = await readFile(join(root, "docs", "constitution", "VAERION_CONSTITUTION_v1.4.md"), "utf8");
-    expect(constitution).toContain("VAERION_CONSTITUTION_v1.4");
+    const constitution = await readFile(join(root, "docs", "constitution", "VAERION_CONSTITUTION_v1.5.md"), "utf8");
+    expect(constitution).toContain("VAERION_CONSTITUTION_v1.5");
     expect(constitution).toContain("D-M′");
     for (const law of ["D-P", "D-Q", "D-R", "D-S", "D-T"]) {
       expect(constitution).toContain(`| ${law} |`);
     }
-    // The surface (A3, carried unchanged into v1.4): account, ai, center ratified;
+    // The surface (A3, carried unchanged into v1.5): account, ai, center ratified;
     // init carries the template face.
     expect(constitution).toContain("tour, account, ai, center`");
     expect(constitution).toContain("--template NAME");
     expect(constitution).toContain("welcome front door");
-    // The GA campaign (A4): Phase 7 re-issued with a recorded definition
-    // (the performance budget law); Phases 8–10 ratified as one program.
+    // The GA campaign (A4) and its boundary reconciliation (A5).
     expect(constitution).toContain("### A4 — v1.3 → v1.4");
+    expect(constitution).toContain("### A5 — v1.4 → v1.5");
     expect(constitution).toContain("the performance budget law");
     expect(constitution).toContain("the accessibility law");
     expect(constitution).toContain("the release-train rehearsal");
     expect(constitution).toContain("the GA gate");
-    expect(constitution).toContain("release tag + version lockstep land at program close");
     expect(constitution).toContain("zero repository evidence"); // the honest Phase 7 adjudication, quoted in A4
-    expect(constitution).toContain("▶ in flight"); // the ratified campaign is in flight
-    expect(constitution).not.toContain("awaits Founder re-issue or cancellation");
-    // History is retained unmodified: v1.3 (with the A3 surface), v1.2 (with the
+    expect(constitution).toContain("rehearsed and pending Founder GO"); // §7 after A5
+    expect(constitution).toContain("docs/ga/GO-NO-GO.md"); // the dossier of record
+    expect(constitution).not.toContain("▶ in flight"); // the campaign is complete — no rows in flight
+    // History is retained unmodified: v1.4, v1.3 (with the A3 surface), v1.2 (with the
     // A2 surface), v1.1 (with the v1.1-era adjudication) and v1.0.
+    const v14 = await readFile(join(root, "docs", "constitution", "VAERION_CONSTITUTION_v1.4.md"), "utf8");
+    expect(v14).toContain("VAERION_CONSTITUTION_v1.4");
     const v13 = await readFile(join(root, "docs", "constitution", "VAERION_CONSTITUTION_v1.3.md"), "utf8");
     expect(v13).toContain("VAERION_CONSTITUTION_v1.3");
     expect(v13).toContain("tour, account, ai, center`");
