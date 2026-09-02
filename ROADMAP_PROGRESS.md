@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| **Date** | 2026-09-02 (ASCENSION XVIII Phase 8) |
+| **Date** | 2026-09-02 (ASCENSION XVIII Phase 2) |
 | **Overall progress** | **86%** of the milestone arc (MS-0 → GA) — measured: milestone board average, `tools/status.ts` → `site-data/vaerion-status.json`; MS-6 at 85% (reproducible bundles + distribution packaging + docs sweep done; native installers / performance double-check / accessibility sweep remain) |
-| **Verification** | ALL 6 GATES GREEN (`VERIFICATION_REPORT.md`) — 335 tests / 2191 expectations / 26 files; floors held (86/74/86/90) |
+| **Verification** | ALL 6 GATES GREEN (`VERIFICATION_REPORT.md`) — 352 tests / 2302 expectations / 27 files; floors held (86/74/86/90) |
 | **Release** | **v0.1.8-rc1** (ASCENSION XVIII Phase 8 — git/CI/constitution synchronization) version lockstep; the constitutional release evaluator: `vae release readiness` (measured only, fail-closed) |
-| **Phase ledger (D-T)** | Phase Ω, 0, 1 complete; **phases 2–7 have no repository evidence (NOT complete)**; Phase 8 this phase — reconciled against the repository, recorded in Constitution v1.1 §11 |
+| **Phase ledger (D-T)** | Phases Ω, 0, 1, 8 complete; **Phase 2 complete (the empty-laptop experience: welcome front door + `vae tour`; Constitution v1.2 A2)**; **phases 3–7 have no repository evidence (NOT complete)** — re-issue or cancel |
 
 ---
 
@@ -41,11 +41,11 @@
 
 ## Recommended next work (priority order)
 
-1. **MS-6 installers + docs sweep** — then accessibility + performance double-check, completing the exit criteria.
-2. **Daemon packages route group** (wire parity; spec/openapi regen) — Machine Parity law for the new subsystem.
-3. **Record real-provider planning cassettes** (scripts/record-cassettes.ts) when network access exists.
-4. **Ratify ADR-0018** (substrate) and re-baseline shipping goals.
-5. **Multi-process daemon federation ADR** — the serial run queue is lawful for one workspace/process; sharing breakers/chains across processes needs a ratified design.
+1. **ASCENSION phases 3–7** — recorded NOT complete (zero repository evidence, D-T); each needs explicit Founder re-issue or cancellation.
+2. **MS-6 installers + docs sweep** — then accessibility + performance double-check, completing the exit criteria.
+3. **Daemon packages route group** (wire parity; spec/openapi regen) — Machine Parity law for the new subsystem.
+4. **Record real-provider planning cassettes** (scripts/record-cassettes.ts) when network access exists.
+5. **Ratify ADR-0018** (substrate) and re-baseline shipping goals.
 
 ---
 

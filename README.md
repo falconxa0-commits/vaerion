@@ -68,17 +68,23 @@ vae ci validate                  # CI must re-run the same six gates (D-R)
 vae release readiness            # can this repository ship? measured only
 ```
 
+New here? Run **bare `vae`** — the welcome front door measures your
+directory and points at the next step — then take **`vae tour`**, a guided,
+read-only walk of the whole engine (nine steps, measured against your
+machine).
+
 Full walkthrough: `docs/QUICKSTART.md` · companion workspace:
 `examples/vaerion-demo/`.
 
 ## The CLI at a glance
 
-`vae` (the Daily Seven, plus additive commands):
+`vae` (the Daily Seven, plus additive commands — bare `vae` opens the
+welcome front door):
 
 `init` · `run research|demo|model|agent|workflow` · `resume` · `explain` ·
 `journal ls|show|verify|recover|export` · `doctor` · `dev` · `serve` ·
 `package build|verify` · `provenance` · `repo` · `ci validate|simulate` ·
-`release readiness`
+`release readiness` · `tour`
 
 Every command honors `--json` (stable machine output), `--dry-run`
 (plan only, nothing written), and exit codes 0–5 with the E-code

@@ -25,11 +25,19 @@ vae --version
 Full details (including release-tarball installation and signature
 verification): `docs/INSTALL.md`.
 
-## 1. Create a workspace (1 minute)
+## 1. Look around, then create a workspace (2 minutes)
 
 ```sh
+vae                            # the welcome front door: measures this
+                               # directory, points at the next step (exit 0)
+vae tour                       # a guided, read-only walk of the engine —
+                               # nine steps measured against your machine
 vae init                       # scaffolds vaerion.yaml + .vaerion/
 ```
+
+The welcome and the tour are read-only: nothing is created, modified, or
+executed. The tour teaches by pointing at real commands — `vae dev`,
+`vae journal ls`, `vae doctor`, `vae repo` — never by running them.
 
 Or use the demo workspace directly:
 
