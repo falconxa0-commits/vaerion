@@ -1,7 +1,8 @@
 /**
- * Vaerion CLI — the command surface (constitution v1.1, D-M′):
+ * Vaerion CLI — the command surface (constitution v1.2, D-M′):
  *   init · run · resume · explain · journal · doctor · dev
- *   + additive: serve · package · provenance · repo · ci · release
+ *   + additive: serve · package · provenance · repo · ci · release · tour
+ *   + the bare invocation: the welcome front door (read-only, teaches, exit 0)
  *
  * Five Guarantees (D-N) enforced here:
  *   1. `--help` never reaches these functions (vae.ts handles it first).
@@ -15,7 +16,7 @@ import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
 import { join, dirname, relative, resolve } from "node:path";
 import { ExitCode, type CliIo, type OutputMode } from "./io.ts";
 import { Renderer } from "./render.ts";
-import { ensureWorkspaceDirs, loadOrAdhocConfig, workspaceAt } from "./workspace.ts";
+import { ensureWorkspaceDirs, configExists, loadOrAdhocConfig, workspaceAt } from "./workspace.ts";
 import { VaerionError } from "../kernel/errors.ts";
 import { SystemClock, SystemRng } from "../kernel/clock.ts";
 import { SystemIdGen, crn } from "../kernel/ids.ts";
@@ -1405,7 +1406,7 @@ export async function cmdDev(ctx: CommandContext): Promise<number> {
       L4: ["cli"],
     },
     daily_seven: ["init", "run", "resume", "explain", "journal", "doctor", "dev"],
-    additive_commands: ["serve (MS-5 daemon, ADR-0010)", "package (MS-6 bundles, ADR-0016)", "provenance (Ω — artifact evidence)", "repo (XVIII-8 — git trust, D-P/D-Q)", "ci (XVIII-8 — CI understanding, D-R)", "release (XVIII-8 — measured readiness, D-S/D-T)"],
+    additive_commands: ["serve (MS-5 daemon, ADR-0010)", "package (MS-6 bundles, ADR-0016)", "provenance (Ω — artifact evidence)", "repo (XVIII-8 — git trust, D-P/D-Q)", "ci (XVIII-8 — CI understanding, D-R)", "release (XVIII-8 — measured readiness, D-S/D-T)", "tour (XVIII-2 — the guided, read-only walk)"],
     gateway: {
       single_gate: "gateway/service.ts — decide(model.invoke) → journal → act",
       egress: "gateway/transport.ts — the ONE sanctioned egress site",
@@ -1413,8 +1414,8 @@ export async function cmdDev(ctx: CommandContext): Promise<number> {
     },
     workspace: { root: ws.root, runs: runs.length },
     spec: "spec/ (single source of truth)",
-    constitution: "docs/constitution/VAERION_CONSTITUTION_v1.1.md",
-    next_milestone: "ASCENSION XVIII — Productization Era: Phase 8 (git/CI/constitution synchronization) in flight at v0.1.8-rc1 · Phase 1 (distribution) complete at v0.1.7-rc2 · phases 2–7 have no repository evidence (recorded NOT complete, D-T) · MS-6 close-out (native installers, performance, accessibility) + release train remain Founder-gated",
+    constitution: "docs/constitution/VAERION_CONSTITUTION_v1.2.md",
+    next_milestone: "ASCENSION XVIII — Productization Era: Phase 2 (the empty-laptop experience: welcome front door + guided tour) in flight at v0.1.8-rc1 · Phase 8 (git/CI/constitution synchronization) complete · phases 3–7 have no repository evidence (recorded NOT complete, D-T) · MS-6 close-out (native installers, performance, accessibility) + release train remain Founder-gated",
   });
   return ExitCode.ok;
 }
@@ -1996,4 +1997,150 @@ export async function cmdRelease(ctx: CommandContext): Promise<number> {
     await harness.release().catch(() => undefined);
   }
   return report.ready ? ExitCode.ok : ExitCode.partial;
+}
+
+/* ────────────────────  welcome front door + tour (XVIII-2)  ──────────────────── */
+
+/** The welcome front door payload (constitution v1.2 D-M′, amendment A2): what
+ *  the BARE `vae` invocation returns. Read-only by law — it resolves paths and
+ *  stats files; it never creates a workspace, never journals, never touches
+ *  the network. The same directory always yields the same payload bytes. */
+export async function buildWelcomePayload(ctx: CommandContext): Promise<Record<string, unknown>> {
+  const ws = workspaceAt(ctx.cwd);
+  const hasConfig = await configExists(ws);
+  const hasWorkspace = await stat(ws.vaerionDir).then(() => true, () => false);
+  const kind = hasConfig || hasWorkspace ? "workspace" : "fresh";
+  const runs = hasWorkspace ? await listJournals(ws.journalDir) : [];
+  const next = kind === "fresh"
+    ? { command: "vae init", why: "scaffold vaerion.yaml + .vaerion/ in this directory — nothing exists yet" }
+    : { command: "vae doctor", why: "audit this workspace: config, journals, blobs, evidence, audit chain, gateway matrix" };
+  return {
+    command: "welcome",
+    engine_version: ENGINE_VERSION,
+    what: "Vaerion is the local, deterministic, auditable substrate where developers, agents, and models do real work on a codebase.",
+    directory: {
+      path: ws.root,
+      kind,
+      has_config: hasConfig,
+      has_workspace: hasWorkspace,
+      runs: runs.length,
+    },
+    next,
+    learn: [
+      "vae --help — the command surface of record (help always teaches)",
+      "vae tour — a guided, read-only walk of the engine, measured against this machine",
+      "docs/QUICKSTART.md — the first-run journey",
+      "docs/constitution/VAERION_CONSTITUTION_v1.2.md — the ratified law",
+    ],
+    read_only: "nothing was created or modified",
+  };
+}
+
+/** `vae tour` — the guided, read-only walk (roadmap Phase 2, A2). Nine steps;
+ *  every measured value comes from THIS machine and THIS directory (D-S):
+ *  no network, no wall-clock in the payload, no writes — the same directory
+ *  yields byte-identical `--json` output. It teaches by pointing at real
+ *  commands, never by executing them. */
+export async function cmdTour(ctx: CommandContext): Promise<number> {
+  if (ctx.flags._positional1 !== "") {
+    throw new VaerionError("E1600", "usage: `vae tour` takes no arguments — it is a read-only guided walk");
+  }
+  const ws = workspaceAt(ctx.cwd);
+  const hasConfig = await configExists(ws);
+  const hasWorkspace = await stat(ws.vaerionDir).then(() => true, () => false);
+  const kind = hasConfig || hasWorkspace ? "workspace" : "fresh";
+  const runs = hasWorkspace ? await listJournals(ws.journalDir) : [];
+
+  // Condensed live health (the SAME primitives `vae doctor` uses — never a
+  // second implementation): the tour teaches where doctor goes deep.
+  const audit = await verifyAuditLedger(ws.auditPath);
+
+  // Gateway capability matrix — local data, no network, secret NAMES only.
+  const matrix = new GatewayService({ clock: new SystemClock(), rng: new SystemRng(), idGen: new SystemIdGen(), transport: fetchTransport, secrets: defaultSecretPort() }).matrix();
+  const matrixText = matrix.map((a) => `${a.provider}[${a.ops.join("/")}]${a.requiresSecret ? ` (secret: ${a.secretName})` : " (local)"}`).join(" · ");
+
+  let fingerprint = "none yet — `vae init` writes the first vaerion.yaml";
+  if (hasConfig) {
+    try {
+      const loaded = await loadOrAdhocConfig(ws);
+      if (!loaded.adhoc) fingerprint = loaded.fingerprint.slice(0, 12) + "…";
+    } catch {
+      fingerprint = "present but invalid — `vae doctor` reports the exact defect";
+    }
+  }
+
+  const steps = [
+    {
+      step: 1,
+      title: "What Vaerion is",
+      measured: [`engine ${ENGINE_VERSION}`, "substrate: typescript on bun (ADR-0018, Provisional)"],
+      try: "vae dev",
+      note: "An AI-native development engine — not an IDE, not a chat wrapper, not a cloud service. Three load-bearing ideas: one source-of-truth chain, one Event Spine, one Permission Broker.",
+    },
+    {
+      step: 2,
+      title: "This directory",
+      measured: [`kind: ${kind}`, `vaerion.yaml: ${hasConfig ? "present" : "absent"}`, `.vaerion/: ${hasWorkspace ? "present" : "absent"}`],
+      try: kind === "fresh" ? "vae init" : "vae doctor",
+      note: "Every command operates on exactly one workspace: vaerion.yaml (your declared intent) + .vaerion/ (journals, blobs, audit). No ambient state anywhere else.",
+    },
+    {
+      step: 3,
+      title: "The config law",
+      measured: [`config fingerprint: ${fingerprint}`],
+      try: "vae init --dry-run",
+      note: "Truth flows one direction: vaerion.yaml (human intent) → vaerion.lock (resolved state) → spec/ (published contracts). Unknown keys are rejected by law — the schema is the contract.",
+    },
+    {
+      step: 4,
+      title: "The journal",
+      measured: [`runs journaled here: ${runs.length}`, `journal dir: ${relative(ws.root, ws.journalDir)}`],
+      try: "vae journal ls",
+      note: "Every run persists an append-only NDJSON journal with a blake3 hash chain, one writer, and a verifiable receipt. Replay is deterministic: same journal, same seeds, same state.",
+    },
+    {
+      step: 5,
+      title: "Doctor — the health audit",
+      measured: [`audit ledger: ${audit.ok ? `intact (${audit.entries} entries)` : `BROKEN — ${audit.message}`}`],
+      try: "vae doctor",
+      note: "The full audit checks config validity, every journal chain, blob CAS, evidence triangulation, the audit ledger, the Refusal Log, and the gateway matrix. Zero telemetry, no secret values — names only.",
+    },
+    {
+      step: 6,
+      title: "The gateway single gate",
+      measured: [`providers: ${matrixText}`],
+      try: 'vae run model --model mockbrain/mock-1 --prompt "hello" --seed 7',
+      note: "All model I/O crosses ONE gate (decide → journal → act) through the ONE sanctioned egress site. mockbrain is the local virtual provider: no network, byte-identical for the same seed. Secret values resolve only behind broker decisions.",
+    },
+    {
+      step: 7,
+      title: "Your first run",
+      measured: [kind === "fresh" ? "this directory has no sources declared yet" : `${runs.length} run(s) already journaled in this workspace`],
+      try: "vae run demo",
+      note: "A research run crosses the full constitutional pipeline: broker decision per source → fingerprint → fence → blob CAS → evidence → citations → context pack → receipt. Every step is attributed and hash-chained.",
+    },
+    {
+      step: 8,
+      title: "The trust surface",
+      measured: ["repository intelligence · CI understanding · measured release readiness"],
+      try: "vae repo  ·  vae ci validate  ·  vae release readiness",
+      note: "Trust is measured, never assumed (D-S): git identity and canonical protection (D-P/D-Q), CI as the remote projection of the single verification authority (D-R), and a fail-closed release evaluator.",
+    },
+    {
+      step: 9,
+      title: "Where to go next",
+      measured: ["docs/QUICKSTART.md", "docs/constitution/VAERION_CONSTITUTION_v1.2.md", "spec/ (the contracts)"],
+      try: "vae --help",
+      note: "Help always teaches, --json is stable, --dry-run is pure, receipts close every run, and exit codes tell the truth. Build with discipline. Build with receipts. Build Vaerion.",
+    },
+  ];
+
+  r(ctx).result({
+    command: "tour",
+    engine_version: ENGINE_VERSION,
+    directory: { path: ws.root, kind, has_config: hasConfig, has_workspace: hasWorkspace, runs: runs.length },
+    steps,
+    read_only: "every step measured this directory read-only — nothing was created, modified, or executed",
+  });
+  return ExitCode.ok;
 }

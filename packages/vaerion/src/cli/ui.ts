@@ -424,6 +424,8 @@ export function renderRichResult(a: Ansi, obj: Obj, width: number): string[] {
     case "repo": return repoReport(a, obj, width);
     case "ci": return ciReport(a, obj, width);
     case "release": return releaseReport(a, obj, width);
+    case "welcome": return welcomeReport(a, obj, width);
+    case "tour": return tourReport(a, obj, width);
     default: return genericRich(a, obj, width);
   }
 }
@@ -1274,6 +1276,93 @@ function releaseReport(a: Ansi, obj: Obj, width: number): string[] {
   if (obj.journaled === false) {
     out.push("");
     out.push(a.dim(redactString(String(obj.journal_note ?? "not journaled"))));
+  }
+  return out;
+}
+
+/* ───────────────────  welcome front door + tour (XVIII-2)  ─────────────────── */
+
+function welcomeReport(a: Ansi, obj: Obj, width: number): string[] {
+  const out: string[] = [];
+  const what = str(obj, "what") ?? "";
+  out.push(...panel(a, {
+    title: "Welcome to Vaerion",
+    lines: [what],
+    width,
+    accent: "gold",
+    subtitle: `engine ${str(obj, "engine_version") ?? "?"} · local-first · deterministic · zero telemetry`,
+  }));
+  const dir = sub(obj, "directory") ?? {};
+  const kind = str(dir, "kind") ?? "unknown";
+  const next = sub(obj, "next") ?? {};
+  const learn = Array.isArray(obj.learn) ? (obj.learn as string[]) : [];
+  out.push("");
+  out.push(...panel(a, {
+    title: kind === "fresh" ? "This directory is fresh" : "This is a Vaerion workspace",
+    lines: kvBlock(a, [
+      ["path", str(dir, "path") ?? "?"],
+      ["vaerion.yaml", dir.has_config === true ? "present" : "absent"],
+      [".vaerion/", dir.has_workspace === true ? "present" : "absent"],
+      ["runs", String(dir.runs ?? 0)],
+    ], width),
+    width,
+    accent: kind === "fresh" ? "info" : "success",
+  }));
+  out.push("");
+  out.push(...panel(a, {
+    title: "Next step",
+    lines: [`${a.gold("▸")} ${str(next, "command") ?? "vae --help"} — ${str(next, "why") ?? ""}`],
+    width,
+    accent: "gold",
+  }));
+  if (learn.length > 0) {
+    out.push("");
+    out.push(...panel(a, {
+      title: "Learn",
+      lines: learn.map((l) => `${a.dim(SYM.arrow)} ${l}`),
+      width,
+      accent: "none",
+    }));
+  }
+  return out;
+}
+
+interface TourStepShape { step?: number; title?: string; measured?: string[]; try?: string; note?: string }
+
+function tourReport(a: Ansi, obj: Obj, width: number): string[] {
+  const out: string[] = [];
+  const dir = sub(obj, "directory") ?? {};
+  const steps = Array.isArray(obj.steps) ? (obj.steps as TourStepShape[]) : [];
+  out.push(...panel(a, {
+    title: "The Vaerion tour",
+    lines: kvBlock(a, [
+      ["directory", str(dir, "path") ?? "?"],
+      ["kind", str(dir, "kind") ?? "?"],
+      ["steps", `${steps.length} · measured against this machine`],
+    ], width),
+    width,
+    accent: "gold",
+    subtitle: "read-only · no network · no writes · measured, never assumed (D-S)",
+  }));
+  for (const s of steps) {
+    out.push("");
+    const lines: string[] = [];
+    for (const m of s.measured ?? []) lines.push(`${a.dim(SYM.dot)} ${m}`);
+    if ((s.measured ?? []).length > 0) lines.push("");
+    lines.push(s.note ?? "");
+    lines.push("");
+    lines.push(`${a.gold("▸ try:")} ${s.try ?? ""}`);
+    out.push(...panel(a, {
+      title: `${s.step ?? "·"} · ${s.title ?? ""}`,
+      lines,
+      width,
+      accent: "info",
+    }));
+  }
+  const readOnly = str(obj, "read_only");
+  if (readOnly !== undefined) {
+    out.push("");
+    out.push(badge(a, "ok", readOnly));
   }
   return out;
 }

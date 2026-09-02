@@ -9,11 +9,11 @@
  */
 
 import { ExitCode, type CliIo } from "./io.ts";
-import { cmdDev, cmdExplain, cmdInit, cmdJournal, cmdDoctor, cmdPackage, cmdProvenance, cmdRepo, cmdRelease, cmdResume, cmdRun, cmdServe, cmdCi, type CommandContext } from "./commands.ts";
+import { buildWelcomePayload, cmdDev, cmdExplain, cmdInit, cmdJournal, cmdDoctor, cmdPackage, cmdProvenance, cmdRepo, cmdRelease, cmdResume, cmdRun, cmdServe, cmdCi, cmdTour, type CommandContext } from "./commands.ts";
 import { VaerionError } from "../kernel/errors.ts";
 import { isVaerionError } from "./workspace.ts";
 import { Renderer, setBannerVersion } from "./render.ts";
-import { Ansi, banner, errorBlock, type RenderEnv } from "./ui.ts";
+import { Ansi, banner, errorBlock, footer, type RenderEnv } from "./ui.ts";
 
 export const VERSION = "0.1.8-rc1";
 setBannerVersion(VERSION);
@@ -21,6 +21,8 @@ setBannerVersion(VERSION);
 const MAIN_HELP = `vae — Vaerion engine command line (v${VERSION})
 
 Usage: vae [global flags] <command> [args] [flags]
+(Bare \`vae\` opens the welcome front door: it measures this directory and
+ points at the next step — read-only, exit 0.)
 
 Command surface (the Daily Seven + additive commands):
   init                       scaffold vaerion.yaml + .vaerion/ workspace
@@ -97,6 +99,10 @@ Command surface (the Daily Seven + additive commands):
                              git trust, CI validity, version lockstep,
                              tag binding, artifact set, ledger — fail-closed,
                              honestly labeled.
+  tour                       a guided, read-only walk of the engine (XVIII-2):
+                             nine steps measured against this machine and
+                             this directory; it teaches by pointing at real
+                             commands, never by executing them
 
 Global flags:
   --json                     stable NDJSON output (machine mode, guaranteed)
@@ -107,7 +113,7 @@ Global flags:
 
 Exit codes: 0 ok · 1 internal · 2 usage · 3 broker-denied · 4 provider-down · 5 partial-with-repair-hint
 
-Learn more: docs/constitution/VAERION_CONSTITUTION_v1.1.md · spec/ (contracts)
+Learn more: docs/constitution/VAERION_CONSTITUTION_v1.2.md · spec/ (contracts)
 `;
 
 const COMMAND_HELP: Record<string, string> = {
@@ -300,6 +306,15 @@ vae ci simulate --event push|pull_request|workflow_dispatch|tag [--ref NAME]
   Fail-closed (P6): unmeasurable ⇒ blocked. Exit 0 READY; exit 5 BLOCKED with
   the blocker list. The evaluation is journaled with a receipt when the
   repository is a Vaerion workspace, and says so when it is not.`,
+  tour: `vae tour
+
+  A guided, read-only walk of the engine (ASCENSION XVIII Phase 2;
+  constitution v1.2 D-M′/A2). Nine steps — what Vaerion is, this directory,
+  the config law, the journal, doctor, the gateway single gate, your first
+  run, the trust surface, where to go next — each MEASURED against this
+  machine and this directory (no network, no writes, no wall-clock in the
+  payload). It teaches by pointing at real commands; it never executes
+  them. The same directory yields byte-identical --json output.`,
 };
 
 interface ParsedArgs {
@@ -367,18 +382,6 @@ export async function runCli(argv: string[], io: CliIo, cwd: string): Promise<Cl
 
   const mode = parsed.flags.json === true ? "json" : "plain";
   const renderer = new Renderer(io, mode, envOf());
-
-  if (!parsed.command) {
-    if (renderer.rich) {
-      const a = new Ansi(true);
-      for (const line of banner(a, VERSION, renderer.width)) io.out(line);
-      io.out("");
-      for (const line of errorBlock(a, { code: "E1600", message: "no command given.", fix: "run `vae --help` (help always teaches)." }, renderer.width)) io.err(line);
-    } else {
-      io.err("E1600 no command given. Fix: run `vae --help` (help always teaches).");
-    }
-    return { code: ExitCode.usage };
-  }
   const dryRun = parsed.flags["dry-run"] === true;
   const cwdFlag = typeof parsed.flags.cwd === "string" ? (parsed.flags.cwd as string) : cwd;
   const ctx: CommandContext = {
@@ -393,6 +396,22 @@ export async function runCli(argv: string[], io: CliIo, cwd: string): Promise<Cl
       _positional2: parsed.positional[1] ?? "",
     },
   };
+
+  if (!parsed.command) {
+    // Welcome front door (constitution v1.2 D-M′, amendment A2): the bare
+    // invocation teaches — it measures this directory read-only and points
+    // at the next step. Exit 0 in every output mode; never a usage error.
+    if (renderer.rich) {
+      for (const line of banner(new Ansi(true), VERSION, renderer.width)) io.out(line);
+      io.out("");
+    }
+    renderer.result(await buildWelcomePayload(ctx));
+    if (renderer.rich) {
+      io.out("");
+      for (const line of footer(new Ansi(true))) io.out(line);
+    }
+    return { code: ExitCode.ok };
+  }
 
   try {
     let code: number;
@@ -410,6 +429,7 @@ export async function runCli(argv: string[], io: CliIo, cwd: string): Promise<Cl
       case "repo": code = await cmdRepo(ctx); break;
       case "ci": code = await cmdCi(ctx); break;
       case "release": code = await cmdRelease(ctx); break;
+      case "tour": code = await cmdTour(ctx); break;
       case "version":
         if (renderer.rich) {
           for (const line of banner(new Ansi(true), VERSION, renderer.width)) io.out(line);

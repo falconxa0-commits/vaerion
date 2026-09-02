@@ -707,17 +707,24 @@ describe("repo / ci / release CLI contracts (Five Guarantees)", () => {
 /* ───────────────────────────  law & lockstep regression  ─────────────────────────── */
 
 describe("constitution and version lockstep regression (Phase 8)", () => {
-  test("the ratified constitution is v1.1 with the Phase 8 laws and the honest phase ledger", async () => {
+  test("the ratified constitution is v1.2 with the Phase 2 surface and the honest phase ledger", async () => {
     const root = join(import.meta.dir, "..", "..", "..", "..");
-    const constitution = await readFile(join(root, "docs", "constitution", "VAERION_CONSTITUTION_v1.1.md"), "utf8");
-    expect(constitution).toContain("VAERION_CONSTITUTION_v1.1");
+    const constitution = await readFile(join(root, "docs", "constitution", "VAERION_CONSTITUTION_v1.2.md"), "utf8");
+    expect(constitution).toContain("VAERION_CONSTITUTION_v1.2");
     expect(constitution).toContain("D-M′");
     for (const law of ["D-P", "D-Q", "D-R", "D-S", "D-T"]) {
       expect(constitution).toContain(`| ${law} |`);
     }
-    expect(constitution).toContain("2–7");
+    // The v1.2 surface (A2): tour ratified; the welcome front door defined.
+    expect(constitution).toContain("release, tour`");
+    expect(constitution).toContain("welcome front door");
+    // Phases 3–7 remain recorded NOT complete (zero repository evidence).
+    expect(constitution).toContain("3–7");
     expect(constitution).toContain("zero repository evidence");
-    // v1.0 remains as history.
+    // History is retained unmodified: v1.1 (with the v1.1-era adjudication) and v1.0.
+    const v11 = await readFile(join(root, "docs", "constitution", "VAERION_CONSTITUTION_v1.1.md"), "utf8");
+    expect(v11).toContain("VAERION_CONSTITUTION_v1.1");
+    expect(v11).toContain("2–7");
     await readFile(join(root, "docs", "constitution", "VAERION_CONSTITUTION_v1.0.md"), "utf8");
   });
 
