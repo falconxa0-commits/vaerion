@@ -310,7 +310,7 @@ errors:
   E2305:
     name: ci_verify_authority_missing
     summary: "A workflow job runs gate logic without invoking tools/verify.ts — the single verification authority (D-R)."
-    fix: "Make every verification job run `bun run tools/verify.ts`; no surface may re-implement the seven gates."
+    fix: "Make every verification job run `bun run tools/verify.ts`; no surface may re-implement the verification gates."
   E2306:
     name: ci_env_if_drift
     summary: "A step's `if:` condition reads a variable defined in that same step's own `env:` — the condition cannot see it and is permanently false."

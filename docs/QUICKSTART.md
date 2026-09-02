@@ -17,7 +17,7 @@ Requires [Bun](https://bun.sh) 1.3+.
 ```sh
 git clone <repository-url> vaerion && cd vaerion
 bun install
-bun run tools/verify.ts        # all seven gates must be green
+bun run tools/verify.ts        # all gates must be green
 alias vae="bun run packages/vaerion/src/cli/vae.ts"
 vae --version
 ```

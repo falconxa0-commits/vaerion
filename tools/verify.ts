@@ -9,7 +9,8 @@
  *   4. layerlint (architecture boundaries)
  *   5. constitutional-check (invariants + contract sync + secrets)
  *   6. perf-budget (Phase 7 — the performance budget law, v1.4 A4)
- *   7. repository lint (eslint, app + tooling)
+ *   7. a11y-structural (Phase 8 — the accessibility law, v1.4 A4)
+ *   8. repository lint (eslint, app + tooling)
  *
  * Every gate must be green before any commit (release blocker #1).
  * Emits .vaerion-verification.json for reports and the status dashboard.
@@ -61,6 +62,7 @@ gates.push(run("tests", ["bun", "test", "tests/", "--coverage"], { cwd: ENGINE }
 gates.push(run("layerlint", ["bun", "run", join2(ROOT, "tools", "layerlint.ts")]));
 gates.push(run("constitutional-check", ["bun", "run", join2(ROOT, "tools", "constitutional-check.ts")]));
 gates.push(run("perf-budget", ["bun", "run", join2(ROOT, "tools", "perf-gate.ts")]));
+gates.push(run("a11y-structural", ["bun", "run", join2(ROOT, "tools", "a11y-check.ts")]));
 gates.push(run("repo-lint", ["bun", "run", "lint"]));
 
 const allOk = gates.every((g) => g.ok);

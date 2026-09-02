@@ -1,55 +1,60 @@
 {
-  "generatedAt": "2026-09-02T20:44:12.021Z",
+  "generatedAt": "2026-09-02T20:56:01.910Z",
   "engineVersion": "0.1.9-rc1",
   "substrate": "TypeScript on Bun (ADR-0018 — provisional with recorded migration path; Founder ratification pending)",
   "verification": {
-    "generatedAt": "2026-09-02T20:42:58.155Z",
+    "generatedAt": "2026-09-02T20:54:44.460Z",
     "ok": true,
     "gates": [
       {
         "gate": "typecheck-engine",
         "ok": true,
-        "durationMs": 4049
+        "durationMs": 4094
       },
       {
         "gate": "typecheck-sdk",
         "ok": true,
-        "durationMs": 3253
+        "durationMs": 3303
       },
       {
         "gate": "tests",
         "ok": true,
-        "durationMs": 6864
+        "durationMs": 6594
       },
       {
         "gate": "layerlint",
         "ok": true,
-        "durationMs": 31
+        "durationMs": 30
       },
       {
         "gate": "constitutional-check",
         "ok": true,
-        "durationMs": 236
+        "durationMs": 206
       },
       {
         "gate": "perf-budget",
         "ok": true,
-        "durationMs": 327
+        "durationMs": 293
+      },
+      {
+        "gate": "a11y-structural",
+        "ok": true,
+        "durationMs": 32
       },
       {
         "gate": "repo-lint",
         "ok": true,
-        "durationMs": 10078
+        "durationMs": 10157
       }
     ]
   },
   "tests": {
-    "suites": 32,
-    "assertedExpectations": 2664,
-    "totalTests": 410,
+    "suites": 34,
+    "assertedExpectations": 2710,
+    "totalTests": 431,
     "coverage": {
-      "lines": 86.75,
-      "branches": 91.22,
+      "lines": 86.82,
+      "branches": 91.18,
       "floors": "bunfig.toml coverageThreshold (OBJ-Q6, ratcheted at MS-6 bundle close: 0.86/0.74/0.86/0.90; held at every ASCENSION phase close)"
     },
     "note": "counts from the latest full run of `bun test tests/ --coverage`"
@@ -60,16 +65,16 @@
       "lines": 21064
     },
     "engineTests": {
-      "files": 32,
-      "lines": 9637
+      "files": 34,
+      "lines": 9909
     },
     "sdk": {
       "files": 3,
       "lines": 779
     },
     "tools": {
-      "files": 9,
-      "lines": 1283
+      "files": 10,
+      "lines": 1548
     }
   },
   "contracts": {
@@ -162,7 +167,7 @@
       "name": "Packaging + Hardening",
       "status": "in_progress",
       "progress": 85,
-      "evidence": "PHASE 1 (2026-08-30): distribution packaging fail-closed tooling (tools/dist-pack.ts: deterministic git-archive tarball built twice + byte-compared, canonical MANIFEST.json with sha256+blake3, Ed25519-signed manifest with self-verification, tamper detection proven, consumer tools/dist-verify.ts), LICENSE Apache-2.0 + CONTRIBUTING, beta experience (README/QUICKSTART/INSTALL/TROUBLESHOOTING/BETA-ONBOARDING + examples/vaerion-demo executed end-to-end), security dossier (docs/security/ threat model + mitigations + 7-item risk ledger, zero critical), ADR finalization (docs/adr/README.md — no unclear decisions; ADR-0018 provisional with migration path), CI workflow (.github/workflows/verify.yml), version lockstep 0.1.7-rc1. REPRODUCIBLE BUNDLES (ADR-0016) COMPLETE: src/package/ deterministic .vxn format (magic VXN1, canonical JSON manifest, strictly ascending entry order, zstd pinned level 19, blake3 content identity); build = pure fold over declared inputs (config package.include + pin-verified extension artifacts auto-carried, E2100 refusal on mismatch) — no wall-clock, no ambient paths, byte-identical rebuilds proven by test; vaerion.lock generated canonical-JSON seal (config fingerprint + extension pins + bundle digest); verify = pure check with honest per-check findings (payload/entry digests E2201, pin swap E2202, non-canonical E2200, bad magic E2203, stale lock E2205) — content NEVER executed; CLI `vae package build|verify` (additive ninth command) with --dry-run purity + journaled package.built/package.verified runs + receipts; doctor package-lock cross-check (E2205); config package block (spec 0.1.6: errors E2200–E2206, events package.built/verified); exit-code mapping E2204→usage, verification failures→partial; +28 tests (unit format law + integration build/verify/tamper matrix/doctor), coverage ratcheted to measured 86.07/90.87. PHASE 7 (2026-09-03, v1.4 A4): the performance double-check EXECUTED as permanent law — one deterministic perf harness (src/perf/perf.ts: seven engine-critical operations, fixed seeded inputs, median-of-N) against typed budget contracts, gated as verify.ts step 6 (perf-budget) through the single verification authority (D-R); the remaining MS-6 close-out is the accessibility sweep (Phase 8) + native installers (host-gated); release-train publish steps are Founder-gated. PHASE Ω (2026-08-31): product refinement pass — brand system (tools/brand-render.ts generates the seal/monogram/wordmark/editions byte-reproducibly; brand/BRAND-BOOK.md; brand book PDF; web face + favicon rebranded), terminal design language (src/cli/ui.ts: TTY-gated rich rendering — panels, tables, badges, receipts, educated error blocks with E-code + fix + docs pointer, quiet spinners; plain/--json contracts byte-stable and pinned by tests), the additive `vae provenance` command (artifact evidence with recomputed digests), honest dev surface (ADR-0018 Provisional wording, current milestone position), docs (README refresh, FAQ, quickstart provenance step), version lockstep 0.1.7-rc2 + spec 0.1.7-rc2 changelog + golden re-bless. +12 tests (290 total, 1969 expectations); coverage floors held (measured 86.00 lines / 90.84 branches)."
+      "evidence": "PHASE 1 (2026-08-30): distribution packaging fail-closed tooling (tools/dist-pack.ts: deterministic git-archive tarball built twice + byte-compared, canonical MANIFEST.json with sha256+blake3, Ed25519-signed manifest with self-verification, tamper detection proven, consumer tools/dist-verify.ts), LICENSE Apache-2.0 + CONTRIBUTING, beta experience (README/QUICKSTART/INSTALL/TROUBLESHOOTING/BETA-ONBOARDING + examples/vaerion-demo executed end-to-end), security dossier (docs/security/ threat model + mitigations + 7-item risk ledger, zero critical), ADR finalization (docs/adr/README.md — no unclear decisions; ADR-0018 provisional with migration path), CI workflow (.github/workflows/verify.yml), version lockstep 0.1.7-rc1. REPRODUCIBLE BUNDLES (ADR-0016) COMPLETE: src/package/ deterministic .vxn format (magic VXN1, canonical JSON manifest, strictly ascending entry order, zstd pinned level 19, blake3 content identity); build = pure fold over declared inputs (config package.include + pin-verified extension artifacts auto-carried, E2100 refusal on mismatch) — no wall-clock, no ambient paths, byte-identical rebuilds proven by test; vaerion.lock generated canonical-JSON seal (config fingerprint + extension pins + bundle digest); verify = pure check with honest per-check findings (payload/entry digests E2201, pin swap E2202, non-canonical E2200, bad magic E2203, stale lock E2205) — content NEVER executed; CLI `vae package build|verify` (additive ninth command) with --dry-run purity + journaled package.built/package.verified runs + receipts; doctor package-lock cross-check (E2205); config package block (spec 0.1.6: errors E2200–E2206, events package.built/verified); exit-code mapping E2204→usage, verification failures→partial; +28 tests (unit format law + integration build/verify/tamper matrix/doctor), coverage ratcheted to measured 86.07/90.87. PHASE 7 (2026-09-03, v1.4 A4): the performance double-check EXECUTED as permanent law — one deterministic perf harness (src/perf/perf.ts: seven engine-critical operations, fixed seeded inputs, median-of-N) against typed budget contracts, gated as verify.ts step 6 (perf-budget) through the single verification authority (D-R); the remaining MS-6 close-out is the accessibility sweep (Phase 8) + native installers (host-gated); release-train publish steps are Founder-gated. PHASE 8 (2026-09-03, v1.4 A4): the accessibility sweep EXECUTED as permanent law — nine deterministic structural invariants (tools/a11y-check.ts, gate 7 a11y-structural: lang, metadata, single-h1, landmarks, labeled sections, image alt, labeled progressbars, natural tab order, focus-visible styling); three real defects found and fixed at root (unlabeled progress bars, missing base :focus-visible styling, duplicate React keys from the two legitimate Phase-8 ledger rows — caught by the browser audit); CLI color accessibility behavior-pinned (NO_COLOR/TERM=dumb/CI veto TTY, explicit VAE_UI beats ambient, --json never painted); browser-measured audit recorded (docs/ga/ACCESSIBILITY-AUDIT.md, zero console errors, zero overflow at 390/1280, footer law verified); release-train publish steps are Founder-gated. PHASE Ω (2026-08-31): product refinement pass — brand system (tools/brand-render.ts generates the seal/monogram/wordmark/editions byte-reproducibly; brand/BRAND-BOOK.md; brand book PDF; web face + favicon rebranded), terminal design language (src/cli/ui.ts: TTY-gated rich rendering — panels, tables, badges, receipts, educated error blocks with E-code + fix + docs pointer, quiet spinners; plain/--json contracts byte-stable and pinned by tests), the additive `vae provenance` command (artifact evidence with recomputed digests), honest dev surface (ADR-0018 Provisional wording, current milestone position), docs (README refresh, FAQ, quickstart provenance step), version lockstep 0.1.7-rc2 + spec 0.1.7-rc2 changelog + golden re-bless. +12 tests (290 total, 1969 expectations); coverage floors held (measured 86.00 lines / 90.84 branches)."
     },
     {
       "id": "GA",
@@ -175,66 +180,79 @@
   "overallProgress": 86,
   "phaseLedger": [
     {
+      "id": "dt-0",
       "phase": "Ω + artifacts",
       "status": "✅ complete",
       "evidence": "tag `v0.1.7-rc2`; commits `9d6cbd2`, `6ab6068`; six gates green"
     },
     {
+      "id": "dt-1",
       "phase": "0",
       "status": "✅ complete",
       "evidence": "commit `34b015d`; `docs/ga/FOUNDATION-AUDIT-ASCENSION-XVIII.md`"
     },
     {
+      "id": "dt-2",
       "phase": "1",
       "status": "✅ complete",
       "evidence": "commits `1c6892f`→`f8f341e`; four install channels verified; trust chain rebuilt; worklog `ASC-XVIII-PHASE-1`"
     },
     {
+      "id": "dt-3",
       "phase": "8",
       "status": "✅ complete",
       "evidence": "commits `68ef1e5`→`9d3dad8`; tag `v0.1.8-rc1`; six gates green (335/0/2191/26); worklog `ASC-XVIII-PHASE-8` + `ASC-XVIII-PHASE-8-OPS`"
     },
     {
+      "id": "dt-4",
       "phase": "2",
       "status": "✅ complete",
       "evidence": "commits `1a810d8`, `39027c4`; six gates green (352/0/2302/27); worklog `ASC-XVIII-PHASE-2`; Constitution v1.2 (A2)"
     },
     {
+      "id": "dt-5",
       "phase": "3",
       "status": "✅ complete",
       "evidence": "commit `c16de89`; six gates green (363/0/2362/28); worklog `ASC-XVIII-PHASE-3`; one L2 identity module + `vae account` (A3)"
     },
     {
+      "id": "dt-6",
       "phase": "4",
       "status": "✅ complete",
       "evidence": "commit `af5608d`; six gates green (377/0/2441/29); worklog `ASC-XVIII-PHASE-4`; the ONE shared research pipeline + `vae ai` (A3)"
     },
     {
+      "id": "dt-7",
       "phase": "5",
       "status": "✅ complete",
       "evidence": "commit `60c2d3e`; six gates green (388/0/2498/30); worklog `ASC-XVIII-PHASE-5`; the deterministic template registry + `vae init --template` + E1203 (A3)"
     },
     {
+      "id": "dt-8",
       "phase": "6",
       "status": "✅ complete",
       "evidence": "six gates green (397/0/2538/31); worklog `ASC-XVIII-PHASE-6`; the ONE center fold + `vae center` + the web face command-center section (A3); release tag + version lockstep land at program close"
     },
     {
+      "id": "dt-9",
       "phase": "7",
       "status": "✅ complete",
       "evidence": "one deterministic perf harness (src/perf/perf.ts: seven engine-critical operations, typed budget contracts, median-of-N) + verify.ts gate 6 \"perf-budget\" (D-R); SEVEN gates green (410/0/2664/32); worklog `ASC-XVIII-PHASE-7`; executes the §7 MS-6 performance double-check"
     },
     {
+      "id": "dt-10",
       "phase": "8",
-      "status": "▶ in flight",
-      "evidence": "ratified under A4 — the accessibility law (deterministic structural checker + browser-measured audit + behavior-pinned color accessibility + docs sweep); executes the §7 MS-6 accessibility sweep"
+      "status": "✅ complete",
+      "evidence": "nine deterministic a11y invariants (tools/a11y-check.ts) + verify.ts gate 7 \"a11y-structural\" (D-R); CLI color accessibility behavior-pinned; browser-measured audit docs/ga/ACCESSIBILITY-AUDIT.md; 3 defects fixed at root; EIGHT gates green (431/0/2710/34); worklog `ASC-XVIII-PHASE-8-ACC`"
     },
     {
+      "id": "dt-11",
       "phase": "9",
       "status": "▶ in flight",
       "evidence": "ratified under A4 — the release-train rehearsal (one deterministic end-to-end runner + measured rehearsal report); executes the §7 GA \"release train rehearsed\""
     },
     {
+      "id": "dt-12",
       "phase": "10",
       "status": "▶ in flight",
       "evidence": "ratified under A4 — the GA gate (burndown ledger + GO/NO-GO dossier + §7 reconciliation at the boundary; program close: version lockstep, tag, artifact trust chain, canonical + GitHub synchronization)"
@@ -247,7 +265,7 @@
     "passed": 7,
     "total": 12,
     "blockers": [
-      "git-tree-clean: working tree dirty: 0 staged, 17 unstaged, 3 untracked",
+      "git-tree-clean: working tree dirty: 0 staged, 17 unstaged, 4 untracked",
       "release-tag-binding: HEAD is not exactly at a v* release tag",
       "release-artifacts: artifact set incomplete: dist/MANIFEST.json, dist/MANIFEST.json.sig, dist/SHA256SUMS, dist/VERIFY.md missing"
     ]
@@ -296,7 +314,7 @@
       "blockers": [
         {
           "check": "git-tree-clean",
-          "detail": "working tree dirty: 0 staged, 17 unstaged, 3 untracked"
+          "detail": "working tree dirty: 0 staged, 17 unstaged, 4 untracked"
         },
         {
           "check": "release-tag-binding",
@@ -319,8 +337,8 @@
     "ModelPlanner success path needs a recorded real-provider cassette for end-to-end golden coverage (environment has no provider network access)."
   ],
   "nextWork": [
-    "THE GA CAMPAIGN (Phases 7–10, v1.4 A4): Phase 7 (the performance budget law) complete — verify.ts now carries SEVEN gates; Phase 8 (the accessibility law) is next; Phase 9 (release-train rehearsal) and Phase 10 (the GA gate) follow.",
-    "MS-6 remaining exit criteria: accessibility sweep (Phase 8) + native single-binary installers (host-gated: brew/winget/dmg/rpm authored in Phase 1, awaiting their platforms); then the daemon packages route group (wire parity, spec/openapi regen).",
+    "THE GA CAMPAIGN (Phases 7–10, v1.4 A4): Phase 7 (the performance budget law) and Phase 8 (the accessibility law) complete — verify.ts now carries EIGHT gates; Phase 9 (the release-train rehearsal) is next; Phase 10 (the GA gate) closes the program.",
+    "MS-6 remaining exit criteria: native single-binary installers (host-gated: brew/winget/dmg/rpm authored in Phase 1, awaiting their platforms); then the daemon packages route group (wire parity, spec/openapi regen).",
     "Program close (Phase 10): version lockstep, release tag, artifact trust chain, canonical + GitHub synchronization, and the GO/NO-GO dossier.",
     "Release train steps (publish, announce, key ceremony) — Founder-gated; artifacts are reproducible via tools/dist-pack.ts at the release tag.",
     "Coverage: per-module ratchets on top of the total-based floors (mechanical follow-up)."

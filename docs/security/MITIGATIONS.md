@@ -22,7 +22,7 @@ inspection at the cited module.
 | A4 abuses provider access | Gateway is the single gate (D-J): allow-listed adapters, metering with journaled metrics, circuit breaker per process, cassettes for hermetic runs (ADR-0012) | I + T (gateway suites) |
 | A4 reads secrets from artifacts | Secrets resolve keychain-first (ADR-0013) with env indirection for children; never serialized into journals, receipts, bundles; C5 scans the tree for secret material | C (every run) + T |
 | A5 tampers with release artifacts | Reproducible build (ADR-0016): identical inputs → byte-identical `.vxn` (blake3 identity, pinned zstd-19); release distribution publishes sha256 + blake3 manifests and an Ed25519 signature over the manifest (see `docs/ga/RELEASE-VERIFICATION.md`) | T (P2 proof: two builds byte-identical) + release tooling |
-| A5 tampers with the repository | Single verification entrypoint (`tools/verify.ts`) writes `.vaerion-verification.json`; CI (`.github/workflows/verify.yml`) re-runs all seven gates on every push and PR and fails on any violation | T/I |
+| A5 tampers with the repository | Single verification entrypoint (`tools/verify.ts`) writes `.vaerion-verification.json`; CI (`.github/workflows/verify.yml`) re-runs the full gate suite on every push and PR and fails on any violation | T/I |
 | Supply chain (compromised dependency) | Workspace-internal dependency resolution for engine packages (ADR-0001); lockfile (`bun.lock`) committed; the release distribution installs offline from the packed tarball and smoke-tests the installed shim before publishing a dist report | I + release tooling |
 
 ## Residual exposures

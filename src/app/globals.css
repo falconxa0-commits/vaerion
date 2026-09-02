@@ -119,4 +119,10 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Keyboard focus is always visible (Phase 8 — the accessibility law):
+     a base focus-visible ring for every interactive element that does not
+     ship its own focus-visible styling (components extend, never remove). */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring/70;
+  }
 }

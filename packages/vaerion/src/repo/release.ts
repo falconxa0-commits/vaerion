@@ -154,7 +154,7 @@ export async function evaluateReleaseReadiness(cwd: string, opts: ReadinessOptio
       check: "verification-gates", ok: live.ok, severity: "blocker",
       code: live.ok ? undefined : "E2310",
       detail: live.detail,
-      fix: live.ok ? undefined : "make the seven-gate run green before any release; the authority is `bun run tools/verify.ts`",
+      fix: live.ok ? undefined : "make the gate run green before any release; the authority is `bun run tools/verify.ts`",
       honesty: "VERIFIED",
     });
   } else {

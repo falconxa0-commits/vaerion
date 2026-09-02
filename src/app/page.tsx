@@ -16,7 +16,7 @@ interface Status {
   contracts: { specFiles: string[]; adrCount: number };
   milestones: Array<{ id: string; name: string; status: string; progress: number; evidence: string }>;
   overallProgress: number;
-  phaseLedger?: Array<{ phase: string; status: string; evidence: string }>;
+  phaseLedger?: Array<{ id: string; phase: string; status: string; evidence: string }>;
   release?: { measured: boolean; ready?: boolean; verdict?: string; passed?: number; total?: number; blockers: string[]; note?: string };
   commandCenter?: {
     workspace: { root: string; runs: number };
@@ -97,7 +97,7 @@ export default function Home() {
             <h2 className="text-lg font-semibold">Roadmap progress</h2>
             {status && <span className="text-sm text-zinc-500 dark:text-zinc-400">{status.overallProgress}% of MS-0 → GA</span>}
           </div>
-          <div className="h-3 w-full rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden" role="progressbar" aria-valuenow={status?.overallProgress ?? 0} aria-valuemin={0} aria-valuemax={100}>
+          <div className="h-3 w-full rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden" role="progressbar" aria-label="Overall roadmap progress" aria-valuenow={status?.overallProgress ?? 0} aria-valuemin={0} aria-valuemax={100}>
             <div className="h-full bg-[#3F9B6E] rounded-full" style={{ width: `${status?.overallProgress ?? 0}%` }} />
           </div>
           {status && (
@@ -114,7 +114,7 @@ export default function Home() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-4 pt-0">
-                    <div className="h-1.5 w-full rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
+                    <div className="h-1.5 w-full rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden" role="progressbar" aria-label={`${m.id} ${m.name} progress`} aria-valuenow={m.progress} aria-valuemin={0} aria-valuemax={100}>
                       <div className={`h-full rounded-full ${m.status === "complete" ? "bg-[#3F9B6E]" : m.status === "in_progress" ? "bg-[#C98A1F]" : "bg-zinc-400"}`} style={{ width: `${m.progress}%` }} />
                     </div>
                     <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2 line-clamp-4">{m.evidence}</p>
@@ -238,7 +238,7 @@ export default function Home() {
                 <CardContent className="p-6 pt-0 space-y-2">
                   <div className="max-h-64 overflow-y-auto space-y-2 pr-1 [scrollbar-width:thin]">
                     {(status.phaseLedger ?? []).map((row) => (
-                      <div key={row.phase} className={`text-xs border-l-2 pl-2 py-0.5 ${row.status.includes("complete") ? "border-[#3F9B6E]" : row.status.includes("in flight") ? "border-[#C9A227]" : "border-zinc-300 dark:border-zinc-700"}`}>
+                      <div key={row.id} className={`text-xs border-l-2 pl-2 py-0.5 ${row.status.includes("complete") ? "border-[#3F9B6E]" : row.status.includes("in flight") ? "border-[#C9A227]" : "border-zinc-300 dark:border-zinc-700"}`}>
                         <div className="flex items-center justify-between gap-2">
                           <span className="font-mono font-semibold">Phase {row.phase}</span>
                           <span className={row.status.includes("complete") ? "text-emerald-700 dark:text-[#3F9B6E]" : row.status.includes("in flight") ? "text-[#C98A1F]" : "text-zinc-500"}>
