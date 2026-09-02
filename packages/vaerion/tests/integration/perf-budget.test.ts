@@ -135,6 +135,10 @@ describe("PERF_BUDGETS — the typed budget contracts of record", () => {
 describe("measureEnginePerf — one deterministic harness over the real engine", () => {
   let report: PerfReport;
 
+  // The three harness tests carry explicit 60s timeouts: bun's default 5s test
+  // timeout held only on the fast calibration host and TIMED OUT on the
+  // sanctioned CI runner (surfaced by name by the Phase 11 diagnostics on run
+  // #6 — the portability law, v1.6 A6, applies to test timeboxes too).
   test("measures all seven operations against the budgets of record and passes", async () => {
     report = await measureEnginePerf({ scratchRoot });
     expect(report.schema).toBe("vaerion.perf.v1");
@@ -149,7 +153,7 @@ describe("measureEnginePerf — one deterministic harness over the real engine",
       expect(m.honesty).toBe("VERIFIED");
       expect(m.passed).toBe(true);
     }
-  });
+  }, 60_000);
 
   test("the metric SHAPE is deterministic across runs (values are honestly host-relative)", async () => {
     const second = await measureEnginePerf({ scratchRoot });
@@ -161,7 +165,7 @@ describe("measureEnginePerf — one deterministic harness over the real engine",
     for (let i = 0; i < second.metrics.length; i++) {
       expect(second.metrics[i]!.measuredMs).toBeGreaterThan(0);
     }
-  });
+  }, 60_000);
 
   test("the report carries its measuring host (v1.6 A6: budget governance knows WHICH host measured)", () => {
     expect(typeof report.host).toBe("string");
@@ -192,7 +196,7 @@ describe("measureEnginePerf — one deterministic harness over the real engine",
     } finally {
       await rm(isolated, { recursive: true, force: true });
     }
-  });
+  }, 60_000);
 });
 
 /* ───────────────────────────  D-R gate wiring pin  ─────────────────────────── */
