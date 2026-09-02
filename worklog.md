@@ -694,3 +694,20 @@ Stage Summary:
 - D-Q is now enforced on BOTH sides of the synchronization: the canonical store by pre-receive hook, the GitHub remote by measured branch protection with a live deletion-refusal probe. The recorded honest limit "GitHub main is currently unprotected" is CLOSED.
 - Two of my own tool's defects were caught by its own verdict and fixed at root (the {enabled} wrapper comparison; the 404 refusal semantics) — the checker is checked.
 - Next: Phase 13 — the CI execution law: a measured GREEN run on the remote, then the staged required check is elevated.
+
+---
+Task ID: ASC-XIX-PHASE-13
+Agent: Auren — Principal Release Commander (THE CI EXECUTION LAW — the production operations campaign, phase 3 of 4)
+Task: ASCENSION XIX Phase 13 (ratified under Constitution v1.6 A6) — the verification pipeline measured on the real remote: a fully-green run as evidence of record, the staged-check elevation applied and measured, the discovery root-caused and recorded.
+
+Work Log:
+- THE FIRST FULLY-GREEN REMOTE RUN (evidence of record): push `97e5778` → run #7 (`33692553230`) — completed SUCCESS; every step green INCLUDING "Upload the measured verification record" (the historically failing step); 43s of gate time. The UPLOADED ARTIFACT downloaded and verified: `.vaerion-verification.json` inside carries ok:true, all 8 gates green, measured counts 475/0/2848/37 — the hidden-file fix proven END-TO-END (pipeline → upload → artifact → record).
+- A HOST DEFECT SURFACED — BY NAME (the Phase 11 diagnostics payoff): run #6 (`546003a`) failed in the suite and the log NAMED the failure: the perf-harness test timed out at bun's default 5000ms on the slower runner (the same unnamed "1 fail" of the historical red tag runs, now identified at last). Fixed at root: explicit 60s timeboxes on the three real-harness tests (the portability law applies to test timeboxes). Also measured in run #6: perf-budget GREEN on the actual runner — the 900ms re-based budget holds where the 400ms one breached.
+- THE STAGED-CHECK ELEVATION, APPLIED AND MEASURED: tools/remote-protect.ts gains --require-checks with guardElevation() — elevation is REFUSED unless the committed record is a measured green run (P6); the PUT body cannot drift other descriptor properties; the report distinguishes staged vs elevated honestly. Elevation applied ("verification (all gates)" required, verified in the measured state).
+- THE MEASURED DISCOVERY (the phase's real engineering result): with the check required, the next push was DECLINED at pre-receive ("protected branch hook declined") — required status checks and the direct-push synchronization path are STRUCTURALLY INCOMPATIBLE (the check for new commits cannot exist before the push that triggers it). D-Q's elevation clause is a PERMISSION CONDITION (a measured green run exists — satisfied and preserved in the guard), not a mandate; the check of record stays STAGED while the direct-push sync law governs the remote. Converting main to a merge-only PR flow to enable full elevation is a human authority decision (P4), recorded in the report of record (docs/security/REMOTE-PROTECTION.md) and the ledger.
+- RUN #8 (`33693201464` @ `5676962`, the phase-close commit): SUCCESS — two consecutive fully-green remote runs measured.
+- +3 tests (the elevation guard: refused on missing/red/unmeasured records, granted on measured green). D-T ledger row 13 appended (operational).
+
+Stage Summary:
+- The remote pipeline is now a MEASURED, TRUSTED verification surface: green runs are reproducible, the record artifact chain is proven end-to-end, and failures name themselves. The honest boundary is drawn: full check-elevation requires a PR-based synchronization flow — a Founder decision (P4), with all the evidence staged for it.
+- Next: Phase 14 — the program close: version lockstep 0.1.11-rc1, release tag, artifact trust chain, canonical + GitHub synchronization, final zero-based reality recovery.
