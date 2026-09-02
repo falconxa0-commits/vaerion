@@ -256,9 +256,10 @@ describe("explain / doctor / dev gateway surfaces", () => {
     const gateway = devPayload.gateway as Record<string, unknown>;
     expect((gateway.matrix as Array<Record<string, unknown>>).length).toBe(4);
     expect(String(devPayload.next_milestone)).toContain("MS-6");
-    // The position of record moves with reality (v1.5 A5): the GA campaign is
-    // complete and GA is rehearsed, pending the Founder's GO.
-    expect(String(devPayload.next_milestone)).toContain("GA CAMPAIGN");
+    // The position of record moves with reality (v1.6 A6): the production
+    // operations campaign is the ratified program; GA stays pending the
+    // Founder's GO.
+    expect(String(devPayload.next_milestone)).toContain("ASCENSION XIX");
     expect(String(devPayload.next_milestone)).toContain("PENDING FOUNDER GO");
     expect(String(devPayload.next_milestone)).not.toContain("toward release v0.1.7-rc2");
   });
@@ -442,10 +443,10 @@ describe("PHASE Ω design language (rich profile, TTY-gated)", () => {
       expect(jr.code).toBe(ExitCode.ok);
       const devPayload = jsonLines.map((l) => JSON.parse(l) as Record<string, unknown>).find((p) => typeof p.next_milestone === "string")!;
       const milestone = String(devPayload.next_milestone);
-      expect(milestone).toContain("ASCENSION XVIII");
-      expect(milestone).toContain("GA CAMPAIGN");
-      expect(milestone).toContain("Phases 7–10");
-      expect(milestone).toContain("performance budget law");
+      expect(milestone).toContain("ASCENSION XIX");
+      expect(milestone).toContain("PRODUCTION OPERATIONS CAMPAIGN");
+      expect(milestone).toContain("Phases 11–14");
+      expect(milestone).toContain("MS-6 complete");
     });
   });
 

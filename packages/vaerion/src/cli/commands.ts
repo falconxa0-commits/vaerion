@@ -1305,8 +1305,8 @@ export async function cmdDev(ctx: CommandContext): Promise<number> {
     },
     workspace: { root: ws.root, runs: runs.length },
     spec: "spec/ (single source of truth)",
-    constitution: "docs/constitution/VAERION_CONSTITUTION_v1.5.md",
-    next_milestone: "ASCENSION XVIII — THE GA CAMPAIGN (Phases 7–10) COMPLETE under Constitution v1.5 (A5): the performance budget law + the accessibility law are permanent gates, the release train is rehearsed end-to-end, the burndown + GO/NO-GO dossier are archived · MS-6 complete · GA is rehearsed and PENDING FOUNDER GO (P4) — the Founder gates F-2…F-6 remain",
+    constitution: "docs/constitution/VAERION_CONSTITUTION_v1.6.md",
+    next_milestone: "ASCENSION XIX — THE PRODUCTION OPERATIONS CAMPAIGN (Phases 11–14) ratified under Constitution v1.6 (A6): the CI truth law (the workflow uploads its measured record, red gates NAME their failure, perf budgets hold on every sanctioned host, the roadmap report is generated from one measured source), the remote protection law (D-Q on GitHub: no force-push, no deletion, linear history), the CI execution law (a measured green remote run, then the elevated required check), and the program close (lockstep 0.1.11-rc1 + synchronization) · MS-6 complete · GA remains rehearsed and PENDING FOUNDER GO (P4) — the Founder gates F-2…F-6 remain",
   });
   return ExitCode.ok;
 }

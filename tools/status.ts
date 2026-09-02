@@ -71,7 +71,7 @@ const milestones = [
 // NOT unique keys. The browser audit (Phase 8) caught the duplicate-key defect.
 const phaseLedger: Array<{ id: string; phase: string; status: string; evidence: string }> = [];
 try {
-  const constitution = readFileSync(join(ROOT, "docs", "constitution", "VAERION_CONSTITUTION_v1.5.md"), "utf8");
+  const constitution = readFileSync(join(ROOT, "docs", "constitution", "VAERION_CONSTITUTION_v1.6.md"), "utf8");
   let row = 0;
   for (const m of constitution.matchAll(/^\| ([^|]+) \| (ASCENSION XVIII|PHASE Ω) \| (✅ complete|▶ in flight|❌ NOT complete) \| (.+?) \|$/gm)) {
     phaseLedger.push({ id: `dt-${row++}`, phase: m[1]!.trim(), status: m[3]!.trim(), evidence: m[4]!.trim() });
@@ -127,11 +127,14 @@ const status = {
     "Journal per-record fsync trades durability for throughput; batching decision needed before agent-scale testing.",
     "Provider price table is build-time data (2026-08); provider drift is a data update with a reviewed contract change.",
     "ModelPlanner success path needs a recorded real-provider cassette for end-to-end golden coverage (environment has no provider network access).",
+    "zstd byte-determinism holds for the pinned level (19) on the current toolchain; a toolchain bump could change bytes — the format version in the magic is the escape hatch (never a silent rebuild).",
+    "Per-process breaker state is deliberately not journaled (the failures are); multi-process sharing is a daemon concern needing an ADR.",
+    "Coverage floors are total-based; per-module ratchets are mechanical follow-up, and totals only move up.",
   ],
   nextWork: [
-    "THE GA CAMPAIGN (Phases 7–10) is COMPLETE under Constitution v1.5 (A5): MS-6 reconciled complete, the burndown + GO/NO-GO dossier archived, GA rehearsed and PENDING FOUNDER GO — the Founder gates (F-2 legal name, F-3 key ceremony, F-4 substrate ratification, F-5 publish, F-6 real-provider cassettes) are the remaining path to full GA.",
-    "MS-6 remaining exit criteria: native single-binary installers (host-gated: brew/winget/dmg/rpm authored in Phase 1, awaiting their platforms); then the daemon packages route group (wire parity, spec/openapi regen).",
-    "Program close (Phase 10): version lockstep, release tag, artifact trust chain, canonical + GitHub synchronization, and the GO/NO-GO dossier.",
+    "ASCENSION XIX — THE PRODUCTION OPERATIONS CAMPAIGN (Phases 11–14) is ratified under Constitution v1.6 (A6): the CI truth law (the workflow uploads its measured record, red gates NAME their failure, perf budgets hold on every sanctioned host, the roadmap report is GENERATED from this measured status source), the remote protection law (D-Q branch protection + adversarial probes on GitHub main), the CI execution law (a measured green remote run, then the elevated required check), and the program close (version lockstep 0.1.11-rc1 + synchronization).",
+    "GA remains rehearsed and PENDING FOUNDER GO (P4); the Founder gates (F-2 legal name, F-3 key ceremony, F-4 substrate ratification, F-5 publish, F-6 real-provider cassettes) are the remaining path to full GA.",
+    "MS-6 leftovers: native single-binary installers (host-gated: brew/winget/dmg/rpm authored in Phase 1, awaiting their platforms); the daemon packages route group (wire parity, spec/openapi regen).",
     "Release train steps (publish, announce, key ceremony) — Founder-gated; artifacts are reproducible via tools/dist-pack.ts at the release tag.",
     "Coverage: per-module ratchets on top of the total-based floors (mechanical follow-up).",
   ],

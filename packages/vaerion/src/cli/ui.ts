@@ -1406,7 +1406,7 @@ function aiReport(a: Ansi, obj: Obj, width: number): string[] {
     ], width),
     width,
     accent: "gold",
-    subtitle: "the ONE research pipeline → the gateway single gate (constitution v1.5 A3)",
+    subtitle: "the ONE research pipeline → the gateway single gate (constitution v1.6 A3)",
   }));
   out.push("");
   out.push(...panel(a, {
@@ -1467,7 +1467,7 @@ function centerReport(a: Ansi, obj: Obj, width: number): string[] {
     ], width),
     width,
     accent: obj.ok === true ? "success" : "warn",
-    subtitle: "constitution v1.5 A3 · one measured core · read-only (D-S)",
+    subtitle: "constitution v1.6 A3 · one measured core · read-only (D-S)",
   }));
   const runs = Array.isArray(ops.runs) ? (ops.runs as CenterRunShape[]) : [];
   if (runs.length > 0) {
@@ -1538,7 +1538,7 @@ function accountReport(a: Ansi, obj: Obj, width: number): string[] {
     ], width),
     width,
     accent: "gold",
-    subtitle: "constitution v1.5 A3 · P5 attribution · D-D actor+cause · local identity, never a cloud account",
+    subtitle: "constitution v1.6 A3 · P5 attribution · D-D actor+cause · local identity, never a cloud account",
   }));
   const actors = Array.isArray(obj.observed_actors) ? (obj.observed_actors as ObservedActorShape[]) : [];
   out.push("");

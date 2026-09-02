@@ -133,13 +133,13 @@ Global flags:
 
 Exit codes: 0 ok · 1 internal · 2 usage · 3 broker-denied · 4 provider-down · 5 partial-with-repair-hint
 
-Learn more: docs/constitution/VAERION_CONSTITUTION_v1.5.md · spec/ (contracts)
+Learn more: docs/constitution/VAERION_CONSTITUTION_v1.6.md · spec/ (contracts)
 `;
 
 const COMMAND_HELP: Record<string, string> = {
   init: `vae init [--template minimal|demo|agent] [--name NAME] [--dry-run]
   Scaffold vaerion.yaml (strict schema 0.1) and the .vaerion/ workspace from
-  the deterministic template registry (constitution v1.5 A3, Phase 5):
+  the deterministic template registry (constitution v1.6 A3, Phase 5):
 
     minimal   the default scaffold: declared project docs, policy examples
               in comments — bare 'vae init' is exactly this template
@@ -349,7 +349,7 @@ vae ci simulate --event push|pull_request|workflow_dispatch|tag [--ref NAME]
   them. The same directory yields byte-identical --json output.`,
   account: `vae account
 
-  The identity & attribution surface (constitution v1.5 A3, Phase 3;
+  The identity & attribution surface (constitution v1.6 A3, Phase 3;
   P5/D-D/D-P). Read-only. It MEASURES who acts here:
 
     actor law          the canonical local actor and the broker principal
@@ -369,7 +369,7 @@ vae ci simulate --event push|pull_request|workflow_dispatch|tag [--ref NAME]
                 [--intent TEXT] [--dry-run]
 vae ai models
 
-  ask (constitution v1.5 A3, Phase 4; P8/D-J/D-O) — the grounded question:
+  ask (constitution v1.6 A3, Phase 4; P8/D-J/D-O) — the grounded question:
 
     1. capability: a vaerion.yaml research.capabilities entry (--capability)
        or an explicit --sources declaration — never ambient, never network
@@ -391,7 +391,7 @@ vae ai models
   models reports the gateway capability matrix (secret NAMES only). Read-only.`,
   center: `vae center
 
-  The operator cockpit (constitution v1.5 A3, Phase 6; P7/D-S). Read-only.
+  The operator cockpit (constitution v1.6 A3, Phase 6; P7/D-S). Read-only.
   ONE measured core folds this workspace's artifacts into an honest
   operations snapshot:
 
