@@ -10,7 +10,7 @@
 class Vaerion < Formula
   desc "AI-native development engine — deterministic, auditable, local-first"
   homepage "https://vaerion.dev"
-  url "https://vaerion.dev/dist/vaerion-0.1.7-rc2-source.tar.gz" # release-time: filled from SHA256SUMS
+  url "https://vaerion.dev/dist/vaerion-0.1.8-rc1-source.tar.gz" # release-time: filled from SHA256SUMS
   sha256 "0000000000000000000000000000000000000000000000000000000000000000" # release-time
   license "Apache-2.0"
 

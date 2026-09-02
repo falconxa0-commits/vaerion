@@ -1,6 +1,7 @@
 /**
- * Vaerion CLI — the Daily Seven commands (constitution D-M):
+ * Vaerion CLI — the command surface (constitution v1.1, D-M′):
  *   init · run · resume · explain · journal · doctor · dev
+ *   + additive: serve · package · provenance · repo · ci · release
  *
  * Five Guarantees (D-N) enforced here:
  *   1. `--help` never reaches these functions (vae.ts handles it first).
@@ -43,6 +44,8 @@ import { provenanceOf } from "../research/provenance.ts";
 import { buildEvidenceRecord, type EvidenceRecord } from "../research/evidence.ts";
 import { makeCitations } from "../research/citation.ts";
 import { LocalIndex } from "../research/local-index.ts";
+import { measureRepository, validateWorkflows, simulateWorkflow, evaluateReleaseReadiness, type SimEvent, type WorkflowDoc } from "../repo/index.ts";
+import { redactString } from "../kernel/redact.ts";
 import { prepareContext } from "../research/context.ts";
 import { GatewayService, GatewayGatePrompt, type BudgetGuard } from "../gateway/service.ts";
 import { fetchTransport } from "../gateway/transport.ts";
@@ -1398,11 +1401,11 @@ export async function cmdDev(ctx: CommandContext): Promise<number> {
     layers: {
       L0: ["kernel(errors,ids,clock,canonical,redact,hash)", "config"],
       L1: ["spine", "journal", "store(blob-cas)", "receipts", "broker/contracts", "gateway"],
-      L2: ["runtime(run)", "research", "agents", "workflow", "evals", "extensions", "package"],
+      L2: ["runtime(run)", "research", "agents", "workflow", "evals", "extensions", "package", "repo"],
       L4: ["cli"],
     },
     daily_seven: ["init", "run", "resume", "explain", "journal", "doctor", "dev"],
-    additive_commands: ["serve (MS-5 daemon, ADR-0010)", "package (MS-6 bundles, ADR-0016)", "provenance (Ω — artifact evidence)"],
+    additive_commands: ["serve (MS-5 daemon, ADR-0010)", "package (MS-6 bundles, ADR-0016)", "provenance (Ω — artifact evidence)", "repo (XVIII-8 — git trust, D-P/D-Q)", "ci (XVIII-8 — CI understanding, D-R)", "release (XVIII-8 — measured readiness, D-S/D-T)"],
     gateway: {
       single_gate: "gateway/service.ts — decide(model.invoke) → journal → act",
       egress: "gateway/transport.ts — the ONE sanctioned egress site",
@@ -1410,8 +1413,8 @@ export async function cmdDev(ctx: CommandContext): Promise<number> {
     },
     workspace: { root: ws.root, runs: runs.length },
     spec: "spec/ (single source of truth)",
-    constitution: "docs/constitution/VAERION_CONSTITUTION_v1.0.md",
-    next_milestone: "ASCENSION XVIII — Productization Era: distribution & installers (npm/PyPI/Homebrew/winget/dmg/deb/AppImage/universal), empty-laptop experience, ecosystem · PHASE Ω complete at v0.1.7-rc2 · MS-6 close-out (performance, accessibility) + release train remain Founder-gated",
+    constitution: "docs/constitution/VAERION_CONSTITUTION_v1.1.md",
+    next_milestone: "ASCENSION XVIII — Productization Era: Phase 8 (git/CI/constitution synchronization) in flight at v0.1.8-rc1 · Phase 1 (distribution) complete at v0.1.7-rc2 · phases 2–7 have no repository evidence (recorded NOT complete, D-T) · MS-6 close-out (native installers, performance, accessibility) + release train remain Founder-gated",
   });
   return ExitCode.ok;
 }
@@ -1772,4 +1775,225 @@ export async function cmdPackage(ctx: CommandContext): Promise<number> {
     r(ctx).result(payload);
   }
   return report.ok ? ExitCode.ok : ExitCode.partial;
+}
+
+/* ─────────────────────  repo / ci / release (XVIII-8)  ───────────────────── */
+
+/** `vae repo` — repository intelligence: Git measured as a trust system
+ *  (Constitution v1.1, D-P/D-Q/D-S). Read-only: every git call is
+ *  plumbing with --no-optional-locks; measurement can never mutate the
+ *  repository it measures. */
+export async function cmdRepo(ctx: CommandContext): Promise<number> {
+  const sub = ctx.flags._positional1;
+  if (sub !== "" && sub !== "verify") {
+    throw new VaerionError("E1600", "usage: `vae repo` for the full measurement, or `vae repo verify` for the trust findings");
+  }
+  const intel = await measureRepository(ctx.cwd);
+  const trustOnly = sub === "verify";
+  if (trustOnly) {
+    const blockerFindings = intel.findings.filter((f) => f.severity === "blocker");
+    const payload: Record<string, unknown> = {
+      command: "repo",
+      kind: "verify",
+      root: intel.root,
+      branch: intel.branch,
+      head: intel.head,
+      ok: blockerFindings.length === 0,
+      findings: intel.findings,
+      identity: {
+        ratified: "Auren <auren@vaerion.dev>",
+        head_author: intel.headAuthor === null ? null : `${intel.headAuthor.name} <${intel.headAuthor.email}>`,
+        audited_commits: intel.auditedCommits,
+        violations: intel.identityViolations.map((v) => ({ sha: v.sha, author: `${v.name} <${v.email}>`, subject: redactString(v.subject) })),
+      },
+      canonical: intel.canonical,
+      tags_at_head: intel.tagsAtHead,
+    };
+    r(ctx).result(payload);
+    return blockerFindings.length === 0 ? ExitCode.ok : ExitCode.partial;
+  }
+  const payload: Record<string, unknown> = {
+    command: "repo",
+    kind: "summary",
+    root: intel.root,
+    branch: intel.branch,
+    detached: intel.detached,
+    head: intel.head,
+    head_author: intel.headAuthor === null ? null : `${intel.headAuthor.name} <${intel.headAuthor.email}>`,
+    head_subject: intel.headSubject === null ? null : redactString(intel.headSubject),
+    state: {
+      staged: intel.staged,
+      unstaged: intel.unstaged,
+      untracked: intel.untracked,
+      conflicts: intel.conflicts,
+      staged_count: intel.staged.length,
+      unstaged_count: intel.unstaged.length,
+      untracked_count: intel.untracked.length,
+      conflict_count: intel.conflicts.length,
+      merge_in_progress: intel.mergeInProgress,
+      rebase_in_progress: intel.rebaseInProgress,
+      cherry_pick_in_progress: intel.cherryPickInProgress,
+      bisect_in_progress: intel.bisectInProgress,
+    },
+    worktrees: intel.worktrees.map((w) => ({ path: w.path, branch: w.branch, bare: w.bare, detached: w.detached })),
+    submodules: intel.submodules,
+    tags_at_head: intel.tagsAtHead,
+    identity: {
+      ratified: "Auren <auren@vaerion.dev>",
+      audited_commits: intel.auditedCommits,
+      violations: intel.identityViolations.length,
+    },
+    remotes: intel.remotes,
+    canonical: intel.canonical,
+    findings: intel.findings,
+    read_only: "every git call ran with --no-optional-locks; measurement cannot mutate this repository",
+  };
+  r(ctx).result(payload);
+  const hasBlocker = intel.findings.some((f) => f.severity === "blocker");
+  return hasBlocker ? ExitCode.partial : ExitCode.ok;
+}
+
+/** `vae ci` — CI understanding (D-R): validate the workflows structurally
+ *  against the repository laws, or SIMULATE the pipeline deterministically.
+ *  A simulation is a projection of trigger/condition structure — never an
+ *  execution, and it says so (D-S). */
+export async function cmdCi(ctx: CommandContext): Promise<number> {
+  const sub = ctx.flags._positional1;
+  if (sub !== "validate" && sub !== "simulate") {
+    throw new VaerionError("E1600", "usage: `vae ci validate` or `vae ci simulate --event push|pull_request|workflow_dispatch|tag [--ref NAME]`");
+  }
+  if (sub === "validate") {
+    const { files, docs, findings } = await validateWorkflows(ctx.cwd);
+    const blocking = findings.filter((f) => f.severity === "blocker");
+    r(ctx).result({
+      command: "ci",
+      kind: "validate",
+      root: ctx.cwd,
+      files: files.map((f) => f.split("/").slice(-1)[0]),
+      workflows_found: files.length,
+      findings,
+      ok: blocking.length === 0,
+      authority: "tools/verify.ts is the single verification authority (D-R); workflows must run it, never re-implement it",
+    });
+    return blocking.length === 0 ? ExitCode.ok : ExitCode.partial;
+  }
+
+  const eventArg = typeof ctx.flags.event === "string" ? (ctx.flags.event as string) : "";
+  const EVENTS: SimEvent[] = ["push", "pull_request", "workflow_dispatch", "tag"];
+  if (eventArg === "" || !EVENTS.includes(eventArg as SimEvent)) {
+    throw new VaerionError("E1600", "missing or unknown --event (Fix: `vae ci simulate --event push|pull_request|workflow_dispatch|tag [--ref NAME]`)");
+  }
+  const event = eventArg as SimEvent;
+  const { root } = await measureRepository(ctx.cwd);
+  const refFlag = typeof ctx.flags.ref === "string" && (ctx.flags.ref as string).length > 0 ? (ctx.flags.ref as string) : null;
+  const intel = await measureRepository(root);
+  let tagRef: string | null = null;
+  let branch: string | null = intel.branch === "(detached)" ? null : intel.branch;
+  if (event === "tag") {
+    tagRef = refFlag ?? (intel.releaseTagsAtHead[0] ?? null);
+    if (tagRef === null) {
+      throw new VaerionError("E1600", "no v* tag at HEAD and no --ref given (Fix: `vae ci simulate --event tag --ref v1.2.3`)");
+    }
+    branch = null;
+  } else if (event === "push" && refFlag !== null) {
+    // A push ref can be a branch or a tag ref; measure both honestly.
+    if (/^v\d/.test(refFlag)) {
+      tagRef = refFlag;
+      branch = null;
+    } else {
+      branch = refFlag;
+    }
+  }
+  const { docs, findings } = await validateWorkflows(root);
+  const projections = docs.map((doc: WorkflowDoc) => simulateWorkflow(doc, event, { tagRef, branch }));
+  const runnableJobs = projections.flatMap((p) => p.jobs.filter((j) => j.wouldRun).map((j) => `${p.file.split("/").slice(-1)[0]}:${j.job}`));
+  r(ctx).result({
+    command: "ci",
+    kind: "simulate",
+    root,
+    event,
+    ref: event === "tag" ? tagRef : (branch ?? tagRef),
+    tag_ref: tagRef,
+    branch,
+    workflows_found: docs.length,
+    validation_findings: findings,
+    projections,
+    runnable_jobs: runnableJobs,
+    nothing_runs: runnableJobs.length === 0,
+    scope: "structural projection of trigger and condition logic — NO pipeline was executed, remote outcomes are NEVER EXECUTED (D-S)",
+  });
+  return ExitCode.ok;
+}
+
+/** `vae release readiness` — the constitutional release evaluator (D-S/D-T):
+ *  can this repository ship? Which check blocks? What evidence is missing?
+ *  Measured only, fail-closed, every check honestly labeled. */
+export async function cmdRelease(ctx: CommandContext): Promise<number> {
+  const sub = ctx.flags._positional1;
+  if (sub !== "readiness") {
+    throw new VaerionError("E1600", "usage: `vae release readiness [--live-gates]`");
+  }
+  const liveGates = ctx.flags["live-gates"] === true;
+  const report = await evaluateReleaseReadiness(ctx.cwd, { liveGates });
+
+  const base: Record<string, unknown> = {
+    command: "release",
+    kind: "readiness",
+    root: report.root,
+    ready: report.ready,
+    verdict: report.verdict,
+    score: `${report.passed}/${report.total}`,
+    passed: report.passed,
+    total: report.total,
+    live_gates: liveGates,
+    checks: report.checks,
+    blockers: report.blockers,
+    warnings: report.warnings,
+    version_surfaces: report.versionSurfaces,
+    honesty: "every check is a measurement with an honesty label (D-S); fail-closed: unmeasurable ⇒ blocked (P6)",
+  };
+
+  if (ctx.dryRun) {
+    r(ctx).result({ ...base, dry_run: true, side_effects: 0 });
+    return report.ready ? ExitCode.ok : ExitCode.partial;
+  }
+
+  // Journal the evaluation when the repository is a Vaerion workspace
+  // (non-run record, D-B; same pattern as `package verify`). Without a
+  // workspace config the evaluation stays pure and says so.
+  const ws = workspaceAt(ctx.cwd);
+  const loaded = await loadOrAdhocConfig(ws);
+  if (loaded.adhoc) {
+    r(ctx).result({ ...base, journaled: false, journal_note: "no vaerion.yaml at the repository root — evaluation measured but not journaled" });
+    return report.ready ? ExitCode.ok : ExitCode.partial;
+  }
+  const clock = new SystemClock();
+  const idGen = new SystemIdGen();
+  const runId = crn("run", idGen.next());
+  const traceId = `t_${idGen.next().slice(-10).toLowerCase()}`;
+  const graph = graphFromConfig(loaded.config, `graph_${loaded.fingerprint.slice(0, 12)}`);
+  const harness = await RunHarness.create({ workspaceDir: ws.root, runId, traceId, configFingerprint: loaded.fingerprint, clock, idGen, permissionGraph: graph });
+  try {
+    await harness.emit(
+      "release.readiness.evaluated",
+      {
+        ready: report.ready,
+        verdict: report.verdict,
+        passed: report.passed,
+        total: report.total,
+        blockers: report.blockers.map((b) => ({ check: b.check, code: b.code ?? "E2308", detail: b.detail })),
+        root: report.root,
+      },
+      { kind: "human", id: "local-user" },
+      { kind: "origin", ref: null },
+    );
+    const closed = await harness.close(`release readiness: ${report.verdict} (${report.passed}/${report.total} checks passed, ${report.blockers.length} blocker(s), ${report.warnings.length} warning(s))`);
+    r(ctx).result({ ...base, journaled: true, run_id: runId, receipt: closed?.receipt ?? null });
+  } catch (err) {
+    await harness.close(`release readiness failed: ${(err as Error).message.slice(0, 120)}`).catch(() => undefined);
+    throw err;
+  } finally {
+    await harness.release().catch(() => undefined);
+  }
+  return report.ready ? ExitCode.ok : ExitCode.partial;
 }

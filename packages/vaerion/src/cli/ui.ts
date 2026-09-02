@@ -421,6 +421,9 @@ export function renderRichResult(a: Ansi, obj: Obj, width: number): string[] {
     case "journal": return journalReport(a, obj, width);
     case "package": return packageReport(a, obj, width);
     case "provenance": return provenanceReport(a, obj, width);
+    case "repo": return repoReport(a, obj, width);
+    case "ci": return ciReport(a, obj, width);
+    case "release": return releaseReport(a, obj, width);
     default: return genericRich(a, obj, width);
   }
 }
@@ -1060,4 +1063,217 @@ export class Spinner {
     this.clear();
     this.io.out(`${this.a.error(SYM.fail)} ${this.label} ${this.a.dim(`(${ms} ms${detail !== undefined ? " · " + detail : ""})`)}`);
   }
+}
+
+/* ───────────────────  repo / ci / release (XVIII-8)  ─────────────────── */
+
+interface RepoFindingShape { code?: string; severity: "blocker" | "warn" | "info"; detail: string; fix?: string }
+
+function findingsBlock(a: Ansi, findings: RepoFindingShape[], width: number): string[] {
+  if (findings.length === 0) return [];
+  const bySeverity = (s: RepoFindingShape["severity"]): string[] =>
+    findings.filter((f) => f.severity === s).map((f) => {
+      const head = `${a.error(f.code ?? "finding")} ${redactString(f.detail)}`;
+      return f.fix !== undefined ? `${head}\n${a.gold("Fix:")} ${redactString(f.fix)}` : head;
+    });
+  const out: string[] = [];
+  const blockers = bySeverity("blocker");
+  const warns = bySeverity("warn");
+  if (blockers.length > 0) out.push(...panel(a, { title: `Blockers (${blockers.length})`, lines: blockers, width, accent: "error" }));
+  if (warns.length > 0) out.push(...panel(a, { title: `Warnings (${warns.length})`, lines: warns, width, accent: "warn" }));
+  return out;
+}
+
+function repoReport(a: Ansi, obj: Obj, width: number): string[] {
+  const out: string[] = [];
+  const kind = str(obj, "kind");
+  const branch = str(obj, "branch") ?? "?";
+  const head = str(obj, "head") ?? "(no commits)";
+
+  if (kind === "verify") {
+    const ok = obj.ok === true;
+    const identity = sub(obj, "identity");
+    const lines = kvBlock(a, [
+      ["root", str(obj, "root") ?? "?"],
+      ["branch", branch],
+      ["head", hash12(head)],
+      ["identity", `ratified: ${str(identity ?? {}, "ratified") ?? "Auren <auren@vaerion.dev>"}`],
+    ], width);
+    out.push(...panel(a, {
+      title: ok ? "Repository trust — VERIFIED" : "Repository trust — findings",
+      lines,
+      width,
+      accent: ok ? "success" : "error",
+      subtitle: "measured never assumed · history immutable by law (D-P)",
+    }));
+    const findings = Array.isArray(obj.findings) ? (obj.findings as RepoFindingShape[]) : [];
+    out.push("", ...findingsBlock(a, findings, width));
+    if (findings.length === 0) {
+      out.push("");
+      out.push(badge(a, "ok", "no trust findings — identity, conflicts, and canonical protection all measured clean"));
+    }
+    return out;
+  }
+
+  const state = sub(obj, "state") ?? {};
+  const num2 = (o: Obj, k: string): string => String(o[k] ?? 0);
+  const lines = kvBlock(a, [
+    ["root", str(obj, "root") ?? "?"],
+    ["branch", `${branch}${obj.detached === true ? " (detached)" : ""}`],
+    ["head", head === "(no commits)" ? head : hash12(head)],
+    ["author", str(obj, "head_author") ?? "—"],
+    ["tags", (Array.isArray(obj.tags_at_head) ? (obj.tags_at_head as string[]) : []).join(", ") || "none at HEAD"],
+  ], width);
+  out.push(...panel(a, {
+    title: "Repository intelligence",
+    lines,
+    width,
+    accent: (Array.isArray(obj.findings) ? (obj.findings as RepoFindingShape[]) : []).some((f) => f.severity === "blocker") ? "warn" : "info",
+    subtitle: "read-only measurement — --no-optional-locks, fixed argv",
+  }));
+  out.push("");
+  out.push(...panel(a, {
+    title: "Working tree",
+    lines: kvBlock(a, [
+      ["staged", num2(state, "staged_count")],
+      ["unstaged", num2(state, "unstaged_count")],
+      ["untracked", num2(state, "untracked_count")],
+      ["conflicts", num2(state, "conflict_count")],
+      ["in-progress", `${state.merge_in_progress === true ? "MERGE " : ""}${state.rebase_in_progress === true ? "REBASE " : ""}${state.cherry_pick_in_progress === true ? "CHERRY-PICK " : ""}${state.bisect_in_progress === true ? "BISECT" : ""}`.trim() || "none"],
+    ], width),
+    width,
+  }));
+  const canonical = sub(obj, "canonical");
+  if (canonical !== undefined) {
+    out.push("");
+    out.push(...panel(a, {
+      title: "Canonical remote (D-Q)",
+      lines: [redactString(str(canonical, "detail") ?? "")],
+      width,
+      accent: canonical.reachable === true ? "info" : "warn",
+    }));
+  }
+  const findings = Array.isArray(obj.findings) ? (obj.findings as RepoFindingShape[]) : [];
+  out.push("", ...findingsBlock(a, findings, width));
+  if (findings.length === 0) {
+    out.push("");
+    out.push(`${badge(a, "ok", "measured clean")}  ${a.dim(`identity audited over ${String(num(obj, "audited_commits") ?? (sub(obj, "identity") ? String((sub(obj, "identity") as Obj)["audited_commits"] ?? "?") : "?"))} commits · exit 0`)}`);
+  }
+  return out;
+}
+
+interface CiFindingShape { file: string; code: string; severity: "blocker" | "warn"; detail: string; fix?: string }
+
+function ciReport(a: Ansi, obj: Obj, width: number): string[] {
+  const out: string[] = [];
+  const kind = str(obj, "kind");
+  const files = Array.isArray(obj.files) ? (obj.files as string[]) : [];
+
+  if (kind === "validate") {
+    const ok = obj.ok === true;
+    const findings = Array.isArray(obj.findings) ? (obj.findings as CiFindingShape[]) : [];
+    out.push(...panel(a, {
+      title: ok ? "CI workflows valid" : "CI workflows — findings",
+      lines: kvBlock(a, [
+        ["workflows", files.join(", ") || "none discovered"],
+        ["findings", String(findings.length)],
+        ["authority", "tools/verify.ts (D-R)"],
+      ], width),
+      width,
+      accent: ok ? "success" : "error",
+      subtitle: "CI is the remote projection of the single verification authority",
+    }));
+    if (findings.length > 0) {
+      const rows = findings.map((f) => [f.severity === "blocker" ? SYM.fail : SYM.warn, f.file.split("/").slice(-1)[0] ?? "", f.code, redactString(f.detail)]);
+      out.push("");
+      out.push(...tableBlock(a, { headers: ["", "file", "code", "detail"], rows, width, maxColumnWidth: 52, cellPaint: (r, c, cell) => (c === 0 ? (findings[r]?.severity === "blocker" ? a.error(cell) : a.warn(cell)) : c === 2 ? a.error(cell) : c === 3 ? a.dim(cell) : cell) }));
+      for (const f of findings.filter((x) => x.fix !== undefined)) {
+        out.push("");
+        out.push(...panel(a, { title: `${f.file.split("/").slice(-1)[0]} · ${f.code}`, lines: [redactString(f.detail), `${a.gold("Fix:")} ${redactString(f.fix!)}`], width, accent: "error" }));
+      }
+    }
+    return out;
+  }
+
+  // simulate
+  const projections = Array.isArray(obj.projections) ? (obj.projections as Obj[]) : [];
+  const runnable = Array.isArray(obj.runnable_jobs) ? (obj.runnable_jobs as string[]) : [];
+  out.push(...panel(a, {
+    title: "Pipeline simulation — structural projection",
+    lines: kvBlock(a, [
+      ["event", `${str(obj, "event") ?? "?"}${obj.tag_ref ? ` (tag ${str(obj, "tag_ref")})` : obj.branch ? ` (branch ${str(obj, "branch")})` : ""}`],
+      ["workflows", files.length === 0 ? (projections.length === 0 ? "none discovered" : String(projections.length)) : files.join(", ")],
+      ["would run", runnable.length === 0 ? "no jobs" : runnable.join(", ")],
+      ["scope", "projection of trigger + condition logic — NO pipeline executed (D-S)"],
+    ], width),
+    width,
+    accent: runnable.length > 0 ? "success" : "warn",
+  }));
+  for (const p of projections) {
+    const jobs = Array.isArray(p.jobs) ? (p.jobs as Obj[]) : [];
+    const lines: string[] = [];
+    for (const j of jobs) {
+      const mark = j.wouldRun === true ? a.success(SYM.ok) : a.dim("·");
+      lines.push(`${mark} ${String(j.job)} — ${a.dim(redactString(String(j.reason)))}`);
+    }
+    out.push("");
+    out.push(...panel(a, {
+      title: `${String(p.file).split("/").slice(-1)[0]} — ${p.triggered === true ? "triggered" : "not triggered"}`,
+      lines: [a.dim(redactString(String(p.reason))), ...lines],
+      width,
+      accent: p.triggered === true ? "info" : undefined,
+    }));
+  }
+  const validation = Array.isArray(obj.validation_findings) ? (obj.validation_findings as CiFindingShape[]) : [];
+  out.push("", ...findingsBlock(a, validation.map((f) => ({ code: f.code, severity: f.severity, detail: `${f.file.split("/").slice(-1)[0]}: ${f.detail}`, fix: f.fix })), width));
+  return out;
+}
+
+function releaseReport(a: Ansi, obj: Obj, width: number): string[] {
+  if (obj.dry_run === true) return dryRunPanel(a, obj, width);
+  const out: string[] = [];
+  const checks = Array.isArray(obj.checks) ? (obj.checks as Array<Obj>) : [];
+  const ready = obj.ready === true;
+  const header = kvBlock(a, [
+    ["verdict", ready ? "READY" : "BLOCKED"],
+    ["score", str(obj, "score") ?? `${num(obj, "passed") ?? 0}/${num(obj, "total") ?? 0}`],
+    ["gates", obj.live_gates === true ? "measured live via tools/verify.ts" : "measured from the on-disk verification record (--live-gates re-measures)"],
+  ], width);
+  out.push(...panel(a, {
+    title: ready ? "Release readiness — READY" : "Release readiness — BLOCKED",
+    lines: header,
+    width,
+    accent: ready ? "success" : "error",
+    subtitle: "measured only, never estimated (D-S) · fail-closed (P6)",
+  }));
+  out.push("");
+  const rows = checks.map((c) => [
+    c.ok === true ? SYM.ok : String(c.severity) === "warn" ? SYM.warn : SYM.fail,
+    String(c.check ?? ""),
+    String(c.honesty ?? ""),
+    redactString(String(c.detail ?? "")),
+  ]);
+  out.push(...tableBlock(a, {
+    headers: ["", "check", "honesty", "detail"],
+    rows,
+    width,
+    maxColumnWidth: 56,
+    cellPaint: (r, c, cell) => (c === 0 ? (checks[r]?.ok === true ? a.success(cell) : a.error(cell)) : c === 2 ? a.dim(cell) : c === 3 ? a.dim(cell) : cell),
+  }));
+  for (const b of Array.isArray(obj.blockers) ? (obj.blockers as Array<Obj>) : []) {
+    out.push("");
+    out.push(...panel(a, {
+      title: `${String(b.check)} · ${String(b.code ?? "E2308")}`,
+      lines: [redactString(String(b.detail ?? ""))],
+      width,
+      accent: "error",
+    }));
+  }
+  const receipt = receiptPanel(a, sub(obj, "receipt") as ReceiptShape | undefined, width);
+  if (receipt !== null) out.push("", ...receipt);
+  if (obj.journaled === false) {
+    out.push("");
+    out.push(a.dim(redactString(String(obj.journal_note ?? "not journaled"))));
+  }
+  return out;
 }

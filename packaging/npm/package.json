@@ -1,6 +1,6 @@
 {
   "name": "vaerion",
-  "version": "0.1.7-rc2",
+  "version": "0.1.8-rc1",
   "description": "Vaerion — the AI-native development engine: deterministic runtime, broker-governed autonomy, hash-chained journals, receipts, and permanent provenance. Evidence, not branding.",
   "license": "Apache-2.0",
   "author": "Auren <auren@vaerion.dev>",

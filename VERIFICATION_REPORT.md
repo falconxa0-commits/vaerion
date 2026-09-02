@@ -1,11 +1,11 @@
-# VERIFICATION_REPORT — Vaerion MS-0 → MS-6 → Phase 1 → PHASE Ω (v0.1.7-rc2)
+# VERIFICATION_REPORT — Vaerion MS-0 → MS-6 → PHASE Ω → ASCENSION XVIII (v0.1.8-rc1)
 
 | | |
 |---|---|
-| **Date** | 2026-08-30 |
+| **Date** | 2026-09-02 (ASCENSION XVIII Phase 8) |
 | **Command** | `bun run tools/verify.ts` |
-| **Result** | **ALL 6 GATES GREEN** (re-run on the PHASE Ω tree, version lockstep 0.1.7-rc2) |
-| **Release scope note** | Phase 1 added no engine behavior; it changed the lockstep version, the OpenAPI license identifier (Apache-2.0), the re-blessed golden receipt (`engine_version`), and the release/CI tooling — the six gates cover every one of those surfaces, and `tools/dist-pack.ts` re-runs this suite as a fail-closed packaging precondition. |
+| **Result** | **ALL 6 GATES GREEN** (final tree, version lockstep 0.1.8-rc1) — **335 tests, 2191 expectations, 0 failures, 26 files**; floors held |
+| **Scope note (Phase 8)** | Git, CI, and release evidence became part of the constitutional runtime: Constitution v1.1 (D-M′, D-P–D-T), the additive `repo`/`ci`/`release` commands, E2300–E2312 (+1 event), the fixed verify.yml provisioning step, and +45 tests. Historical sections below are retained as record. |
 
 ---
 
@@ -87,3 +87,41 @@ engine's behavioral contracts. Verification posture:
   by execution — the stronger outcome).
 - **Rich rendering evidence** (forced via `VAE_UI=rich`) is reproduced in
   `docs/ga/FINAL-VERIFIED-REALITY-REPORT.md` §Ω.
+
+---
+
+## 6. PHASE 8 addendum (2026-09-02, v0.1.8-rc1 — Git, CI & Constitution synchronization)
+
+- **Constitution v1.1 ratified into the repository** (Founder-authorized):
+  D-M′ supersedes D-M (command-surface law, surface of record = `vae --help`),
+  new laws D-P (git identity), D-Q (canonical protection), D-R (single
+  verification authority), D-S (measured-only readiness + honesty labels),
+  D-T (phase ledger); §8 + blocker 8; §11 amendment log + phase ledger
+  (phases 2–7 recorded NOT complete — zero repository evidence). All
+  references re-verified; gates re-run GREEN immediately after the amendment.
+- **Measured reality caught by the new tooling during development**: the
+  committed verify.yml carried a real defect (a step `if:` reading its own
+  step env — permanently false, E2306 class); `vae ci validate` flagged it,
+  it was fixed at root cause (shell-truth provisioning), and the regression
+  test pins the corrected file.
+- **+45 tests** (`tests/integration/repo-intelligence.test.ts`, hermetic temp
+  git repositories with pinned identity and dates): repository detection,
+  detached HEAD, staged/unstaged/untracked classification, merge conflicts,
+  rebase/cherry-pick states, identity blocker + historical warn, tags,
+  worktrees, canonical sync + pre-receive hook law, CI parse/validate per
+  finding code, fail-closed simulation of unknown job conditions,
+  GitHub-accurate push/tag filter semantics, readiness blockers
+  (E2310/E2309/E2311/E2312/E2303), honesty labels on every check, live-gate
+  parsing via an injected stub, all Five-Guarantee contracts (help teaches,
+  usage exits 2, JSON single-line purity, plain no-ANSI, rich panels, dry-run
+  purity), the read-only law (measurement leaves status byte-identical), the
+  security canary across all three output faces, and constitution +
+  version-lockstep regression pins.
+- **Two legitimate pins updated with reality**: the `dev` next_milestone
+  expectation (as a4206fe did before) and the golden fixtures (re-blessed via
+  `VAE_BLESS=1` with rendered diffs — the only movement was
+  `engine_version` 0.1.7-rc2 → 0.1.8-rc1).
+- **Honest limitations**: GitHub Actions execution, remote branch-protection
+  settings, and the secret-provisioned signing-key path are UNVERIFIED /
+  NEVER EXECUTED in this environment — the new tooling labels them as such
+  by design (D-S) instead of claiming them.

@@ -9,13 +9,13 @@
  */
 
 import { ExitCode, type CliIo } from "./io.ts";
-import { cmdDev, cmdExplain, cmdInit, cmdJournal, cmdDoctor, cmdPackage, cmdProvenance, cmdResume, cmdRun, cmdServe, type CommandContext } from "./commands.ts";
+import { cmdDev, cmdExplain, cmdInit, cmdJournal, cmdDoctor, cmdPackage, cmdProvenance, cmdRepo, cmdRelease, cmdResume, cmdRun, cmdServe, cmdCi, type CommandContext } from "./commands.ts";
 import { VaerionError } from "../kernel/errors.ts";
 import { isVaerionError } from "./workspace.ts";
 import { Renderer, setBannerVersion } from "./render.ts";
 import { Ansi, banner, errorBlock, type RenderEnv } from "./ui.ts";
 
-export const VERSION = "0.1.7-rc2";
+export const VERSION = "0.1.8-rc1";
 setBannerVersion(VERSION);
 
 const MAIN_HELP = `vae — Vaerion engine command line (v${VERSION})
@@ -75,6 +75,28 @@ Command surface (the Daily Seven + additive commands):
                              vaerion.lock (seal vs on-disk bundle), a
                              redacted journal export, or a release
                              MANIFEST. Evidence, not branding.
+  repo | repo verify         repository intelligence, measured never
+                             assumed (XVIII-8): branch, detached HEAD,
+                             staged/unstaged/untracked, conflicts,
+                             rebase/cherry-pick/bisect, worktrees,
+                             submodules, tags, identity audit, canonical
+                             state. verify reports trust findings only
+                             (identity law, canonical protection law).
+  ci validate                validate .github/workflows structurally: shape,
+                             single verification authority (D-R), env-if
+                             drift, supply-chain pins, secret hygiene
+  ci simulate --event EV [--ref NAME]
+                             deterministic pipeline projection (push,
+                             pull_request, workflow_dispatch, tag): which
+                             jobs would run, and why. A projection is not
+                             an execution — never claimed as one.
+  release readiness [--live-gates]
+                             the constitutional release evaluator (XVIII-8):
+                             can this repository ship? Which check blocks?
+                             Gates (from the measured record, or live),
+                             git trust, CI validity, version lockstep,
+                             tag binding, artifact set, ledger — fail-closed,
+                             honestly labeled.
 
 Global flags:
   --json                     stable NDJSON output (machine mode, guaranteed)
@@ -85,7 +107,7 @@ Global flags:
 
 Exit codes: 0 ok · 1 internal · 2 usage · 3 broker-denied · 4 provider-down · 5 partial-with-repair-hint
 
-Learn more: docs/constitution/VAERION_CONSTITUTION_v1.0.md · spec/ (contracts)
+Learn more: docs/constitution/VAERION_CONSTITUTION_v1.1.md · spec/ (contracts)
 `;
 
 const COMMAND_HELP: Record<string, string> = {
@@ -220,6 +242,64 @@ vae package verify BUNDLE [--dry-run]
     MANIFEST.json       a release manifest, displayed as recorded
 
   Exit 0 when the evidence holds; exit 5 with findings when it does not.`,
+  repo: `vae repo
+vae repo verify
+
+  Repository intelligence, measured never assumed (ASCENSION XVIII Phase 8;
+  Constitution v1.1 D-P/D-Q/D-S). Read-only: every git invocation runs with
+  --no-optional-locks and fixed argv, so a measurement can never mutate the
+  repository it measures.
+
+  The summary reports the branch, detached HEAD, staged/unstaged/untracked
+  paths, merge conflicts, merge/rebase/cherry-pick/bisect state, worktrees,
+  submodules, tags at HEAD, the commit-identity audit of the last 50 commits
+  against the ratified identity (D-P), and the canonical remote state —
+  reachability, main sync, tag push, and the pre-receive protection hook
+  (D-Q), each VERIFIED when measured here and UNVERIFIED when it cannot be.
+
+  verify reports the trust findings only (identity law, conflict state,
+  canonical protection). Exit 0 when no blocker-severity finding exists;
+  exit 5 otherwise. History is immutable: violations are recorded, never
+  rewritten.`,
+  ci: `vae ci validate
+vae ci simulate --event push|pull_request|workflow_dispatch|tag [--ref NAME]
+
+  CI understanding (D-R): the workflows under .github/workflows are the
+  remote projection of the single verification authority — tools/verify.ts.
+  No surface may re-implement the gates.
+
+  validate parses every workflow (the same YAML parser the config uses) and
+  reports structural findings with stable codes: unparsable YAML (E2307),
+  shape defects (E2304), gate logic without the authority (E2305), the
+  step-own-env-in-if drift class where an \`if:\` reads a variable defined in
+  the same step's env and is therefore permanently false (E2306), unpinned
+  substrate versions, and secret material echoed toward logs.
+
+  simulate projects which workflows trigger and which jobs would run for a
+  measured event/ref — deterministically, from the workflow text alone. A
+  projection is NOT an execution: remote outcomes are NEVER EXECUTED (D-S),
+  and the output says so.`,
+  release: `vae release readiness [--live-gates]
+
+  The constitutional release evaluator (D-S/D-T): can this repository ship,
+  measured only. Each check carries an honesty label and a Fix:
+
+    verification-gates     the measured verify.ts record (--live-gates re-runs
+                           the six gates live through the single authority)
+    git-tree-clean         a release is cut from a clean, fully committed tree
+    git-identity-head      HEAD authored by the ratified identity (D-P)
+    git-identity-history   identity audit of recent commits (recorded, immutable)
+    release-tag-binding    HEAD exactly at a v* tag (reproducible artifact binding)
+    version-lockstep       every version surface agrees
+    ci-validity            workflows structurally valid (via vae ci validate)
+    canonical-sync         canonical store reachable, in sync, protection enforced
+    release-artifacts      the packed, signed artifact set of record
+    worklog-ledger         the phase ledger of record exists (D-T)
+    reports-present        truthful reports on disk
+
+  Fail-closed (P6): unmeasurable ⇒ blocked. Exit 0 READY; exit 5 BLOCKED with
+  the blocker list. The evaluation is journaled with a receipt when the
+  repository is a Vaerion workspace, and says so when it is not.`,
 };
 
 interface ParsedArgs {
@@ -246,7 +326,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
       const value = eq === -1 ? undefined : a.slice(eq + 1);
       if (value !== undefined) {
         parsed.flags[name] = value;
-      } else if (i + 1 < argv.length && !(argv[i + 1] as string).startsWith("--") && ["cwd", "sources", "query", "max-docs", "answer", "out", "name", "profile", "model", "prompt", "system", "op", "seed", "max-tokens", "intent", "input-json", "docs-json", "goal", "planner", "steps", "plan-json", "dag", "resume", "port", "host"].includes(name)) {
+      } else if (i + 1 < argv.length && !(argv[i + 1] as string).startsWith("--") && ["cwd", "sources", "query", "max-docs", "answer", "out", "name", "profile", "model", "prompt", "system", "op", "seed", "max-tokens", "intent", "input-json", "docs-json", "goal", "planner", "steps", "plan-json", "dag", "resume", "port", "host", "event", "ref", "limit"].includes(name)) {
         parsed.flags[name] = argv[i + 1] as string;
         i++;
       } else {
@@ -327,6 +407,9 @@ export async function runCli(argv: string[], io: CliIo, cwd: string): Promise<Cl
       case "serve": code = await cmdServe(ctx); break;
       case "package": code = await cmdPackage(ctx); break;
       case "provenance": code = await cmdProvenance(ctx); break;
+      case "repo": code = await cmdRepo(ctx); break;
+      case "ci": code = await cmdCi(ctx); break;
+      case "release": code = await cmdRelease(ctx); break;
       case "version":
         if (renderer.rich) {
           for (const line of banner(new Ansi(true), VERSION, renderer.width)) io.out(line);
@@ -348,7 +431,7 @@ export async function runCli(argv: string[], io: CliIo, cwd: string): Promise<Cl
     if (isVaerionError(err)) {
       renderer.error(err);
       const code =
-        err.code === "E1600" || err.code === "E1700" || err.code === "E1701" || err.code === "E2204"
+        err.code === "E1600" || err.code === "E1700" || err.code === "E1701" || err.code === "E2204" || err.code === "E2300"
           ? ExitCode.usage
           : err.code === "E1300" || err.code === "E1301" || err.code === "E1302"
             ? ExitCode.brokerDenied
@@ -356,7 +439,9 @@ export async function runCli(argv: string[], io: CliIo, cwd: string): Promise<Cl
               ? ExitCode.providerDown
               : err.code === "E1703" || err.code === "E2200" || err.code === "E2201" || err.code === "E2202" || err.code === "E2203" || err.code === "E2205" || err.code === "E2206"
                 ? ExitCode.partial
-                : ExitCode.internal;
+                : err.code.startsWith("E23")
+                  ? ExitCode.partial
+                  : ExitCode.internal;
       return { code };
     }
     const msg = err instanceof Error ? err.message : String(err);

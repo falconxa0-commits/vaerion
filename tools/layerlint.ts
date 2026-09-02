@@ -34,7 +34,7 @@ function layerOf(relPath: string): Layer | null {
   const p = relPath.replaceAll("\\", "/");
   if (p.startsWith("kernel/") || p.startsWith("config/")) return "L0";
   if (p.startsWith("spine/") || p.startsWith("journal/") || p.startsWith("store/") || p.startsWith("receipts/") || p.startsWith("broker/")) return "L1";
-  if (p.startsWith("runtime/") || p.startsWith("research/") || p.startsWith("agents/") || p.startsWith("workflow/") || p.startsWith("evals/") || p.startsWith("extensions/") || p.startsWith("package/")) return "L2";
+  if (p.startsWith("runtime/") || p.startsWith("research/") || p.startsWith("agents/") || p.startsWith("workflow/") || p.startsWith("evals/") || p.startsWith("extensions/") || p.startsWith("package/") || p.startsWith("repo/")) return "L2";
   if (p.startsWith("cli/") || p.startsWith("api/")) return "L4";
   return null;
 }

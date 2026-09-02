@@ -63,6 +63,9 @@ vae run demo --sources ./sources --query "your question"
 vae journal verify <RUN_ID>
 vae doctor
 vae provenance <BUNDLE>.vxn      # permanent evidence for anything it built
+vae repo                         # measure the repository you are standing in
+vae ci validate                  # CI must re-run the same six gates (D-R)
+vae release readiness            # can this repository ship? measured only
 ```
 
 Full walkthrough: `docs/QUICKSTART.md` · companion workspace:
@@ -74,7 +77,8 @@ Full walkthrough: `docs/QUICKSTART.md` · companion workspace:
 
 `init` · `run research|demo|model|agent|workflow` · `resume` · `explain` ·
 `journal ls|show|verify|recover|export` · `doctor` · `dev` · `serve` ·
-`package build|verify` · `provenance`
+`package build|verify` · `provenance` · `repo` · `ci validate|simulate` ·
+`release readiness`
 
 Every command honors `--json` (stable machine output), `--dry-run`
 (plan only, nothing written), and exit codes 0–5 with the E-code

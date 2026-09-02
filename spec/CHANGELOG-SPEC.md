@@ -4,6 +4,26 @@ All changes to files under `spec/` are recorded here. Evolution is
 additive-only within a major version; removals require a major bump and a
 deprecation window. Every entry requires two approvals on the change itself.
 
+## 0.1.8 — 2026-09-02 (ASCENSION XVIII Phase 8 — Git/CI/release intelligence; additive only)
+
+- `errors.yaml` — catalog extended with the 23xx range (E2300–E2312):
+  repository intelligence (`repo_not_a_repository`, `repo_git_unavailable`,
+  `repo_merge_conflict`, `repo_identity_violation`), CI intelligence
+  (`ci_workflow_invalid`, `ci_verify_authority_missing`, `ci_env_if_drift`,
+  `ci_unparsable_yaml`), and release readiness
+  (`release_not_ready`, `release_version_lockstep_broken`,
+  `release_record_missing_or_stale`, `release_tag_binding_missing`,
+  `release_artifacts_missing`). Nothing removed or renamed; catalog grows
+  67 → 80 codes.
+- `events/registry.json` — one additive event type:
+  `release.readiness.evaluated` (measured, evidence-carrying readiness audit:
+  verdict, blockers, honesty labels). Registry version unchanged (1),
+  envelope version unchanged (1).
+- `openapi.json` — `info.version` aligned to the engine lockstep version
+  (0.1.8-rc1, regenerated via the sanctioned generator; C4 byte-sync holds).
+  The daemon route surface is otherwise untouched.
+- All contract documents remain additive within v0.1.
+
 ## 0.1.7-rc2 — 2026-08-31 (PHASE Ω luxury edition; additive only)
 
 Release-alignment change for the `v0.1.7-rc2` tag. Nothing removed, nothing

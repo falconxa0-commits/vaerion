@@ -1,6 +1,6 @@
 {
   "name": "@vaerion/tools",
-  "version": "0.1.7-rc2",
+  "version": "0.1.8-rc1",
   "private": true,
   "description": "Vaerion verification tooling \u2014 layerlint, constitutional checks, verification runner.",
   "type": "module",

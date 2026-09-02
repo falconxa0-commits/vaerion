@@ -89,6 +89,36 @@ guide maps the common ones.
 - **E2206 `vxn_verify_failed`** — verify found failures; the per-check
   findings report says exactly which.
 
+### Repository, CI, and release (E2300–E2312, Phase 8)
+
+- **E2300 / E2301** — you are not inside a git repository, or git itself
+  is unusable. Vaerion measures repositories; it never invents them.
+- **E2302 `repo_merge_conflict`** — the tree has unresolved conflicts or an
+  in-progress merge/rebase/cherry-pick. Resolve or abort before trusting
+  or releasing the tree.
+- **E2303 `repo_identity_violation`** — a commit is not authored
+  `Auren <auren@vaerion.dev>`. History is immutable (no rewrites);
+  identity governance changes require a Founder decision.
+- **E2304 `ci_workflow_invalid`** — a workflow failed structural
+  validation (shape, timeout, unpinned substrate, secret hygiene). The
+  findings list says which file and why.
+- **E2305 `ci_verify_authority_missing`** — a workflow runs gate logic
+  without `tools/verify.ts`. CI must re-run the authority, never
+  re-implement the gates (Constitution D-R).
+- **E2306 `ci_env_if_drift`** — a step's `if:` reads a variable defined in
+  that same step's own `env:` — the condition can never see it and is
+  permanently false. Decide in the shell, or hoist the variable.
+- **E2307 `ci_unparsable_yaml`** — a workflow file does not parse as YAML.
+- **E2308 `release_not_ready`** — release readiness finished with
+  blockers; each blocker in the report carries its own Fix.
+- **E2309** — version surfaces disagree. Align every surface.
+- **E2310** — no green verification record. Run `bun run tools/verify.ts`
+  (or `vae release readiness --live-gates`).
+- **E2311** — HEAD is not exactly at a `v*` tag. Tag the release commit,
+  then pack from the tag.
+- **E2312** — the packed, signed artifact set is missing. Run
+  `tools/dist-pack.ts --ref <tag>` and verify with `tools/dist-verify.ts`.
+
 ## Environment notes
 
 - **Windows**: use WSL2; the daemon binds loopback inside the WSL VM.

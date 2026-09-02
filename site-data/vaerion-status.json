@@ -1,40 +1,40 @@
 {
-  "generatedAt": "2026-08-31T12:45:57.316Z",
-  "engineVersion": "0.1.7-rc2",
+  "generatedAt": "2026-09-02T05:05:52.864Z",
+  "engineVersion": "0.1.8-rc1",
   "substrate": "TypeScript on Bun (ADR-0018 — provisional with recorded migration path; Founder ratification pending)",
   "verification": {
-    "generatedAt": "2026-08-31T12:45:51.224Z",
+    "generatedAt": "2026-09-02T05:05:45.506Z",
     "ok": true,
     "gates": [
       {
         "gate": "typecheck-engine",
         "ok": true,
-        "durationMs": 3768
+        "durationMs": 3551
       },
       {
         "gate": "typecheck-sdk",
         "ok": true,
-        "durationMs": 3233
+        "durationMs": 2887
       },
       {
         "gate": "tests",
         "ok": true,
-        "durationMs": 2754
+        "durationMs": 4343
       },
       {
         "gate": "layerlint",
         "ok": true,
-        "durationMs": 31
+        "durationMs": 29
       },
       {
         "gate": "constitutional-check",
         "ok": true,
-        "durationMs": 206
+        "durationMs": 211
       },
       {
         "gate": "repo-lint",
         "ok": true,
-        "durationMs": 9875
+        "durationMs": 8846
       }
     ]
   },
@@ -51,12 +51,12 @@
   },
   "code": {
     "engine": {
-      "files": 95,
-      "lines": 17496
+      "files": 99,
+      "lines": 19220
     },
     "engineTests": {
-      "files": 25,
-      "lines": 7349
+      "files": 26,
+      "lines": 8093
     },
     "sdk": {
       "files": 3,
@@ -64,49 +64,49 @@
     },
     "tools": {
       "files": 8,
-      "lines": 1131
+      "lines": 1198
     }
   },
   "contracts": {
     "specFiles": [
+      "spec/openapi.json",
+      "spec/README.md",
+      "spec/events/registry.json",
+      "spec/errors.yaml",
       "spec/CHANGELOG-SPEC.md",
-      "spec/schemas/gate.schema.json",
-      "spec/schemas/broker-decision.schema.json",
       "spec/schemas/journal-record.schema.json",
       "spec/schemas/receipt.schema.json",
       "spec/schemas/evidence-record.schema.json",
+      "spec/schemas/broker-decision.schema.json",
+      "spec/schemas/gate.schema.json",
       "spec/schemas/vaerion-yaml.schema.json",
       "spec/schemas/envelope.schema.json",
       "spec/schemas/capability-declaration.schema.json",
-      "spec/events/registry.json",
-      "spec/wit/vaerion-extension@0.1.0.wit",
-      "spec/openapi.json",
-      "spec/errors.yaml",
-      "spec/README.md"
+      "spec/wit/vaerion-extension@0.1.0.wit"
     ],
     "adrCount": 21,
     "adrFiles": [
-      "docs/adr/0001-monorepo-single-version-policy.md",
-      "docs/adr/0005-tiered-intelligence-progressive-enhancement.md",
-      "docs/adr/0011-tokio-axum-tower-stack.md",
-      "docs/adr/0017-reserved-cloud-seams.md",
-      "docs/adr/0018-engine-substrate-typescript-bun.md",
-      "docs/adr/0002-versioned-event-spine-envelope.md",
-      "docs/adr/0008-sqlite-wal-fts5-vec-local-store.md",
-      "docs/adr/0009-wasi-p2-components-capability-broker.md",
-      "docs/adr/0013-os-keychain-first-secrets-env-fallback.md",
-      "docs/adr/0016-reproducible-vxn-bundles.md",
-      "docs/adr/0007-strict-subset-yaml-vaeryaml-manifests.md",
-      "docs/adr/0010-loopback-daemon-pairing-token.md",
       "docs/adr/0004-centralized-permission-broker.md",
-      "docs/adr/0015-per-platform-exec-sandbox-matrix.md",
+      "docs/adr/README.md",
+      "docs/adr/0020-daemon-http-stack-ts-substrate.md",
+      "docs/adr/0005-tiered-intelligence-progressive-enhancement.md",
+      "docs/adr/0012-cassette-mockbrain-hermetic-evals.md",
+      "docs/adr/0009-wasi-p2-components-capability-broker.md",
+      "docs/adr/0014-stable-diagnostics-catalog-ecodes.md",
+      "docs/adr/0001-monorepo-single-version-policy.md",
       "docs/adr/0019-single-sanctioned-gateway-egress.md",
       "docs/adr/0003-contract-first-specs-drive-sdk-generation.md",
-      "docs/adr/0014-stable-diagnostics-catalog-ecodes.md",
-      "docs/adr/0020-daemon-http-stack-ts-substrate.md",
-      "docs/adr/0012-cassette-mockbrain-hermetic-evals.md",
-      "docs/adr/README.md",
-      "docs/adr/0006-event-sourced-run-journals-checkpoint-chaining.md"
+      "docs/adr/0013-os-keychain-first-secrets-env-fallback.md",
+      "docs/adr/0017-reserved-cloud-seams.md",
+      "docs/adr/0008-sqlite-wal-fts5-vec-local-store.md",
+      "docs/adr/0010-loopback-daemon-pairing-token.md",
+      "docs/adr/0016-reproducible-vxn-bundles.md",
+      "docs/adr/0015-per-platform-exec-sandbox-matrix.md",
+      "docs/adr/0002-versioned-event-spine-envelope.md",
+      "docs/adr/0018-engine-substrate-typescript-bun.md",
+      "docs/adr/0006-event-sourced-run-journals-checkpoint-chaining.md",
+      "docs/adr/0007-strict-subset-yaml-vaeryaml-manifests.md",
+      "docs/adr/0011-tokio-axum-tower-stack.md"
     ]
   },
   "milestones": [

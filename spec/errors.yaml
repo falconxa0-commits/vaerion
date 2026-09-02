@@ -283,3 +283,55 @@ errors:
     name: vxn_verify_failed
     summary: "Bundle verification completed with failures (the detailed per-check report carries each finding)."
     fix: "Treat the bundle as unverified: it must not be imported, distributed, or executed. Rebuild and re-verify; publish only bundles whose verify report is fully green."
+  E2300:
+    name: repo_not_a_repository
+    summary: "The working directory is not inside a Git repository (no .git discovered upward)."
+    fix: "Run from inside the repository, or pass --cwd pointing at a checkout; Vaerion measures repositories, it does not invent them."
+  E2301:
+    name: repo_git_unavailable
+    summary: "The git executable is missing or unusable, so repository state cannot be measured."
+    fix: "Install git (fail-closed: an unmeasurable repository is an untrusted one), then re-run the command."
+  E2302:
+    name: repo_merge_conflict
+    summary: "The repository is in a merge/rebase/cherry-pick conflict state; the working tree contains unresolved paths."
+    fix: "Resolve the conflict markers and `git add` the resolved paths, or abort the in-progress operation; release evaluation refuses a conflicted tree."
+  E2303:
+    name: repo_identity_violation
+    summary: "A commit in the audited range is not authored by the ratified identity (Auren <auren@vaerion.dev>)."
+    fix: "History is immutable by law (no rewrites). Record the violation in the worklog; only a Founder-approved decision may change identity governance."
+  E2304:
+    name: ci_workflow_invalid
+    summary: "A workflow file failed structural validation (missing triggers, jobs without steps, missing timeout, or another measured defect)."
+    fix: "Fix the listed findings in .github/workflows/; CI is the remote projection of the single verification authority and must stay structurally sound."
+  E2305:
+    name: ci_verify_authority_missing
+    summary: "A workflow job runs gate logic without invoking tools/verify.ts — the single verification authority (D-R)."
+    fix: "Make every verification job run `bun run tools/verify.ts`; no surface may re-implement the six gates."
+  E2306:
+    name: ci_env_if_drift
+    summary: "A step's `if:` condition reads a variable defined in that same step's own `env:` — the condition cannot see it and is permanently false."
+    fix: "Move the decision into the shell (`if [ -n \"$VAR\" ]; then ... fi`) where the env is real, or hoist the variable to workflow/job level."
+  E2307:
+    name: ci_unparsable_yaml
+    summary: "A workflow file does not parse as YAML, so its pipeline is not provable."
+    fix: "Fix the YAML syntax error reported for the file; an unparsable pipeline cannot be validated or simulated."
+  E2308:
+    name: release_not_ready
+    summary: "Release readiness evaluation completed with one or more blockers (the per-check report carries each finding and its Fix)."
+    fix: "Clear the listed blockers — measured only: gates, git trust, CI validity, version lockstep, evidence record, artifacts — then re-run `vae release readiness`."
+  E2309:
+    name: release_version_lockstep_broken
+    summary: "Version surfaces disagree (package manifests, CLI VERSION, OpenAPI, packaging descriptors)."
+    fix: "Align every version surface to the release version; version lockstep is a release blocker, not a style preference."
+  E2310:
+    name: release_record_missing_or_stale
+    summary: "No parsable verification record (.vaerion-verification.json with ok:true) exists, so gate evidence is absent."
+    fix: "Run `bun run tools/verify.ts` to produce the measured record (or `vae release readiness --live-gates` to measure now); fail-closed means no record, no release."
+  E2311:
+    name: release_tag_binding_missing
+    summary: "HEAD is not exactly at a v* tag, so the release would not be reproducibly bound to the packed artifact set."
+    fix: "Tag the release commit (`git tag -a v<version> -m ...`) after the tree is clean and gates are green, then pack from the tag."
+  E2312:
+    name: release_artifacts_missing
+    summary: "No packed, signed release artifact set (dist/MANIFEST.json + signature + SHA256SUMS) was found."
+    fix: "Pack from the release tag with `bun run tools/dist-pack.ts --ref <tag>` (fail-closed), then verify the consumer set with tools/dist-verify.ts."

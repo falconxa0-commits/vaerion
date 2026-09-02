@@ -5,4 +5,4 @@ TypeScript executed by the Bun runtime (ADR-0018). This package installs
 the `vae` console launcher and the packaged engine source.
 """
 
-__version__ = "0.1.7-rc2"
+__version__ = "0.1.8-rc1"

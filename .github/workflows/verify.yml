@@ -73,13 +73,20 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Provision the release signing key (secret → untracked key file)
-        if: env.RELEASE_SIGNING_KEY != ''
+        # Shell-truth law (Phase 8, E2306): a step's own env is invisible to
+        # its own `if:` — the decision lives in the shell where the variable
+        # is real. dist-pack fails closed to a bootstrap key when the file
+        # is absent, and the report discloses it (RISK-LEDGER R-2).
         env:
           RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
         run: |
-          mkdir -p keys
-          printf '%s' "$RELEASE_SIGNING_KEY" > keys/release-signing.key
-          chmod 600 keys/release-signing.key
+          if [ -n "$RELEASE_SIGNING_KEY" ]; then
+            mkdir -p keys
+            printf '%s' "$RELEASE_SIGNING_KEY" > keys/release-signing.key
+            chmod 600 keys/release-signing.key
+          else
+            echo "RELEASE_SIGNING_KEY not set — the packager will fail closed to a bootstrap key (disclosed in the report)"
+          fi
 
       - name: Package the release (fail-closed; re-runs all gates internally)
         run: bun run tools/dist-pack.ts

@@ -429,7 +429,10 @@ describe("PHASE Ω design language (rich profile, TTY-gated)", () => {
       const joined = rich.lines.out.join("\n");
       expect(joined).toContain("V A E R I O N");
       expect(joined).toContain("Gateway — the single gate");
-      expect(joined).toContain("PHASE Ω");
+      // Milestone position pin (updated with reality, as in a4206fe): the
+      // position of record is the ASCENSION XVIII productization era.
+      expect(joined).toContain("ASCENSION XVIII");
+      expect(joined).toContain("Phase 8");
     });
   });
 

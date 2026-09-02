@@ -98,6 +98,26 @@ console.log(await vae.version());
 The daemon is loopback-only (it refuses any non-loopback bind), and every
 state-changing call requires the pairing token.
 
+## 7. Know your repository (2 minutes)
+
+Vaerion treats Git, CI, and release evidence as part of its constitutional
+runtime — measured, never assumed (Constitution v1.1, D-P through D-T):
+
+```sh
+vae repo                        # branch, tree state, conflicts, identity audit,
+                                # tags, worktrees, canonical sync — read-only
+vae ci validate                 # workflows must re-run tools/verify.ts (D-R),
+                                # never re-implement the gates
+vae ci simulate --event tag --ref v1.0.0   # which jobs WOULD run, and why
+vae release readiness           # can this ship? gates, git trust, CI validity,
+                                # version lockstep, tag binding, artifacts
+```
+
+Every check carries an honesty label — `VERIFIED` (measured here),
+`UNVERIFIED` (not measurable in this environment), `NEVER EXECUTED` — and
+readiness is fail-closed: unmeasurable ⇒ blocked. Exit 0 means READY;
+exit 5 prints the blocker list with a Fix for each.
+
 ## Where to go next
 
 - `docs/INSTALL.md` — installation and verification of release artifacts

@@ -10,7 +10,7 @@
 set -eu
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../.." && pwd)
-VERSION=${1:-0.1.7-rc2}
+VERSION=${1:-0.1.8-rc1}
 OUT="${2:-$ROOT/dist/macos}"
 STAGE=$(mktemp -d)
 trap 'rm -rf "$STAGE"' EXIT

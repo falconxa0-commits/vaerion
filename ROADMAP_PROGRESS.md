@@ -2,10 +2,11 @@
 
 | | |
 |---|---|
-| **Date** | 2026-08-30 (Phase 1 close) |
+| **Date** | 2026-09-02 (ASCENSION XVIII Phase 8) |
 | **Overall progress** | **86%** of the milestone arc (MS-0 → GA) — measured: milestone board average, `tools/status.ts` → `site-data/vaerion-status.json`; MS-6 at 85% (reproducible bundles + distribution packaging + docs sweep done; native installers / performance double-check / accessibility sweep remain) |
-| **Verification** | ALL 6 GATES GREEN (`VERIFICATION_REPORT.md`) — 290 tests / 1969 expectations / coverage 86.00% lines · 90.84% branches |
-| **Release** | **PUBLIC BETA READY** — `v0.1.7-rc2` (PHASE Ω luxury edition) version lockstep; signed reproducible artifacts (`docs/ga/RELEASE-VERIFICATION.md`); verdict and blockers in `docs/ga/FINAL-VERIFIED-REALITY-REPORT.md` |
+| **Verification** | ALL 6 GATES GREEN (`VERIFICATION_REPORT.md`) — 335 tests / 2191 expectations / 26 files; floors held (86/74/86/90) |
+| **Release** | **v0.1.8-rc1** (ASCENSION XVIII Phase 8 — git/CI/constitution synchronization) version lockstep; the constitutional release evaluator: `vae release readiness` (measured only, fail-closed) |
+| **Phase ledger (D-T)** | Phase Ω, 0, 1 complete; **phases 2–7 have no repository evidence (NOT complete)**; Phase 8 this phase — reconciled against the repository, recorded in Constitution v1.1 §11 |
 
 ---
 

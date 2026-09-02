@@ -8,9 +8,9 @@
 set -eu
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../.." && pwd)
-VERSION="${1:-0.1.7-rc2}"
+VERSION="${1:-0.1.8-rc1}"
 OUT="${2:-$ROOT/dist/linux}"
-# Debian versions use ~ for pre-release ordering: 0.1.7-rc2 -> 0.1.7~rc2
+# Debian versions use ~ for pre-release ordering: 0.1.8-rc1 -> 0.1.7~rc2
 DEB_VERSION=$(printf '%s' "$VERSION" | sed 's/-/~/')
 
 STAGE=$(mktemp -d)
@@ -64,7 +64,7 @@ chmod +x "$CTRL/postinst"
 cat > "$STAGE/usr/share/doc/vaerion/README" <<'EOF'
 Vaerion — evidence, not branding.
 Engine source: /usr/lib/vaerion/<version>/src (self-contained TypeScript).
-Constitution: docs/constitution/VAERION_CONSTITUTION_v1.0.md (in the source tree).
+Constitution: docs/constitution/VAERION_CONSTITUTION_v1.1.md (in the source tree).
 Docs: https://vaerion.dev (release train) · vae --help teaches every command.
 EOF
 gzip -9 -n -c "$ROOT/LICENSE" > "$STAGE/usr/share/doc/vaerion/copyright.gz"

@@ -59,6 +59,8 @@ export const EVENT_TYPES = [
   // packaging (MS-6 — reproducible .vxn bundles, ADR-0016)
   "package.built",
   "package.verified",
+  // release readiness (ASCENSION XVIII Phase 8)
+  "release.readiness.evaluated",
   // store
   "store.blob.put",
 ] as const;

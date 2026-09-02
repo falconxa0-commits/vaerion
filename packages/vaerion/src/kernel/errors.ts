@@ -86,7 +86,21 @@ export type ErrorCode =
   | "E2203" // vxn_unsupported_format
   | "E2204" // vxn_input_missing
   | "E2205" // vxn_lock_mismatch
-  | "E2206"; // vxn_verify_failed
+  | "E2206" // vxn_verify_failed
+  // 23xx — repository / CI / release intelligence (ASCENSION XVIII Phase 8)
+  | "E2300" // repo_not_a_repository
+  | "E2301" // repo_git_unavailable
+  | "E2302" // repo_merge_conflict
+  | "E2303" // repo_identity_violation
+  | "E2304" // ci_workflow_invalid
+  | "E2305" // ci_verify_authority_missing
+  | "E2306" // ci_env_if_drift
+  | "E2307" // ci_unparsable_yaml
+  | "E2308" // release_not_ready
+  | "E2309" // release_version_lockstep_broken
+  | "E2310" // release_record_missing_or_stale
+  | "E2311" // release_tag_binding_missing
+  | "E2312"; // release_artifacts_missing
 
 export interface ErrorDescriptor {
   readonly code: ErrorCode;
@@ -166,6 +180,19 @@ export const ERROR_CATALOG: Readonly<Record<ErrorCode, ErrorDescriptor>> = {
   E2204: { code: "E2204", name: "vxn_input_missing", summary: "A declared package input is missing, unreadable, or escapes the project root.", fix: "Fix package.include in vaerion.yaml: paths must exist, stay inside the project, and be relative. Absolute paths and traversal are refused by law." },
   E2205: { code: "E2205", name: "vxn_lock_mismatch", summary: "vaerion.lock disagrees with reality (config fingerprint, extension pins, or the recorded bundle digest).", fix: "The lock is generated, never hand-edited. Re-run `vae package build` to regenerate vaerion.lock, then review the lock diff before committing." },
   E2206: { code: "E2206", name: "vxn_verify_failed", summary: "Bundle verification completed with failures (the detailed per-check report carries each finding).", fix: "Treat the bundle as unverified: it must not be imported, distributed, or executed. Rebuild and re-verify; publish only bundles whose verify report is fully green." },
+  E2300: { code: "E2300", name: "repo_not_a_repository", summary: "The working directory is not inside a Git repository (no .git discovered upward).", fix: "Run from inside the repository, or pass --cwd pointing at a checkout; Vaerion measures repositories, it does not invent them." },
+  E2301: { code: "E2301", name: "repo_git_unavailable", summary: "The git executable is missing or unusable, so repository state cannot be measured.", fix: "Install git (fail-closed: an unmeasurable repository is an untrusted one), then re-run the command." },
+  E2302: { code: "E2302", name: "repo_merge_conflict", summary: "The repository is in a merge/rebase/cherry-pick conflict state; the working tree contains unresolved paths.", fix: "Resolve the conflict markers and `git add` the resolved paths, or abort the in-progress operation; release evaluation refuses a conflicted tree." },
+  E2303: { code: "E2303", name: "repo_identity_violation", summary: "A commit in the audited range is not authored by the ratified identity (Auren <auren@vaerion.dev>).", fix: "History is immutable by law (no rewrites). Record the violation in the worklog; only a Founder-approved decision may change identity governance." },
+  E2304: { code: "E2304", name: "ci_workflow_invalid", summary: "A workflow file failed structural validation (missing triggers, jobs without steps, missing timeout, or another measured defect).", fix: "Fix the listed findings in .github/workflows/; CI is the remote projection of the single verification authority and must stay structurally sound." },
+  E2305: { code: "E2305", name: "ci_verify_authority_missing", summary: "A workflow job runs gate logic without invoking tools/verify.ts — the single verification authority (D-R).", fix: "Make every verification job run `bun run tools/verify.ts`; no surface may re-implement the six gates." },
+  E2306: { code: "E2306", name: "ci_env_if_drift", summary: "A step's `if:` condition reads a variable defined in that same step's own `env:` — the condition cannot see it and is permanently false.", fix: "Move the decision into the shell (`if [ -n \"$VAR\" ]; then ... fi`) where the env is real, or hoist the variable to workflow/job level." },
+  E2307: { code: "E2307", name: "ci_unparsable_yaml", summary: "A workflow file does not parse as YAML, so its pipeline is not provable.", fix: "Fix the YAML syntax error reported for the file; an unparsable pipeline cannot be validated or simulated." },
+  E2308: { code: "E2308", name: "release_not_ready", summary: "Release readiness evaluation completed with one or more blockers (the per-check report carries each finding and its Fix).", fix: "Clear the listed blockers — measured only: gates, git trust, CI validity, version lockstep, evidence record, artifacts — then re-run `vae release readiness`." },
+  E2309: { code: "E2309", name: "release_version_lockstep_broken", summary: "Version surfaces disagree (package manifests, CLI VERSION, OpenAPI, packaging descriptors).", fix: "Align every version surface to the release version; version lockstep is a release blocker, not a style preference." },
+  E2310: { code: "E2310", name: "release_record_missing_or_stale", summary: "No parsable verification record (.vaerion-verification.json with ok:true) exists, so gate evidence is absent.", fix: "Run `bun run tools/verify.ts` to produce the measured record (or `vae release readiness --live-gates` to measure now); fail-closed means no record, no release." },
+  E2311: { code: "E2311", name: "release_tag_binding_missing", summary: "HEAD is not exactly at a v* tag, so the release would not be reproducibly bound to the packed artifact set.", fix: "Tag the release commit (`git tag -a v<version> -m ...`) after the tree is clean and gates are green, then pack from the tag." },
+  E2312: { code: "E2312", name: "release_artifacts_missing", summary: "No packed, signed release artifact set (dist/MANIFEST.json + signature + SHA256SUMS) was found.", fix: "Pack from the release tag with `bun run tools/dist-pack.ts --ref <tag>` (fail-closed), then verify the consumer set with tools/dist-verify.ts." },
 };
 
 export class VaerionError extends Error {
