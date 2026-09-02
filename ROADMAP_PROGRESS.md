@@ -4,7 +4,7 @@
 > (constitution v1.6 A6, Phase 11: the roadmap report of record is generated from the
 > ONE measured status source). Regenerate with `bun tools/status.ts`; hand edits are defects.
 
-- Engine version of record: `0.1.10-rc1`
+- Engine version of record: `0.1.11-rc1`
 - Constitution of record: `v1.6` (Amendment Log §11)
 - Verification record: GREEN — 8/8 gates ok (`.vaerion-verification.json`)
 - Measured tests: 478 pass · 0 fail · 2853 expectations · 37 files
@@ -42,6 +42,7 @@
 | 10 | ASCENSION XVIII | ✅ complete |
 | 11 | ASCENSION XIX | ✅ complete |
 | 12 | ASCENSION XIX | ✅ complete |
+| 13 | ASCENSION XIX | ✅ complete |
 
 ## Recommended next work (priority order)
 

@@ -1,7 +1,7 @@
 # Winget manifest — default locale.
 # Platform marker: UNVERIFIED — WINGET.
 PackageIdentifier: Vaerion.Vaerion
-PackageVersion: 0.1.10-rc1
+PackageVersion: 0.1.11-rc1
 PackageLocale: en-US
 Publisher: Vaerion
 PublisherUrl: https://vaerion.dev

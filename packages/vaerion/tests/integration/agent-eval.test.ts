@@ -91,6 +91,11 @@ describe("eval harness (hermetic, deterministic, golden-governed)", () => {
     expect(report.reportHash).toMatch(/^[0-9a-f]{64}$/);
 
     // No golden yet + no bless ⇒ refused honestly (not silently created).
+    // HERMETIC (Stage 20): the "no bless" premise is enforced by REMOVING the
+    // ambient variable — under a sanctioned global bless (VAE_BLESS=1), an
+    // ambient-dependent assertion would silently re-bless its own fixture.
+    const prevBless = process.env.VAE_BLESS;
+    delete process.env.VAE_BLESS;
     const first = await harness.compareGolden({ ...report });
     expect(first.ok).toBe(false);
     expect(first.blessed).toBe(false);
@@ -102,13 +107,16 @@ describe("eval harness (hermetic, deterministic, golden-governed)", () => {
     expect(blessed.blessed).toBe(true);
     const rematch = await harness.compareGolden(report);
     expect(rematch.ok).toBe(true);
-    // A DRIFTED report is refused E1805 (never silently re-blessed).
+    // A DRIFTED report is refused E1805 (never silently re-blessed) — the
+    // refusal depends on the ABSENCE of VAE_BLESS, so the ambient state stays
+    // removed here and is restored only after the drift is measured.
     try {
       await harness.compareGolden({ ...report, reportHash: "0".repeat(64) });
       expect.unreachable();
     } catch (err) {
       expect((err as { code?: string }).code).toBe("E1805");
     }
+    if (prevBless !== undefined) process.env.VAE_BLESS = prevBless;
   });
 
   test("scenario-local tools are declared for the run and executed", async () => {

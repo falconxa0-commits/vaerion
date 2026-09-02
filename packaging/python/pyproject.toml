@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vaerion"
-version = "0.1.10-rc1"
+version = "0.1.11-rc1"
 description = "Vaerion — the AI-native development engine: deterministic runtime, broker-governed autonomy, hash-chained journals, receipts, and permanent provenance. Evidence, not branding."
 readme = "README.md"
 requires-python = ">=3.9"
