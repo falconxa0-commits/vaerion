@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ShieldCheck, GitBranch, FileCode2, ListChecks, Scale, FlaskConical, ArrowRight } from "lucide-react";
+import { ShieldCheck, GitBranch, FileCode2, ListChecks, Scale, FlaskConical, ArrowRight, Gauge, History, Wallet } from "lucide-react";
 
 interface Status {
   generatedAt: string;
@@ -16,6 +16,14 @@ interface Status {
   contracts: { specFiles: string[]; adrCount: number };
   milestones: Array<{ id: string; name: string; status: string; progress: number; evidence: string }>;
   overallProgress: number;
+  phaseLedger?: Array<{ phase: string; status: string; evidence: string }>;
+  release?: { measured: boolean; ready?: boolean; verdict?: string; passed?: number; total?: number; blockers: string[]; note?: string };
+  commandCenter?: {
+    workspace: { root: string; runs: number };
+    operations: { runs: Array<{ run_id: string; records: number; events: number; verified: boolean; receipt: boolean }>; journals_verified: boolean; receipts: number; metering: { invocations: number; failed: number; inputTokens: number; outputTokens: number; totalMicroUsd: number }; blob_refs: { checked: number; failed: number } };
+    integrity: { audit_ledger: { ok: boolean; entries: number; detail: string }; refusal_log: { ok: boolean; entries: number; detail: string } };
+    read_only: string;
+  };
   risks: string[];
   nextWork: string[];
 }
@@ -166,6 +174,87 @@ export default function Home() {
             </CardContent>
           </Card>
         </section>
+
+        {/* Command center (constitution v1.3 A3, Phase 6) — one measured core */}
+        {status?.commandCenter && (
+          <section aria-label="Command center" className="space-y-4">
+            <div className="flex items-baseline justify-between">
+              <h2 className="text-lg font-semibold">Command center</h2>
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">one measured core — `vae center` · tools/status.ts (D-S)</span>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-3">
+              {/* Release readiness digest */}
+              <Card className="border-zinc-200 dark:border-zinc-800">
+                <CardHeader className="p-6 pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Gauge className="w-4 h-4" aria-hidden /> Release readiness
+                  </CardTitle>
+                  <CardDescription className="text-xs">fail-closed · measured, never estimated</CardDescription>
+                </CardHeader>
+                <CardContent className="p-6 pt-0 space-y-2 text-sm">
+                  {status.release?.measured ? (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold">{status.release.verdict}</span>
+                        <Badge variant="outline" className={status.release.ready ? "border-[#3F9B6E]/40 text-emerald-700 dark:text-[#3F9B6E]" : "border-[#C98A1F]/40 text-[#C98A1F]"}>
+                          {status.release.passed}/{status.release.total} checks
+                        </Badge>
+                      </div>
+                      <ul className="list-disc list-inside text-xs text-zinc-500 dark:text-zinc-400 space-y-1">
+                        {status.release.blockers.slice(0, 4).map((b, i) => (<li key={i}>{b}</li>))}
+                        {status.release.blockers.length === 0 && <li>no blockers measured</li>}
+                      </ul>
+                    </>
+                  ) : (
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">{status.release?.note ?? "not measured"}</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Companion workspace cockpit */}
+              <Card className="border-zinc-200 dark:border-zinc-800">
+                <CardHeader className="p-6 pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Wallet className="w-4 h-4" aria-hidden /> Demo workspace cockpit
+                  </CardTitle>
+                  <CardDescription className="text-xs">examples/vaerion-demo · the same fold `vae center` renders</CardDescription>
+                </CardHeader>
+                <CardContent className="p-6 pt-0 space-y-2 text-sm">
+                  <Stat icon={<History className="w-4 h-4" aria-hidden />} label="runs" value={`${status.commandCenter.workspace.runs} journaled · ${status.commandCenter.operations.receipts} receipted`} />
+                  <Stat icon={<FlaskConical className="w-4 h-4" aria-hidden />} label="journals" value={status.commandCenter.operations.journals_verified ? "all chains verified" : "VERIFICATION FAILURE"} />
+                  <Stat icon={<Wallet className="w-4 h-4" aria-hidden />} label="metering" value={`${status.commandCenter.operations.metering.invocations} invocations · ${status.commandCenter.operations.metering.inputTokens}in/${status.commandCenter.operations.metering.outputTokens}out tokens`} />
+                  <Stat icon={<ShieldCheck className="w-4 h-4" aria-hidden />} label="integrity" value={`audit ${status.commandCenter.integrity.audit_ledger.ok ? "intact" : "BROKEN"} (${status.commandCenter.integrity.audit_ledger.entries}) · refusals ${status.commandCenter.integrity.refusal_log.ok ? "intact" : "BROKEN"} (${status.commandCenter.integrity.refusal_log.entries})`} />
+                </CardContent>
+              </Card>
+
+              {/* The phase program ledger (D-T) */}
+              <Card className="border-zinc-200 dark:border-zinc-800">
+                <CardHeader className="p-6 pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <History className="w-4 h-4" aria-hidden /> Phase program (D-T)
+                  </CardTitle>
+                  <CardDescription className="text-xs">reconciled at every phase boundary</CardDescription>
+                </CardHeader>
+                <CardContent className="p-6 pt-0 space-y-2">
+                  <div className="max-h-64 overflow-y-auto space-y-2 pr-1 [scrollbar-width:thin]">
+                    {(status.phaseLedger ?? []).map((row) => (
+                      <div key={row.phase} className={`text-xs border-l-2 pl-2 py-0.5 ${row.status.includes("complete") ? "border-[#3F9B6E]" : row.status.includes("in flight") ? "border-[#C9A227]" : "border-zinc-300 dark:border-zinc-700"}`}>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-mono font-semibold">Phase {row.phase}</span>
+                          <span className={row.status.includes("complete") ? "text-emerald-700 dark:text-[#3F9B6E]" : row.status.includes("in flight") ? "text-[#C98A1F]" : "text-zinc-500"}>
+                            {row.status.replace("✅ ", "").replace("▶ ", "").replace("❌ ", "")}
+                          </span>
+                        </div>
+                        <p className="text-zinc-500 dark:text-zinc-400 line-clamp-2">{row.evidence}</p>
+                      </div>
+                    ))}
+                    {(status.phaseLedger ?? []).length === 0 && <p className="text-xs text-zinc-500">ledger unavailable</p>}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </section>
+        )}
 
         {/* Next work + risks */}
         {status && (

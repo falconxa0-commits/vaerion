@@ -530,3 +530,22 @@ Stage Summary:
 - Scaffolding is now a registry, not a string: deterministic, validated, pinned, and extensible by the same law (add a template, pin its bytes, keep telemetry false).
 - The Phase 4 surface composes with Phase 5: a scaffolded demo workspace's declared capability drives `vae ai ask --capability sources` — phases strengthen each other, as directed.
 - Next: Phase 6 — command-center (the operator cockpit: `vae center` + the web face, one measured core).
+
+---
+Task ID: ASC-XVIII-PHASE-6
+Agent: Auren — Principal Vaerion Architect (THE OPERATOR COCKPIT — command-center)
+Task: ASCENSION XVIII Phase 6 (Founder program, phase 4 of 4) — the operator cockpit: ONE measured center fold consumed by `vae center` AND the web face; never a second implementation.
+
+Work Log:
+- L2 center/center.ts is the ONE measured core: the operator fold over this workspace's artifacts — runs (records/events/verification/receipt), the gateway metering rollup (meteringFromRecords over ALL journals, integer math), every referenced blob (collectBlobRefs → blobStore.verify), the audit-ledger and refusal-log hash chains (verifyAuditLedger/verifyRefusalLog), and the release readiness digest (evaluateReleaseReadiness, fail-closed) when the workspace is a repository checkout. Structural input (no L4 imports); honest measured absences (repoRoot null → "not a repository checkout"); no wall-clock in the report — byte-identical --json for the same artifacts (test-pinned).
+- `vae center` (L4, read-only): three output faces; purpose-built rich renderer (operations panel + runs table + integrity panel + release digest panel); exit 0 when journals + both chains + every blob verify, exit 5 with the failing section otherwise; E1600 on positional args.
+- THE WEB FACE consumes the same fold: tools/status.ts now measures (a) the release readiness digest of THIS repository (evaluateReleaseReadiness on the repo root — honestly BLOCKED 8/12 pre-tag: no release tag at HEAD, no artifact set yet — exactly what the evaluator is for), (b) the operator cockpit fold over the companion workspace examples/vaerion-demo, and (c) the D-T phase ledger parsed from the constitution artifact (10 rows). src/app/page.tsx gains the Command Center section: release digest card, demo-workspace cockpit card, phase-program ledger card — same zinc/gold/emerald design language, responsive, sticky footer preserved.
+- STALE DATA ROOT-CAUSED: status.ts carried Phase-Ω-era test counts (290/1969/25) and a stale nextWork list — refreshed to the measured 397/2538/31 and the program-close truth.
+- TESTS: +9 in tests/integration/center.test.ts: fresh-dir honest zeros, a real gateway run folded (runs/receipts/metering/blob_refs), cross-run byte determinism, the L2 fold called directly with structural input, whole-directory read-only proof, usage law, help purity, rich face, canary. D-M′ agreement → 17 commands. Full suite: 397 pass / 0 fail / 2538 expectations / 31 files.
+- SIX GATES GREEN on the final tree: typecheck-engine, typecheck-sdk, tests 397/0/2538/31 (floors held), layerlint 103 files/… edges, constitutional C1–C7/81 codes, repo-lint clean.
+- Site-data regenerated from the live gates + fold (release digest + cockpit + ledger measured into site-data/vaerion-status.json).
+
+Stage Summary:
+- The four phases compose into one product: `vae init --template demo` scaffolds a workspace whose declared capability drives `vae ai ask`; `vae account` attributes it; `vae center` and the web face report it — all through ONE measured core per concern, zero parallel systems.
+- Honest ledger: the release digest is BLOCKED by design until the program close (tag + artifacts land next); the demo workspace shows honest zeros until a run is executed in it.
+- Next: PROGRAM CLOSE — version lockstep 0.1.9-rc1, release tag, artifact pack + trust chain, canonical + GitHub synchronization (remote provisioned by the Founder), final report.

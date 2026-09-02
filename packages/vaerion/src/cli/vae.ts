@@ -9,7 +9,7 @@
  */
 
 import { ExitCode, type CliIo } from "./io.ts";
-import { buildWelcomePayload, cmdAccount, cmdAi, cmdDev, cmdExplain, cmdInit, cmdJournal, cmdDoctor, cmdPackage, cmdProvenance, cmdRepo, cmdRelease, cmdResume, cmdRun, cmdServe, cmdCi, cmdTour, type CommandContext } from "./commands.ts";
+import { buildWelcomePayload, cmdAccount, cmdAi, cmdCenter, cmdDev, cmdExplain, cmdInit, cmdJournal, cmdDoctor, cmdPackage, cmdProvenance, cmdRepo, cmdRelease, cmdResume, cmdRun, cmdServe, cmdCi, cmdTour, type CommandContext } from "./commands.ts";
 import { VaerionError } from "../kernel/errors.ts";
 import { isVaerionError } from "./workspace.ts";
 import { Renderer, setBannerVersion } from "./render.ts";
@@ -119,6 +119,10 @@ Command surface (the Daily Seven + additive commands):
                              sources, then the answer crosses the gateway
                              single gate — attributed, metered, receipted
   ai models                  the gateway capability matrix (read-only)
+  center                     the operator cockpit (XVIII-6): runs, receipts,
+                             gateway metering, audit + refusal-log integrity,
+                             referenced blobs, and the release readiness
+                             digest — one measured core, read-only
 
 Global flags:
   --json                     stable NDJSON output (machine mode, guaranteed)
@@ -385,6 +389,22 @@ vae ai models
   redacted like every other.
 
   models reports the gateway capability matrix (secret NAMES only). Read-only.`,
+  center: `vae center
+
+  The operator cockpit (constitution v1.3 A3, Phase 6; P7/D-S). Read-only.
+  ONE measured core folds this workspace's artifacts into an honest
+  operations snapshot:
+
+    operations          runs (records, events, verification, receipt), the
+                        gateway metering rollup (tokens + integer micro-USD,
+                        folded from the journals), and every referenced blob
+    integrity           the audit-ledger and refusal-log hash chains
+    release digest      the release readiness verdict when this workspace is
+                        a repository checkout (measured, fail-closed, D-S)
+
+  Exit 0 when journals, both chains, and every blob verify; exit 5 with the
+  failing section otherwise. The web face command-center section consumes
+  the same fold through tools/status.ts — never a second implementation.`,
 };
 
 interface ParsedArgs {
@@ -502,6 +522,7 @@ export async function runCli(argv: string[], io: CliIo, cwd: string): Promise<Cl
       case "tour": code = await cmdTour(ctx); break;
       case "account": code = await cmdAccount(ctx); break;
       case "ai": code = await cmdAi(ctx); break;
+      case "center": code = await cmdCenter(ctx); break;
       case "version":
         if (renderer.rich) {
           for (const line of banner(new Ansi(true), VERSION, renderer.width)) io.out(line);

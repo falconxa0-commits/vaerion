@@ -428,6 +428,7 @@ export function renderRichResult(a: Ansi, obj: Obj, width: number): string[] {
     case "tour": return tourReport(a, obj, width);
     case "account": return accountReport(a, obj, width);
     case "ai": return aiReport(a, obj, width);
+    case "center": return centerReport(a, obj, width);
     default: return genericRich(a, obj, width);
   }
 }
@@ -1446,6 +1447,82 @@ function aiReport(a: Ansi, obj: Obj, width: number): string[] {
 }
 
 interface ObservedActorShape { kind?: string; id?: string; events?: number; decisions?: number; runs?: number }
+
+interface CenterRunShape { run_id?: string; records?: number; events?: number; verified?: boolean; receipt?: boolean }
+
+function centerReport(a: Ansi, obj: Obj, width: number): string[] {
+  const out: string[] = [];
+  const ops = sub(obj, "operations") ?? {};
+  const integrity = sub(obj, "integrity") ?? {};
+  const metering = sub(ops, "metering") ?? {};
+  out.push(...panel(a, {
+    title: "Command Center — operations",
+    lines: kvBlock(a, [
+      ["workspace", (sub(obj, "workspace") as Obj | undefined)?.root as string ?? "?"],
+      ["runs", String(ops.runs ? (ops.runs as unknown[]).length : 0)],
+      ["receipts", String(ops.receipts ?? 0)],
+      ["journals verified", ops.journals_verified === true ? "yes" : "NO"],
+      ["metering", `${metering.invocations ?? 0} invocation(s), ${metering.inputTokens ?? 0} in / ${metering.outputTokens ?? 0} out tokens, ${metering.totalMicroUsd ?? 0} µUSD`],
+      ["blobs", `${(sub(ops, "blob_refs") ?? {}).checked ?? 0} referenced, ${(sub(ops, "blob_refs") ?? {}).failed ?? 0} failed`],
+    ], width),
+    width,
+    accent: obj.ok === true ? "success" : "warn",
+    subtitle: "constitution v1.3 A3 · one measured core · read-only (D-S)",
+  }));
+  const runs = Array.isArray(ops.runs) ? (ops.runs as CenterRunShape[]) : [];
+  if (runs.length > 0) {
+    out.push("");
+    out.push(...tableBlock(a, {
+      headers: ["run", "records", "events", "verified", "receipt"],
+      rows: runs.map((run) => [
+        (run.run_id ?? "").length > 24 ? `…${(run.run_id ?? "").slice(-20)}` : (run.run_id ?? ""),
+        String(run.records ?? 0),
+        String(run.events ?? 0),
+        run.verified ? "yes" : "NO",
+        run.receipt ? "yes" : "—",
+      ]),
+      width,
+    }));
+  }
+  const audit = sub(integrity, "audit_ledger") ?? {};
+  const refusals = sub(integrity, "refusal_log") ?? {};
+  out.push("");
+  out.push(...panel(a, {
+    title: "Integrity",
+    lines: [
+      `${audit.ok === true ? a.success(SYM.ok) : a.error(SYM.fail)} audit ledger: ${audit.entries ?? 0} entr(ies) — ${audit.detail ?? "?"}`,
+      `${refusals.ok === true ? a.success(SYM.ok) : a.error(SYM.fail)} refusal log: ${refusals.entries ?? 0} entr(ies) — ${refusals.detail ?? "?"}`,
+    ],
+    width,
+    accent: audit.ok === true && refusals.ok === true ? "success" : "warn",
+  }));
+  const release = sub(obj, "release") ?? {};
+  out.push("");
+  if (release.measured === true) {
+    const blockers = Array.isArray(release.blockers) ? (release.blockers as Obj[]) : [];
+    out.push(...panel(a, {
+      title: `Release digest — ${release.verdict ?? "?"} (${release.passed ?? 0}/${release.total ?? 0})`,
+      lines: blockers.length === 0
+        ? ["no blockers measured"]
+        : blockers.map((b) => `${a.dim(SYM.dot)} ${str(b, "check") ?? "?"}: ${str(b, "detail") ?? ""}`),
+      width,
+      accent: release.ready === true ? "success" : "warn",
+    }));
+  } else {
+    out.push(...panel(a, {
+      title: "Release digest",
+      lines: [str(release, "note") ?? "not measured"],
+      width,
+      accent: "none",
+    }));
+  }
+  const readOnly = str(obj, "read_only");
+  if (readOnly !== undefined) {
+    out.push("");
+    out.push(badge(a, "ok", readOnly));
+  }
+  return out;
+}
 
 function accountReport(a: Ansi, obj: Obj, width: number): string[] {
   const out: string[] = [];

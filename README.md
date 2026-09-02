@@ -65,6 +65,8 @@ vae doctor
 vae provenance <BUNDLE>.vxn      # permanent evidence for anything it built
 vae repo                         # measure the repository you are standing in
 vae account                      # who acts in this workspace — local identity, measured
+vae ai ask --question "..." --capability sources   # grounded Q&A through the single gate
+vae center                       # the operator cockpit: runs, metering, integrity
 vae ci validate                  # CI must re-run the same six gates (D-R)
 vae release readiness            # can this repository ship? measured only
 ```
@@ -85,7 +87,7 @@ welcome front door):
 `init` · `run research|demo|model|agent|workflow` · `resume` · `explain` ·
 `journal ls|show|verify|recover|export` · `doctor` · `dev` · `serve` ·
 `package build|verify` · `provenance` · `repo` · `account` ·
-`ai ask|models` · `ci validate|simulate` · `release readiness` · `tour`
+`ai ask|models` · `center` · `ci validate|simulate` · `release readiness` · `tour`
 
 Every command honors `--json` (stable machine output), `--dry-run`
 (plan only, nothing written), and exit codes 0–5 with the E-code

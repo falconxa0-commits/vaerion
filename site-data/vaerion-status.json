@@ -1,62 +1,62 @@
 {
-  "generatedAt": "2026-09-02T14:14:57.064Z",
+  "generatedAt": "2026-09-02T14:22:43.123Z",
   "engineVersion": "0.1.8-rc1",
   "substrate": "TypeScript on Bun (ADR-0018 — provisional with recorded migration path; Founder ratification pending)",
   "verification": {
-    "generatedAt": "2026-09-02T14:13:46.130Z",
+    "generatedAt": "2026-09-02T14:22:31.016Z",
     "ok": true,
     "gates": [
       {
         "gate": "typecheck-engine",
         "ok": true,
-        "durationMs": 4168
+        "durationMs": 4391
       },
       {
         "gate": "typecheck-sdk",
         "ok": true,
-        "durationMs": 3313
+        "durationMs": 3255
       },
       {
         "gate": "tests",
         "ok": true,
-        "durationMs": 5859
+        "durationMs": 5362
       },
       {
         "gate": "layerlint",
         "ok": true,
-        "durationMs": 33
+        "durationMs": 32
       },
       {
         "gate": "constitutional-check",
         "ok": true,
-        "durationMs": 231
+        "durationMs": 390
       },
       {
         "gate": "repo-lint",
         "ok": true,
-        "durationMs": 10804
+        "durationMs": 11318
       }
     ]
   },
   "tests": {
-    "suites": 25,
-    "assertedExpectations": 1969,
-    "totalTests": 290,
+    "suites": 30,
+    "assertedExpectations": 2498,
+    "totalTests": 388,
     "coverage": {
       "lines": 86,
       "branches": 90.84,
-      "floors": "bunfig.toml coverageThreshold (OBJ-Q6, ratcheted at MS-6 bundle close: 0.86/0.74/0.86/0.90; held at PHASE Ω close)"
+      "floors": "bunfig.toml coverageThreshold (OBJ-Q6, ratcheted at MS-6 bundle close: 0.86/0.74/0.86/0.90; held at every ASCENSION phase close)"
     },
     "note": "counts from the latest full run of `bun test tests/ --coverage`"
   },
   "code": {
     "engine": {
-      "files": 102,
-      "lines": 20446
+      "files": 103,
+      "lines": 20734
     },
     "engineTests": {
-      "files": 30,
-      "lines": 9217
+      "files": 31,
+      "lines": 9425
     },
     "sdk": {
       "files": 3,
@@ -64,7 +64,7 @@
     },
     "tools": {
       "files": 8,
-      "lines": 1204
+      "lines": 1250
     }
   },
   "contracts": {
@@ -168,6 +168,128 @@
     }
   ],
   "overallProgress": 86,
+  "phaseLedger": [
+    {
+      "phase": "Ω + artifacts",
+      "status": "✅ complete",
+      "evidence": "tag `v0.1.7-rc2`; commits `9d6cbd2`, `6ab6068`; six gates green"
+    },
+    {
+      "phase": "0",
+      "status": "✅ complete",
+      "evidence": "commit `34b015d`; `docs/ga/FOUNDATION-AUDIT-ASCENSION-XVIII.md`"
+    },
+    {
+      "phase": "1",
+      "status": "✅ complete",
+      "evidence": "commits `1c6892f`→`f8f341e`; four install channels verified; trust chain rebuilt; worklog `ASC-XVIII-PHASE-1`"
+    },
+    {
+      "phase": "8",
+      "status": "✅ complete",
+      "evidence": "commits `68ef1e5`→`9d3dad8`; tag `v0.1.8-rc1`; six gates green (335/0/2191/26); worklog `ASC-XVIII-PHASE-8` + `ASC-XVIII-PHASE-8-OPS`"
+    },
+    {
+      "phase": "2",
+      "status": "✅ complete",
+      "evidence": "commits `1a810d8`, `39027c4`; six gates green (352/0/2302/27); worklog `ASC-XVIII-PHASE-2`; Constitution v1.2 (A2)"
+    },
+    {
+      "phase": "3",
+      "status": "✅ complete",
+      "evidence": "commit `c16de89`; six gates green (363/0/2362/28); worklog `ASC-XVIII-PHASE-3`; one L2 identity module + `vae account` (A3)"
+    },
+    {
+      "phase": "4",
+      "status": "✅ complete",
+      "evidence": "commit `af5608d`; six gates green (377/0/2441/29); worklog `ASC-XVIII-PHASE-4`; the ONE shared research pipeline + `vae ai` (A3)"
+    },
+    {
+      "phase": "5",
+      "status": "✅ complete",
+      "evidence": "commit `60c2d3e`; six gates green (388/0/2498/30); worklog `ASC-XVIII-PHASE-5`; the deterministic template registry + `vae init --template` + E1203 (A3)"
+    },
+    {
+      "phase": "6",
+      "status": "▶ in flight",
+      "evidence": "command-center — the Founder program continues; boundary reconciles its row (D-T)"
+    },
+    {
+      "phase": "7",
+      "status": "❌ NOT complete",
+      "evidence": "zero repository evidence (no commands, no spec entries, no tests, no worklog records) — Founder re-issue or cancellation required"
+    }
+  ],
+  "release": {
+    "measured": true,
+    "ready": false,
+    "verdict": "BLOCKED",
+    "passed": 8,
+    "total": 12,
+    "blockers": [
+      "git-tree-clean: working tree dirty: 0 staged, 8 unstaged, 2 untracked",
+      "release-tag-binding: HEAD is not exactly at a v* release tag",
+      "release-artifacts: artifact set incomplete: dist/MANIFEST.json, dist/MANIFEST.json.sig, dist/SHA256SUMS, dist/VERIFY.md missing"
+    ]
+  },
+  "commandCenter": {
+    "workspace": {
+      "root": "/home/z/my-project/examples/vaerion-demo",
+      "runs": 0
+    },
+    "operations": {
+      "runs": [],
+      "journals_verified": true,
+      "receipts": 0,
+      "metering": {
+        "invocations": 0,
+        "failed": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalMicroUsd": 0,
+        "unpriced": 0,
+        "byModel": {}
+      },
+      "blob_refs": {
+        "checked": 0,
+        "failed": 0
+      }
+    },
+    "integrity": {
+      "audit_ledger": {
+        "ok": true,
+        "entries": 0,
+        "detail": "chain intact, head —"
+      },
+      "refusal_log": {
+        "ok": true,
+        "entries": 0,
+        "detail": "chain intact, head —"
+      }
+    },
+    "release": {
+      "measured": true,
+      "ready": false,
+      "verdict": "BLOCKED",
+      "passed": 8,
+      "total": 12,
+      "blockers": [
+        {
+          "check": "git-tree-clean",
+          "detail": "working tree dirty: 0 staged, 8 unstaged, 2 untracked"
+        },
+        {
+          "check": "release-tag-binding",
+          "detail": "HEAD is not exactly at a v* release tag"
+        },
+        {
+          "check": "release-artifacts",
+          "detail": "artifact set incomplete: dist/MANIFEST.json, dist/MANIFEST.json.sig, dist/SHA256SUMS, dist/VERIFY.md missing"
+        }
+      ]
+    },
+    "read_only": "every value was measured from this workspace's artifacts — nothing was created, modified, or executed"
+  },
   "risks": [
     "Substrate: TypeScript-on-Bun reference implementation is explicitly PROVISIONAL (ADR-0018, Phase 1 finalization) with a recorded migration path; Founder ratification pending.",
     "Release signing uses the bootstrap Ed25519 key; rotation to a held-offline key is Founder-gated (docs/security/RISK-LEDGER.md R-2).",
@@ -177,10 +299,10 @@
     "ModelPlanner success path needs a recorded real-provider cassette for end-to-end golden coverage (environment has no provider network access)."
   ],
   "nextWork": [
-    "Release train steps 3-5 (publish, announce, key ceremony) — Founder-gated at remote provisioning; v0.1.7-rc2 artifacts are reproducible via tools/dist-pack.ts.",
+    "ASCENSION phase 6 (command-center) closes the Founder four-phase program; phase 7 awaits Founder re-issue or cancellation.",
     "MS-6 remaining exit criteria: native single-binary installers, performance double-check, accessibility sweep; then the daemon packages route group (wire parity, spec/openapi regen).",
-    "Provision the GitHub remote + enable Actions (workflow ready: .github/workflows/verify.yml) and provision the RELEASE_SIGNING_KEY secret.",
-    "Beta program: BETA-ONBOARDING.md S1-S4 feedback collection begins at public announcement.",
+    "GitHub synchronization executes at program close (remote provisioned by the Founder: falconxa0-commits/vaerion, main at a strict ancestor — fast-forward push ready).",
+    "Release train steps (publish, announce, key ceremony) — Founder-gated; artifacts are reproducible via tools/dist-pack.ts at the release tag.",
     "Coverage: per-module ratchets on top of the total-based floors (mechanical follow-up)."
   ]
 }

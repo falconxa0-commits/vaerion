@@ -38,10 +38,11 @@ import { renderUnified, assertReviewDiffShape, type ReviewDiff } from "../broker
 import { type PolicyContract, type PolicyRule } from "../broker/contracts/decision.ts";
 import { policyFromConfig } from "../config/config.ts";
 import { DEFAULT_INIT_TEMPLATE, renderInitTemplate } from "../config/templates.ts";
+import { measureCenter } from "../center/center.ts";
 import { researchPrincipal } from "../research/principal.ts";
 import { declareResearchCapability, type ResearchCapabilityDeclaration } from "../research/capability.ts";
 import { assembleResearchContext, collectDocs, renderPackAsSystemPrompt } from "../research/pipeline.ts";
-import { measureRepository, validateWorkflows, simulateWorkflow, evaluateReleaseReadiness, type SimEvent, type WorkflowDoc } from "../repo/index.ts";
+import { measureRepository, validateWorkflows, simulateWorkflow, evaluateReleaseReadiness, discoverRepository, type SimEvent, type WorkflowDoc } from "../repo/index.ts";
 import { redactString } from "../kernel/redact.ts";
 import { GatewayService, GatewayGatePrompt, type BudgetGuard } from "../gateway/service.ts";
 import { fetchTransport } from "../gateway/transport.ts";
@@ -1296,7 +1297,7 @@ export async function cmdDev(ctx: CommandContext): Promise<number> {
       L4: ["cli"],
     },
     daily_seven: ["init", "run", "resume", "explain", "journal", "doctor", "dev"],
-    additive_commands: ["serve (MS-5 daemon, ADR-0010)", "package (MS-6 bundles, ADR-0016)", "provenance (Ω — artifact evidence)", "repo (XVIII-8 — git trust, D-P/D-Q)", "ci (XVIII-8 — CI understanding, D-R)", "release (XVIII-8 — measured readiness, D-S/D-T)", "tour (XVIII-2 — the guided, read-only walk)", "account (XVIII-3 — identity & attribution, P5/D-D/D-P)"],
+    additive_commands: ["serve (MS-5 daemon, ADR-0010)", "package (MS-6 bundles, ADR-0016)", "provenance (Ω — artifact evidence)", "repo (XVIII-8 — git trust, D-P/D-Q)", "ci (XVIII-8 — CI understanding, D-R)", "release (XVIII-8 — measured readiness, D-S/D-T)", "tour (XVIII-2 — the guided, read-only walk)", "account (XVIII-3 — identity & attribution, P5/D-D/D-P)", "ai (XVIII-4 — the grounded question, P8/D-J/D-O)", "center (XVIII-6 — the operator cockpit, one measured core)"],
     gateway: {
       single_gate: "gateway/service.ts — decide(model.invoke) → journal → act",
       egress: "gateway/transport.ts — the ONE sanctioned egress site",
@@ -2167,6 +2168,42 @@ export async function cmdAi(ctx: CommandContext): Promise<number> {
     }
     throw err;
   }
+}
+
+/* ────────────────────  center — the operator cockpit (XVIII-6)  ──────────────────── */
+
+/** `vae center` — the operator cockpit (constitution v1.3 A3, Phase 6; P7,
+ *  D-S). Read-only. ONE measured core (center/center.ts) folds this
+ *  workspace's artifacts into an honest operations snapshot: runs, receipts,
+ *  gateway metering, the audit-ledger and refusal-log chains, every
+ *  referenced blob, and — when this workspace is a repository checkout — the
+ *  release readiness digest. The web face consumes the same fold through
+ *  tools/status.ts; never a second implementation. */
+export async function cmdCenter(ctx: CommandContext): Promise<number> {
+  if (ctx.flags._positional1 !== "") {
+    throw new VaerionError("E1600", "usage: `vae center` takes no arguments — it measures this workspace's operations");
+  }
+  const ws = workspaceAt(ctx.cwd);
+  let repoRoot: string | null = null;
+  try {
+    repoRoot = (await discoverRepository(ctx.cwd)).root;
+  } catch {
+    repoRoot = null; // an honest absence: the release digest says so itself
+  }
+  const report = await measureCenter({
+    root: ws.root,
+    journalDir: ws.journalDir,
+    blobsDir: ws.blobsDir,
+    auditPath: ws.auditPath,
+    refusalsPath: ws.refusalsPath,
+    repoRoot,
+  });
+  const ok = report.operations.journals_verified
+    && report.integrity.audit_ledger.ok
+    && report.integrity.refusal_log.ok
+    && report.operations.blob_refs.failed === 0;
+  r(ctx).result({ command: "center", engine_version: ENGINE_VERSION, ok, ...report });
+  return ok ? ExitCode.ok : ExitCode.partial;
 }
 
 /* ────────────────────  welcome front door + tour (XVIII-2)  ──────────────────── */

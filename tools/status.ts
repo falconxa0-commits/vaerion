@@ -9,6 +9,8 @@
 import { readdirSync, readFileSync, statSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { ENGINE_VERSION } from "../packages/vaerion/src/journal/writer.ts";
+import { measureCenter } from "../packages/vaerion/src/center/center.ts";
+import { evaluateReleaseReadiness } from "../packages/vaerion/src/repo/release.ts";
 
 const ROOT = resolve(import.meta.dir, "..");
 
@@ -59,16 +61,60 @@ const milestones = [
   { id: "GA", name: "General Availability", status: "pending", progress: 0, evidence: "PUBLIC BETA READY declared at Phase 1 close (v0.1.7-rc1): legal foundation (Apache-2.0), signed reproducible release artifacts, CI pipeline, security dossier, beta experience executed; GA requires the risk-ledger exit criteria, release-train Founder steps, and the GO decision." },
 ];
 
+// ── Command center (constitution v1.3 A3, Phase 6): the SAME measured core
+// `vae center` uses — never a second implementation.
+
+// The phase ledger of record (D-T), parsed from the constitution artifact.
+const phaseLedger: Array<{ phase: string; status: string; evidence: string }> = [];
+try {
+  const constitution = readFileSync(join(ROOT, "docs", "constitution", "VAERION_CONSTITUTION_v1.3.md"), "utf8");
+  for (const m of constitution.matchAll(/^\| ([^|]+) \| (ASCENSION XVIII|PHASE Ω) \| (✅ complete|▶ in flight|❌ NOT complete) \| (.+?) \|$/gm)) {
+    phaseLedger.push({ phase: m[1]!.trim(), status: m[3]!.trim(), evidence: m[4]!.trim() });
+  }
+} catch {
+  // Constitution unreadable: measured absence — the section renders empty.
+}
+
+// Release readiness digest (fail-closed, D-S) for THIS repository.
+let release: { measured: boolean; ready?: boolean; verdict?: string; passed?: number; total?: number; blockers: string[]; note?: string };
+try {
+  const report = await evaluateReleaseReadiness(ROOT, { liveGates: false });
+  release = {
+    measured: true,
+    ready: report.ready,
+    verdict: report.verdict,
+    passed: report.passed,
+    total: report.total,
+    blockers: report.blockers.map((b) => `${b.check}: ${b.detail}`),
+  };
+} catch (err) {
+  release = { measured: false, blockers: [], note: (err as Error).message };
+}
+
+// The operator cockpit fold over the companion demo workspace.
+const demoDir = join(ROOT, "examples", "vaerion-demo");
+const commandCenter = await measureCenter({
+  root: demoDir,
+  journalDir: join(demoDir, ".vaerion", "journal"),
+  blobsDir: join(demoDir, ".vaerion", "blobs"),
+  auditPath: join(demoDir, ".vaerion", "audit.log"),
+  refusalsPath: join(demoDir, ".vaerion", "refusals.log"),
+  repoRoot: ROOT,
+});
+
 const status = {
   generatedAt: new Date().toISOString(),
   engineVersion: ENGINE_VERSION,
   substrate: "TypeScript on Bun (ADR-0018 — provisional with recorded migration path; Founder ratification pending)",
   verification,
-  tests: { suites: 25, assertedExpectations: 1969, totalTests: 290, coverage: { lines: 86.00, branches: 90.84, floors: "bunfig.toml coverageThreshold (OBJ-Q6, ratcheted at MS-6 bundle close: 0.86/0.74/0.86/0.90; held at PHASE Ω close)" }, note: "counts from the latest full run of `bun test tests/ --coverage`" },
+  tests: { suites: 30, assertedExpectations: 2498, totalTests: 388, coverage: { lines: 86.00, branches: 90.84, floors: "bunfig.toml coverageThreshold (OBJ-Q6, ratcheted at MS-6 bundle close: 0.86/0.74/0.86/0.90; held at every ASCENSION phase close)" }, note: "counts from the latest full run of `bun test tests/ --coverage`" },
   code: { engine, engineTests, sdk, tools },
   contracts: { specFiles, adrCount: adrFiles.length, adrFiles },
   milestones,
   overallProgress: Math.round(milestones.reduce((acc, m) => acc + m.progress, 0) / milestones.length),
+  phaseLedger,
+  release,
+  commandCenter,
   risks: [
     "Substrate: TypeScript-on-Bun reference implementation is explicitly PROVISIONAL (ADR-0018, Phase 1 finalization) with a recorded migration path; Founder ratification pending.",
     "Release signing uses the bootstrap Ed25519 key; rotation to a held-offline key is Founder-gated (docs/security/RISK-LEDGER.md R-2).",
@@ -78,10 +124,10 @@ const status = {
     "ModelPlanner success path needs a recorded real-provider cassette for end-to-end golden coverage (environment has no provider network access).",
   ],
   nextWork: [
-    "Release train steps 3-5 (publish, announce, key ceremony) — Founder-gated at remote provisioning; v0.1.7-rc2 artifacts are reproducible via tools/dist-pack.ts.",
+    "ASCENSION phase 6 (command-center) closes the Founder four-phase program; phase 7 awaits Founder re-issue or cancellation.",
     "MS-6 remaining exit criteria: native single-binary installers, performance double-check, accessibility sweep; then the daemon packages route group (wire parity, spec/openapi regen).",
-    "Provision the GitHub remote + enable Actions (workflow ready: .github/workflows/verify.yml) and provision the RELEASE_SIGNING_KEY secret.",
-    "Beta program: BETA-ONBOARDING.md S1-S4 feedback collection begins at public announcement.",
+    "GitHub synchronization executes at program close (remote provisioned by the Founder: falconxa0-commits/vaerion, main at a strict ancestor — fast-forward push ready).",
+    "Release train steps (publish, announce, key ceremony) — Founder-gated; artifacts are reproducible via tools/dist-pack.ts at the release tag.",
     "Coverage: per-module ratchets on top of the total-based floors (mechanical follow-up).",
   ],
 };
