@@ -1,57 +1,57 @@
 {
-  "generatedAt": "2026-09-02T22:31:33.578Z",
+  "generatedAt": "2026-09-02T22:39:25.643Z",
   "engineVersion": "0.1.10-rc1",
   "substrate": "TypeScript on Bun (ADR-0018 — provisional with recorded migration path; Founder ratification pending)",
   "verification": {
-    "generatedAt": "2026-09-02T22:31:33.291Z",
+    "generatedAt": "2026-09-02T22:39:25.379Z",
     "ok": true,
     "gates": [
       {
         "gate": "typecheck-engine",
         "ok": true,
-        "durationMs": 4009
+        "durationMs": 4307
       },
       {
         "gate": "typecheck-sdk",
         "ok": true,
-        "durationMs": 3227
+        "durationMs": 3195
       },
       {
         "gate": "tests",
         "ok": true,
-        "durationMs": 5596
+        "durationMs": 6426
       },
       {
         "gate": "layerlint",
         "ok": true,
-        "durationMs": 28
+        "durationMs": 30
       },
       {
         "gate": "constitutional-check",
         "ok": true,
-        "durationMs": 220
+        "durationMs": 232
       },
       {
         "gate": "perf-budget",
         "ok": true,
-        "durationMs": 283
+        "durationMs": 326
       },
       {
         "gate": "a11y-structural",
         "ok": true,
-        "durationMs": 23
+        "durationMs": 25
       },
       {
         "gate": "repo-lint",
         "ok": true,
-        "durationMs": 10056
+        "durationMs": 9813
       }
     ],
     "measured": {
-      "testsPassed": 461,
+      "testsPassed": 475,
       "testsFailed": 0,
-      "expectations": 2812,
-      "testFiles": 36
+      "expectations": 2848,
+      "testFiles": 37
     }
   },
   "constitution": {
@@ -59,9 +59,9 @@
     "version": "v1.6"
   },
   "tests": {
-    "suites": 36,
-    "assertedExpectations": 2812,
-    "totalTests": 461,
+    "suites": 37,
+    "assertedExpectations": 2848,
+    "totalTests": 475,
     "testsFailed": 0,
     "coverage": {
       "lines": 86.52,
@@ -76,16 +76,16 @@
       "lines": 21084
     },
     "engineTests": {
-      "files": 36,
-      "lines": 10343
+      "files": 37,
+      "lines": 10517
     },
     "sdk": {
       "files": 3,
       "lines": 779
     },
     "tools": {
-      "files": 12,
-      "lines": 2091
+      "files": 13,
+      "lines": 2366
     }
   },
   "contracts": {
@@ -280,16 +280,23 @@
       "era": "ASCENSION XVIII",
       "status": "✅ complete",
       "evidence": "the burndown (docs/ga/BURNDOWN.md) + the GO/NO-GO dossier (docs/ga/GO-NO-GO.md) archived; §7 reconciled by A5; program close: version lockstep 0.1.10-rc1, tag `v0.1.10-rc1`, artifact trust chain, canonical + GitHub synchronization (§11 synchronization ledger)"
+    },
+    {
+      "id": "dt-13",
+      "phase": "11",
+      "era": "ASCENSION XIX",
+      "status": "✅ complete",
+      "evidence": "the CI truth law (A6): record upload `include-hidden-files: true` (the 6/6-red-run root cause); red gates NAME failures (tools/gate-output.ts + verify.ts full-output persistence .vaerion-logs/); journal.append budget re-based 400→900 ms with the GitHub-runner median of record (452.95 ms) + additive report `host`; measured test counts in `.vaerion-verification.json` (the one measured source — status.ts counters now derive); ROADMAP_PROGRESS.md GENERATED from tools/status.ts (the stale hand-written era closed); EIGHT gates green (461/0/2812/36); worklog `ASC-XIX-PHASE-11`"
     }
   ],
   "release": {
     "measured": true,
     "ready": false,
     "verdict": "BLOCKED",
-    "passed": 8,
+    "passed": 9,
     "total": 12,
     "blockers": [
-      "git-tree-clean: working tree dirty: 0 staged, 11 unstaged, 2 untracked",
+      "git-tree-clean: working tree dirty: 0 staged, 4 unstaged, 3 untracked",
       "release-tag-binding: HEAD is not exactly at a v* release tag"
     ]
   },
@@ -354,12 +361,12 @@
       "measured": true,
       "ready": false,
       "verdict": "BLOCKED",
-      "passed": 8,
+      "passed": 9,
       "total": 12,
       "blockers": [
         {
           "check": "git-tree-clean",
-          "detail": "working tree dirty: 0 staged, 11 unstaged, 2 untracked"
+          "detail": "working tree dirty: 0 staged, 4 unstaged, 3 untracked"
         },
         {
           "check": "release-tag-binding",

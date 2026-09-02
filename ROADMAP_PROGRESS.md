@@ -7,7 +7,7 @@
 - Engine version of record: `0.1.10-rc1`
 - Constitution of record: `v1.6` (Amendment Log §11)
 - Verification record: GREEN — 8/8 gates ok (`.vaerion-verification.json`)
-- Measured tests: 461 pass · 0 fail · 2812 expectations · 36 files
+- Measured tests: 475 pass · 0 fail · 2848 expectations · 37 files
 - Coverage floors: bunfig.toml coverageThreshold (OBJ-Q6, ratcheted at MS-6 bundle close: 0.86/0.74/0.86/0.90; held at every ASCENSION phase close)
 
 ## Milestone board (§7)
@@ -40,6 +40,7 @@
 | 8 | ASCENSION XVIII | ✅ complete |
 | 9 | ASCENSION XVIII | ✅ complete |
 | 10 | ASCENSION XVIII | ✅ complete |
+| 11 | ASCENSION XIX | ✅ complete |
 
 ## Recommended next work (priority order)
 
