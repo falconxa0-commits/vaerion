@@ -3,12 +3,12 @@
 # is Founder-gated via the key ceremony).
 # Platform marker: UNVERIFIED — WINGET.
 PackageIdentifier: Vaerion.Vaerion
-PackageVersion: 0.1.9-rc1
+PackageVersion: 0.1.10-rc1
 Channel: stable
 Installers:
   - Architecture: x64
     InstallerType: zip
-    InstallerUrl: https://vaerion.dev/dist/vaerion-0.1.9-rc1-windows-x64.zip # release-time
+    InstallerUrl: https://vaerion.dev/dist/vaerion-0.1.10-rc1-windows-x64.zip # release-time
     InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000 # release-time
     NestedInstallerType: portable
     NestedInstallerFiles:
@@ -17,7 +17,7 @@ Installers:
     UpgradeBehavior: uninstallPrevious
   - Architecture: arm64
     InstallerType: zip
-    InstallerUrl: https://vaerion.dev/dist/vaerion-0.1.9-rc1-windows-arm64.zip # release-time
+    InstallerUrl: https://vaerion.dev/dist/vaerion-0.1.10-rc1-windows-arm64.zip # release-time
     InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000 # release-time
     NestedInstallerType: portable
     NestedInstallerFiles:

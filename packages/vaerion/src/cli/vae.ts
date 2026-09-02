@@ -15,7 +15,7 @@ import { isVaerionError } from "./workspace.ts";
 import { Renderer, setBannerVersion } from "./render.ts";
 import { Ansi, banner, errorBlock, footer, type RenderEnv } from "./ui.ts";
 
-export const VERSION = "0.1.9-rc1";
+export const VERSION = "0.1.10-rc1";
 setBannerVersion(VERSION);
 
 const MAIN_HELP = `vae — Vaerion engine command line (v${VERSION})

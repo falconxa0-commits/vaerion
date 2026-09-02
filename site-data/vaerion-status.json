@@ -1,50 +1,50 @@
 {
-  "generatedAt": "2026-09-02T21:06:44.315Z",
-  "engineVersion": "0.1.9-rc1",
+  "generatedAt": "2026-09-02T21:13:00.930Z",
+  "engineVersion": "0.1.10-rc1",
   "substrate": "TypeScript on Bun (ADR-0018 — provisional with recorded migration path; Founder ratification pending)",
   "verification": {
-    "generatedAt": "2026-09-02T21:05:51.254Z",
+    "generatedAt": "2026-09-02T21:12:50.232Z",
     "ok": true,
     "gates": [
       {
         "gate": "typecheck-engine",
         "ok": true,
-        "durationMs": 4322
+        "durationMs": 3983
       },
       {
         "gate": "typecheck-sdk",
         "ok": true,
-        "durationMs": 3522
+        "durationMs": 3167
       },
       {
         "gate": "tests",
         "ok": true,
-        "durationMs": 6969
+        "durationMs": 6503
       },
       {
         "gate": "layerlint",
         "ok": true,
-        "durationMs": 32
+        "durationMs": 39
       },
       {
         "gate": "constitutional-check",
         "ok": true,
-        "durationMs": 227
+        "durationMs": 254
       },
       {
         "gate": "perf-budget",
         "ok": true,
-        "durationMs": 340
+        "durationMs": 357
       },
       {
         "gate": "a11y-structural",
         "ok": true,
-        "durationMs": 27
+        "durationMs": 28
       },
       {
         "gate": "repo-lint",
         "ok": true,
-        "durationMs": 11157
+        "durationMs": 11086
       }
     ]
   },
@@ -66,7 +66,7 @@
     },
     "engineTests": {
       "files": 35,
-      "lines": 10099
+      "lines": 10104
     },
     "sdk": {
       "files": 3,
@@ -165,19 +165,19 @@
     {
       "id": "MS-6",
       "name": "Packaging + Hardening",
-      "status": "in_progress",
-      "progress": 85,
-      "evidence": "PHASE 1 (2026-08-30): distribution packaging fail-closed tooling (tools/dist-pack.ts: deterministic git-archive tarball built twice + byte-compared, canonical MANIFEST.json with sha256+blake3, Ed25519-signed manifest with self-verification, tamper detection proven, consumer tools/dist-verify.ts), LICENSE Apache-2.0 + CONTRIBUTING, beta experience (README/QUICKSTART/INSTALL/TROUBLESHOOTING/BETA-ONBOARDING + examples/vaerion-demo executed end-to-end), security dossier (docs/security/ threat model + mitigations + 7-item risk ledger, zero critical), ADR finalization (docs/adr/README.md — no unclear decisions; ADR-0018 provisional with migration path), CI workflow (.github/workflows/verify.yml), version lockstep 0.1.7-rc1. REPRODUCIBLE BUNDLES (ADR-0016) COMPLETE: src/package/ deterministic .vxn format (magic VXN1, canonical JSON manifest, strictly ascending entry order, zstd pinned level 19, blake3 content identity); build = pure fold over declared inputs (config package.include + pin-verified extension artifacts auto-carried, E2100 refusal on mismatch) — no wall-clock, no ambient paths, byte-identical rebuilds proven by test; vaerion.lock generated canonical-JSON seal (config fingerprint + extension pins + bundle digest); verify = pure check with honest per-check findings (payload/entry digests E2201, pin swap E2202, non-canonical E2200, bad magic E2203, stale lock E2205) — content NEVER executed; CLI `vae package build|verify` (additive ninth command) with --dry-run purity + journaled package.built/package.verified runs + receipts; doctor package-lock cross-check (E2205); config package block (spec 0.1.6: errors E2200–E2206, events package.built/verified); exit-code mapping E2204→usage, verification failures→partial; +28 tests (unit format law + integration build/verify/tamper matrix/doctor), coverage ratcheted to measured 86.07/90.87. PHASE 7 (2026-09-03, v1.4 A4): the performance double-check EXECUTED as permanent law — one deterministic perf harness (src/perf/perf.ts: seven engine-critical operations, fixed seeded inputs, median-of-N) against typed budget contracts, gated as verify.ts step 6 (perf-budget) through the single verification authority (D-R); the remaining MS-6 close-out is the accessibility sweep (Phase 8) + native installers (host-gated); release-train publish steps are Founder-gated. PHASE 8 (2026-09-03, v1.4 A4): the accessibility sweep EXECUTED as permanent law — nine deterministic structural invariants (tools/a11y-check.ts, gate 7 a11y-structural: lang, metadata, single-h1, landmarks, labeled sections, image alt, labeled progressbars, natural tab order, focus-visible styling); three real defects found and fixed at root (unlabeled progress bars, missing base :focus-visible styling, duplicate React keys from the two legitimate Phase-8 ledger rows — caught by the browser audit); CLI color accessibility behavior-pinned (NO_COLOR/TERM=dumb/CI veto TTY, explicit VAE_UI beats ambient, --json never painted); browser-measured audit recorded (docs/ga/ACCESSIBILITY-AUDIT.md, zero console errors, zero overflow at 390/1280, footer law verified); release-train publish steps are Founder-gated. PHASE Ω (2026-08-31): product refinement pass — brand system (tools/brand-render.ts generates the seal/monogram/wordmark/editions byte-reproducibly; brand/BRAND-BOOK.md; brand book PDF; web face + favicon rebranded), terminal design language (src/cli/ui.ts: TTY-gated rich rendering — panels, tables, badges, receipts, educated error blocks with E-code + fix + docs pointer, quiet spinners; plain/--json contracts byte-stable and pinned by tests), the additive `vae provenance` command (artifact evidence with recomputed digests), honest dev surface (ADR-0018 Provisional wording, current milestone position), docs (README refresh, FAQ, quickstart provenance step), version lockstep 0.1.7-rc2 + spec 0.1.7-rc2 changelog + golden re-bless. +12 tests (290 total, 1969 expectations); coverage floors held (measured 86.00 lines / 90.84 branches)."
+      "status": "complete",
+      "progress": 100,
+      "evidence": "PHASE 10 (2026-09-03, v1.5 A5): MS-6 reconciled COMPLETE at the GA-gate boundary — performance double-check = the permanent perf-budget gate (Phase 7), accessibility sweep = the permanent a11y-structural gate + browser-measured audit (Phase 8), distribution packaging VERIFIED (npm/PyPI/universal/deb) with brew/winget/dmg/rpm honestly UNVERIFIED host-gated; the release train rehearsed end-to-end (Phase 9). Prior record: PHASE 1 (2026-08-30): distribution packaging fail-closed tooling (tools/dist-pack.ts: deterministic git-archive tarball built twice + byte-compared, canonical MANIFEST.json with sha256+blake3, Ed25519-signed manifest with self-verification, tamper detection proven, consumer tools/dist-verify.ts), LICENSE Apache-2.0 + CONTRIBUTING, beta experience (README/QUICKSTART/INSTALL/TROUBLESHOOTING/BETA-ONBOARDING + examples/vaerion-demo executed end-to-end), security dossier (docs/security/ threat model + mitigations + 7-item risk ledger, zero critical), ADR finalization (docs/adr/README.md — no unclear decisions; ADR-0018 provisional with migration path), CI workflow (.github/workflows/verify.yml), version lockstep 0.1.7-rc1. REPRODUCIBLE BUNDLES (ADR-0016) COMPLETE: src/package/ deterministic .vxn format (magic VXN1, canonical JSON manifest, strictly ascending entry order, zstd pinned level 19, blake3 content identity); build = pure fold over declared inputs (config package.include + pin-verified extension artifacts auto-carried, E2100 refusal on mismatch) — no wall-clock, no ambient paths, byte-identical rebuilds proven by test; vaerion.lock generated canonical-JSON seal (config fingerprint + extension pins + bundle digest); verify = pure check with honest per-check findings (payload/entry digests E2201, pin swap E2202, non-canonical E2200, bad magic E2203, stale lock E2205) — content NEVER executed; CLI `vae package build|verify` (additive ninth command) with --dry-run purity + journaled package.built/package.verified runs + receipts; doctor package-lock cross-check (E2205); config package block (spec 0.1.6: errors E2200–E2206, events package.built/verified); exit-code mapping E2204→usage, verification failures→partial; +28 tests (unit format law + integration build/verify/tamper matrix/doctor), coverage ratcheted to measured 86.07/90.87. PHASE 7 (2026-09-03, v1.4 A4): the performance double-check EXECUTED as permanent law — one deterministic perf harness (src/perf/perf.ts: seven engine-critical operations, fixed seeded inputs, median-of-N) against typed budget contracts, gated as verify.ts step 6 (perf-budget) through the single verification authority (D-R); the remaining MS-6 close-out is the accessibility sweep (Phase 8) + native installers (host-gated); release-train publish steps are Founder-gated. PHASE 8 (2026-09-03, v1.4 A4): the accessibility sweep EXECUTED as permanent law — nine deterministic structural invariants (tools/a11y-check.ts, gate 7 a11y-structural: lang, metadata, single-h1, landmarks, labeled sections, image alt, labeled progressbars, natural tab order, focus-visible styling); three real defects found and fixed at root (unlabeled progress bars, missing base :focus-visible styling, duplicate React keys from the two legitimate Phase-8 ledger rows — caught by the browser audit); CLI color accessibility behavior-pinned (NO_COLOR/TERM=dumb/CI veto TTY, explicit VAE_UI beats ambient, --json never painted); browser-measured audit recorded (docs/ga/ACCESSIBILITY-AUDIT.md, zero console errors, zero overflow at 390/1280, footer law verified); release-train publish steps are Founder-gated. PHASE Ω (2026-08-31): product refinement pass — brand system (tools/brand-render.ts generates the seal/monogram/wordmark/editions byte-reproducibly; brand/BRAND-BOOK.md; brand book PDF; web face + favicon rebranded), terminal design language (src/cli/ui.ts: TTY-gated rich rendering — panels, tables, badges, receipts, educated error blocks with E-code + fix + docs pointer, quiet spinners; plain/--json contracts byte-stable and pinned by tests), the additive `vae provenance` command (artifact evidence with recomputed digests), honest dev surface (ADR-0018 Provisional wording, current milestone position), docs (README refresh, FAQ, quickstart provenance step), version lockstep 0.1.7-rc2 + spec 0.1.7-rc2 changelog + golden re-bless. +12 tests (290 total, 1969 expectations); coverage floors held (measured 86.00 lines / 90.84 branches)."
     },
     {
       "id": "GA",
       "name": "General Availability",
       "status": "pending",
-      "progress": 0,
-      "evidence": "PUBLIC BETA READY declared at Phase 1 close (v0.1.7-rc1): legal foundation (Apache-2.0), signed reproducible release artifacts, CI pipeline, security dossier, beta experience executed; GA requires the risk-ledger exit criteria, release-train Founder steps, and the GO decision."
+      "progress": 95,
+      "evidence": "REHEARSED AND PENDING FOUNDER GO (v1.5 A5): the three GA exit criteria are met with evidence — burndown archived (docs/ga/BURNDOWN.md), GO/NO-GO dossier archived (docs/ga/GO-NO-GO.md: GO for public beta recommended, full GA blocked only by the Founder gates F-2…F-6 + host-gated channel verification), release train rehearsed end-to-end (docs/ga/RELEASE-TRAIN-REHEARSAL.md); the GO decision itself is human authority (P4) — automation proposes, the Founder disposes. Earlier: PUBLIC BETA READY declared at Phase 1 close (v0.1.7-rc1)."
     }
   ],
-  "overallProgress": 86,
+  "overallProgress": 99,
   "phaseLedger": [
     {
       "id": "dt-0",
@@ -248,14 +248,14 @@
     {
       "id": "dt-11",
       "phase": "9",
-      "status": "▶ in flight",
-      "evidence": "ratified under A4 — the release-train rehearsal (one deterministic end-to-end runner + measured rehearsal report); executes the §7 GA \"release train rehearsed\""
+      "status": "✅ complete",
+      "evidence": "ONE rehearsal runner (tools/rehearsal.ts: nine fixed steps, fail-closed D-R departure, scratch-only side effects); the REAL train PASSED end-to-end at v0.1.9-rc1 (trust chain ALL CHECKS PASSED; installed vae lockstep verified); report docs/ga/RELEASE-TRAIN-REHEARSAL.md; D-N gap fixed (`version --json` NDJSON); EIGHT gates green (443/0/2752/35); worklog `ASC-XVIII-PHASE-9`"
     },
     {
       "id": "dt-12",
       "phase": "10",
-      "status": "▶ in flight",
-      "evidence": "ratified under A4 — the GA gate (burndown ledger + GO/NO-GO dossier + §7 reconciliation at the boundary; program close: version lockstep, tag, artifact trust chain, canonical + GitHub synchronization)"
+      "status": "✅ complete",
+      "evidence": "the burndown (docs/ga/BURNDOWN.md) + the GO/NO-GO dossier (docs/ga/GO-NO-GO.md) archived; §7 reconciled by A5; program close: version lockstep 0.1.10-rc1, tag `v0.1.10-rc1`, artifact trust chain, canonical + GitHub synchronization (§11 synchronization ledger)"
     }
   ],
   "release": {
@@ -265,7 +265,7 @@
     "passed": 8,
     "total": 12,
     "blockers": [
-      "git-tree-clean: working tree dirty: 0 staged, 6 unstaged, 4 untracked",
+      "git-tree-clean: working tree dirty: 0 staged, 21 unstaged, 0 untracked",
       "release-tag-binding: HEAD is not exactly at a v* release tag"
     ]
   },
@@ -328,7 +328,7 @@
       "blockers": [
         {
           "check": "git-tree-clean",
-          "detail": "working tree dirty: 0 staged, 6 unstaged, 4 untracked"
+          "detail": "working tree dirty: 0 staged, 21 unstaged, 0 untracked"
         },
         {
           "check": "release-tag-binding",
@@ -347,7 +347,7 @@
     "ModelPlanner success path needs a recorded real-provider cassette for end-to-end golden coverage (environment has no provider network access)."
   ],
   "nextWork": [
-    "THE GA CAMPAIGN (Phases 7–10, v1.4 A4): Phases 7 (performance budget law), 8 (accessibility law), and 9 (release-train rehearsal — PASSED end-to-end at v0.1.9-rc1, docs/ga/RELEASE-TRAIN-REHEARSAL.md) complete — verify.ts carries EIGHT gates; Phase 10 (the GA gate) closes the program.",
+    "THE GA CAMPAIGN (Phases 7–10) is COMPLETE under Constitution v1.5 (A5): MS-6 reconciled complete, the burndown + GO/NO-GO dossier archived, GA rehearsed and PENDING FOUNDER GO — the Founder gates (F-2 legal name, F-3 key ceremony, F-4 substrate ratification, F-5 publish, F-6 real-provider cassettes) are the remaining path to full GA.",
     "MS-6 remaining exit criteria: native single-binary installers (host-gated: brew/winget/dmg/rpm authored in Phase 1, awaiting their platforms); then the daemon packages route group (wire parity, spec/openapi regen).",
     "Program close (Phase 10): version lockstep, release tag, artifact trust chain, canonical + GitHub synchronization, and the GO/NO-GO dossier.",
     "Release train steps (publish, announce, key ceremony) — Founder-gated; artifacts are reproducible via tools/dist-pack.ts at the release tag.",

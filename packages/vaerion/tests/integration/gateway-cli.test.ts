@@ -256,7 +256,10 @@ describe("explain / doctor / dev gateway surfaces", () => {
     const gateway = devPayload.gateway as Record<string, unknown>;
     expect((gateway.matrix as Array<Record<string, unknown>>).length).toBe(4);
     expect(String(devPayload.next_milestone)).toContain("MS-6");
-    expect(String(devPayload.next_milestone)).toContain("Productization Era");
+    // The position of record moves with reality (v1.5 A5): the GA campaign is
+    // complete and GA is rehearsed, pending the Founder's GO.
+    expect(String(devPayload.next_milestone)).toContain("GA CAMPAIGN");
+    expect(String(devPayload.next_milestone)).toContain("PENDING FOUNDER GO");
     expect(String(devPayload.next_milestone)).not.toContain("toward release v0.1.7-rc2");
   });
 });

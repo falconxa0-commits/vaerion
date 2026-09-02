@@ -11,7 +11,7 @@
 set -eu
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../.." && pwd)
-VERSION=${1:-0.1.9-rc1}
+VERSION=${1:-0.1.10-rc1}
 OUT="${2:-$ROOT/dist/macos}"
 NAME="Vaerion-$VERSION"
 STAGE=$(mktemp -d)
