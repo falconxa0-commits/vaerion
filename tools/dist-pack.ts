@@ -29,11 +29,17 @@ import {
 import { existsSync, mkdirSync, readFileSync, writeFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { blake3HexOf } from "../packages/vaerion/src/kernel/hash.ts";
+import { ENGINE_VERSION } from "../packages/vaerion/src/journal/writer.ts";
 
 const ROOT = resolve(import.meta.dir, "..");
 const DIST = join(ROOT, "dist");
-const VERSION = "0.1.7-rc2";
+// Version lockstep by construction: the pack derives its version from the
+// engine itself (the Phase 8 readiness evaluator treats any disagreement as
+// a blocker, and the evaluator's own sweep missed nothing — this constant
+// DID drift once, which is why it is now derived, never declared).
+const VERSION = ENGINE_VERSION;
 const NAME = `vaerion-${VERSION}`;
+const TARBALL = `${NAME}-source.tar.gz`;
 
 function run(cmd: string[], opts: { cwd?: string } = {}): { ok: boolean; out: string } {
   const proc = spawnSync(cmd[0]!, cmd.slice(1), {
@@ -222,7 +228,7 @@ if (!sigOk) {
 console.log(`dist-pack: Ed25519 signature self-verified (public key fp sha256:${pubFp}…, ${generated ? "bootstrap key GENERATED this run" : "bootstrap key loaded"})`);
 
 // ---- 8. SHA256SUMS last: covers EVERYTHING except itself ----------------------
-const sumTargets = ["vaerion-0.1.7-rc2-source.tar.gz", "vaerion-demo.vxn", "VERIFY.md", "dist-report.json", "MANIFEST.json", "MANIFEST.json.sig"];
+const sumTargets = [TARBALL, "vaerion-demo.vxn", "VERIFY.md", "dist-report.json", "MANIFEST.json", "MANIFEST.json.sig"];
 const sums = sumTargets.map((n) => `${sha256File(join(DIST, n))}  ${n}`).join("\n") + "\n";
 writeFileSync(join(DIST, "SHA256SUMS"), sums);
 

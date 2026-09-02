@@ -412,3 +412,17 @@ Stage Summary:
 - The trust system is real: `vae repo` measured its own in-flight phase accurately (11 modified + 5 untracked during development); `vae ci validate` caught the real verify.yml defect before the fix; `vae release readiness` refused to call the in-flight tree READY (BLOCKED 7/12) — the evaluator measures reality, not intentions.
 - Honest ledger: GitHub Actions execution, remote branch protections, and the secret-provisioned key path are UNVERIFIED/NEVER EXECUTED in this environment (labeled by the tooling itself, D-S); canonical re-provision + adversarial probes + push happen at phase close; commit-identity history (14 Z User commits) remains recorded, immutable, Founder-gated.
 - Founder decisions carried forward: F-1..F-6 unchanged; phases 2–7 would need explicit re-issue or cancellation.
+
+---
+Task ID: ASC-XVIII-PHASE-8-OPS
+Agent: Auren — Principal Release Commander (phase-close operations, disclosed)
+Task: Phase 8 close-out — canonical provisioning, adversarial probes, tag binding, artifact pack.
+
+Work Log:
+- dist-pack FOUND A REAL VERSION DRIFT the readiness sweep had missed: tools/dist-pack.ts carried hardcoded `VERSION = "0.1.7-rc2"` + a stale sumTargets literal — the first pack produced `vaerion-0.1.7-rc2-source.tar.gz`. Root-cause fixed: VERSION is now DERIVED from ENGINE_VERSION (lockstep by construction, never declared twice again); TARBALL name derived from it.
+- PROBE DISCIPLINE (disclosed honestly): two probe-design errors during D-Q adversarial testing — probes that cut an empty commit from main's tip are genuinely fast-forward and were CORRECTLY accepted by the hook, landing junk probe commits on the canonical store; the store was re-provisioned clean each time (same protected-main law). The FINAL probe battery is correctly divergent and all three refusals measured: non-ff force-push REFUSED ("main is fast-forward-only (D-Q)"), tag overwrite REFUSED ("v* tags are immutable (D-Q)"), main deletion REFUSED ("main deletion is prohibited (D-Q)"); post-probe remote state byte-identical to baseline (ls-remote diff empty).
+- Final lawful sequence: fix commit → canonical re-provisioned fresh → main pushed → tag v0.1.8-rc1 created AT the final commit and pushed ONCE (immutability respected) → dist-pack --ref v0.1.8-rc1 → consumer dist-verify ALL CHECKS PASSED + tamper probe REFUSED the corrupted set.
+
+Stage Summary:
+- The pack, the tag, the canonical store, and the readiness evaluator now agree on one version (0.1.8-rc1) with zero hardcoded copies outside the engine's own constant.
+- Bootstrap signing key: LOADED from the Phase-1-era key file this run (it survived this boundary); fp recorded in dist/VERIFY.md.
