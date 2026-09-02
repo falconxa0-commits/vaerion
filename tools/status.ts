@@ -67,7 +67,7 @@ const milestones = [
 // The phase ledger of record (D-T), parsed from the constitution artifact.
 const phaseLedger: Array<{ phase: string; status: string; evidence: string }> = [];
 try {
-  const constitution = readFileSync(join(ROOT, "docs", "constitution", "VAERION_CONSTITUTION_v1.3.md"), "utf8");
+  const constitution = readFileSync(join(ROOT, "docs", "constitution", "VAERION_CONSTITUTION_v1.4.md"), "utf8");
   for (const m of constitution.matchAll(/^\| ([^|]+) \| (ASCENSION XVIII|PHASE Ω) \| (✅ complete|▶ in flight|❌ NOT complete) \| (.+?) \|$/gm)) {
     phaseLedger.push({ phase: m[1]!.trim(), status: m[3]!.trim(), evidence: m[4]!.trim() });
   }

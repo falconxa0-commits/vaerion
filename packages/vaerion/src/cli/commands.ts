@@ -1305,8 +1305,8 @@ export async function cmdDev(ctx: CommandContext): Promise<number> {
     },
     workspace: { root: ws.root, runs: runs.length },
     spec: "spec/ (single source of truth)",
-    constitution: "docs/constitution/VAERION_CONSTITUTION_v1.3.md",
-    next_milestone: "ASCENSION XVIII — Productization Era: the Founder program (Phases 3–6: account · ai · init-templates · command-center) in flight under Constitution v1.3 (A3) · Phase 2 (the empty-laptop experience) complete · Phase 8 (git/CI/constitution synchronization) complete · Phase 7 awaits Founder re-issue or cancellation · MS-6 close-out (native installers, performance, accessibility) + release train remain Founder-gated",
+    constitution: "docs/constitution/VAERION_CONSTITUTION_v1.4.md",
+    next_milestone: "ASCENSION XVIII — Productization Era: THE GA CAMPAIGN (Phases 7–10: performance budget law · accessibility law · release-train rehearsal · the GA gate) in flight under Constitution v1.4 (A4) · Phases 0–6 + 8 complete · canonical + GitHub synchronized (v0.1.9-rc1) · MS-6 close-out and GA preparation execute as one ratified program",
   });
   return ExitCode.ok;
 }
