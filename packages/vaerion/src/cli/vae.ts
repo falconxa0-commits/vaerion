@@ -9,7 +9,7 @@
  */
 
 import { ExitCode, type CliIo } from "./io.ts";
-import { buildWelcomePayload, cmdDev, cmdExplain, cmdInit, cmdJournal, cmdDoctor, cmdPackage, cmdProvenance, cmdRepo, cmdRelease, cmdResume, cmdRun, cmdServe, cmdCi, cmdTour, type CommandContext } from "./commands.ts";
+import { buildWelcomePayload, cmdAccount, cmdDev, cmdExplain, cmdInit, cmdJournal, cmdDoctor, cmdPackage, cmdProvenance, cmdRepo, cmdRelease, cmdResume, cmdRun, cmdServe, cmdCi, cmdTour, type CommandContext } from "./commands.ts";
 import { VaerionError } from "../kernel/errors.ts";
 import { isVaerionError } from "./workspace.ts";
 import { Renderer, setBannerVersion } from "./render.ts";
@@ -103,6 +103,11 @@ Command surface (the Daily Seven + additive commands):
                              nine steps measured against this machine and
                              this directory; it teaches by pointing at real
                              commands, never by executing them
+  account                    who acts in this workspace (XVIII-3): the actor
+                             law, the actors observed in the journals, the
+                             commit identity (D-P), and declared secret
+                             PROFILES — names only. Read-only. Local identity,
+                             never a cloud account.
 
 Global flags:
   --json                     stable NDJSON output (machine mode, guaranteed)
@@ -113,7 +118,7 @@ Global flags:
 
 Exit codes: 0 ok · 1 internal · 2 usage · 3 broker-denied · 4 provider-down · 5 partial-with-repair-hint
 
-Learn more: docs/constitution/VAERION_CONSTITUTION_v1.2.md · spec/ (contracts)
+Learn more: docs/constitution/VAERION_CONSTITUTION_v1.3.md · spec/ (contracts)
 `;
 
 const COMMAND_HELP: Record<string, string> = {
@@ -315,6 +320,23 @@ vae ci simulate --event push|pull_request|workflow_dispatch|tag [--ref NAME]
   machine and this directory (no network, no writes, no wall-clock in the
   payload). It teaches by pointing at real commands; it never executes
   them. The same directory yields byte-identical --json output.`,
+  account: `vae account
+
+  The identity & attribution surface (constitution v1.3 A3, Phase 3;
+  P5/D-D/D-P). Read-only. It MEASURES who acts here:
+
+    actor law          the canonical local actor and the broker principal
+                       ids — one identity module, no call-site literals
+    observed actors    who appears in this workspace's journals (a
+                       deterministic fold over every envelope's actor)
+    commit identity    the repository's HEAD author and the D-P audit of
+                       recent commits (the same primitives as vae repo)
+    secret profiles    the secret NAMES declared in vaerion.yaml and the
+                       principal patterns granted them — never their values
+                       (ADR-0013: values resolve only behind broker decisions)
+
+  Vaerion has no cloud accounts (P1): your identity is local, attributed,
+  and yours. Exit 0; the same workspace yields byte-identical --json output.`,
 };
 
 interface ParsedArgs {
@@ -430,6 +452,7 @@ export async function runCli(argv: string[], io: CliIo, cwd: string): Promise<Cl
       case "ci": code = await cmdCi(ctx); break;
       case "release": code = await cmdRelease(ctx); break;
       case "tour": code = await cmdTour(ctx); break;
+      case "account": code = await cmdAccount(ctx); break;
       case "version":
         if (renderer.rich) {
           for (const line of banner(new Ansi(true), VERSION, renderer.width)) io.out(line);

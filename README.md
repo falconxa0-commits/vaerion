@@ -64,6 +64,7 @@ vae journal verify <RUN_ID>
 vae doctor
 vae provenance <BUNDLE>.vxn      # permanent evidence for anything it built
 vae repo                         # measure the repository you are standing in
+vae account                      # who acts in this workspace — local identity, measured
 vae ci validate                  # CI must re-run the same six gates (D-R)
 vae release readiness            # can this repository ship? measured only
 ```
@@ -83,8 +84,8 @@ welcome front door):
 
 `init` · `run research|demo|model|agent|workflow` · `resume` · `explain` ·
 `journal ls|show|verify|recover|export` · `doctor` · `dev` · `serve` ·
-`package build|verify` · `provenance` · `repo` · `ci validate|simulate` ·
-`release readiness` · `tour`
+`package build|verify` · `provenance` · `repo` · `account` ·
+`ci validate|simulate` · `release readiness` · `tour`
 
 Every command honors `--json` (stable machine output), `--dry-run`
 (plan only, nothing written), and exit codes 0–5 with the E-code

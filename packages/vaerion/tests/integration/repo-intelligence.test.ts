@@ -707,21 +707,26 @@ describe("repo / ci / release CLI contracts (Five Guarantees)", () => {
 /* ───────────────────────────  law & lockstep regression  ─────────────────────────── */
 
 describe("constitution and version lockstep regression (Phase 8)", () => {
-  test("the ratified constitution is v1.2 with the Phase 2 surface and the honest phase ledger", async () => {
+  test("the ratified constitution is v1.3 with the Phases 3–6 surface and the honest phase ledger", async () => {
     const root = join(import.meta.dir, "..", "..", "..", "..");
-    const constitution = await readFile(join(root, "docs", "constitution", "VAERION_CONSTITUTION_v1.2.md"), "utf8");
-    expect(constitution).toContain("VAERION_CONSTITUTION_v1.2");
+    const constitution = await readFile(join(root, "docs", "constitution", "VAERION_CONSTITUTION_v1.3.md"), "utf8");
+    expect(constitution).toContain("VAERION_CONSTITUTION_v1.3");
     expect(constitution).toContain("D-M′");
     for (const law of ["D-P", "D-Q", "D-R", "D-S", "D-T"]) {
       expect(constitution).toContain(`| ${law} |`);
     }
-    // The v1.2 surface (A2): tour ratified; the welcome front door defined.
-    expect(constitution).toContain("release, tour`");
+    // The v1.3 surface (A3): account, ai, center ratified; init carries the template face.
+    expect(constitution).toContain("tour, account, ai, center`");
+    expect(constitution).toContain("--template NAME");
     expect(constitution).toContain("welcome front door");
-    // Phases 3–7 remain recorded NOT complete (zero repository evidence).
-    expect(constitution).toContain("3–7");
+    // Phases 3–6 are the in-flight Founder program; 7 remains NOT complete.
+    expect(constitution).toContain("▶ in flight");
     expect(constitution).toContain("zero repository evidence");
-    // History is retained unmodified: v1.1 (with the v1.1-era adjudication) and v1.0.
+    // History is retained unmodified: v1.2 (with the A2 surface), v1.1 (with the
+    // v1.1-era adjudication) and v1.0.
+    const v12 = await readFile(join(root, "docs", "constitution", "VAERION_CONSTITUTION_v1.2.md"), "utf8");
+    expect(v12).toContain("VAERION_CONSTITUTION_v1.2");
+    expect(v12).toContain("release, tour`");
     const v11 = await readFile(join(root, "docs", "constitution", "VAERION_CONSTITUTION_v1.1.md"), "utf8");
     expect(v11).toContain("VAERION_CONSTITUTION_v1.1");
     expect(v11).toContain("2–7");

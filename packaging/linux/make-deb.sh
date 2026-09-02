@@ -64,7 +64,7 @@ chmod +x "$CTRL/postinst"
 cat > "$STAGE/usr/share/doc/vaerion/README" <<'EOF'
 Vaerion — evidence, not branding.
 Engine source: /usr/lib/vaerion/<version>/src (self-contained TypeScript).
-Constitution: docs/constitution/VAERION_CONSTITUTION_v1.2.md (in the source tree).
+Constitution: docs/constitution/VAERION_CONSTITUTION_v1.3.md (in the source tree).
 Docs: https://vaerion.dev (release train) · vae --help teaches every command.
 EOF
 gzip -9 -n -c "$ROOT/LICENSE" > "$STAGE/usr/share/doc/vaerion/copyright.gz"

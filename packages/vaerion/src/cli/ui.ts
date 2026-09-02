@@ -426,6 +426,7 @@ export function renderRichResult(a: Ansi, obj: Obj, width: number): string[] {
     case "release": return releaseReport(a, obj, width);
     case "welcome": return welcomeReport(a, obj, width);
     case "tour": return tourReport(a, obj, width);
+    case "account": return accountReport(a, obj, width);
     default: return genericRich(a, obj, width);
   }
 }
@@ -1359,6 +1360,74 @@ function tourReport(a: Ansi, obj: Obj, width: number): string[] {
       accent: "info",
     }));
   }
+  const readOnly = str(obj, "read_only");
+  if (readOnly !== undefined) {
+    out.push("");
+    out.push(badge(a, "ok", readOnly));
+  }
+  return out;
+}
+
+interface ObservedActorShape { kind?: string; id?: string; events?: number; decisions?: number; runs?: number }
+
+function accountReport(a: Ansi, obj: Obj, width: number): string[] {
+  const out: string[] = [];
+  const law = sub(obj, "actor_law") ?? {};
+  const localActor = sub(law, "local_actor") ?? {};
+  out.push(...panel(a, {
+    title: "Identity — who acts here",
+    lines: kvBlock(a, [
+      ["workspace", str(obj, "workspace") ? String((sub(obj, "workspace") ?? {}).root) : "?"],
+      ["human principal", str(law, "human_principal_id") ?? "?"],
+      ["local actor", `${str(localActor, "kind") ?? "?"}:${str(localActor, "id") ?? "?"}`],
+      ["ratified commit identity", str(law, "ratified_commit_identity") ?? "?"],
+    ], width),
+    width,
+    accent: "gold",
+    subtitle: "constitution v1.3 A3 · P5 attribution · D-D actor+cause · local identity, never a cloud account",
+  }));
+  const actors = Array.isArray(obj.observed_actors) ? (obj.observed_actors as ObservedActorShape[]) : [];
+  out.push("");
+  if (actors.length === 0) {
+    out.push(...panel(a, {
+      title: "Observed actors",
+      lines: ["no journals in this workspace yet — actors appear here after your first run"],
+      width,
+      accent: "info",
+    }));
+  } else {
+    out.push(a.dim(`observed actors — deterministic fold over every envelope's actor (D-D):`));
+    out.push(...tableBlock(a, {
+      headers: ["kind", "id", "events", "decisions", "runs"],
+      rows: actors.map((x) => [x.kind ?? "", x.id ?? "", String(x.events ?? 0), String(x.decisions ?? 0), String(x.runs ?? 0)]),
+      width,
+      aligns: ["left", "left", "right", "right", "right"],
+    }));
+  }
+  const ci = sub(obj, "commit_identity") ?? {};
+  const ciLines: Array<[string, string]> = [];
+  if (ci.measured === true) {
+    ciLines.push(["branch", str(ci, "branch") ?? "?"]);
+    ciLines.push(["head author", str(ci, "head_author") ?? "?"]);
+    ciLines.push(["audited commits", String(ci.audited_commits ?? 0)]);
+    const violations = Array.isArray(ci.violations) ? (ci.violations as Obj[]) : [];
+    ciLines.push(["D-P violations", violations.length === 0 ? "none" : `${violations.length} (recorded, immutable)`]);
+  } else {
+    ciLines.push(["commit identity", `not measured — ${str(ci, "note") ?? "unavailable"}`]);
+  }
+  out.push("");
+  out.push(...panel(a, { title: "Commit identity (D-P)", lines: kvBlock(a, ciLines, width), width, accent: ci.measured === true ? "success" : "warn" }));
+  const profiles = Array.isArray(obj.secret_profiles) ? (obj.secret_profiles as Array<{ name?: string; granted?: string[] }>) : [];
+  const profileLines: string[] = profiles.length === 0
+    ? ["no secret names declared in vaerion.yaml"]
+    : profiles.map((p) => `${a.dim(SYM.dot)} ${p.name ?? "?"} → granted: ${(p.granted ?? []).length === 0 ? "(no grant patterns)" : (p.granted ?? []).join(", ")}`);
+  out.push("");
+  out.push(...panel(a, {
+    title: "Secret profiles (names only — never values, ADR-0013)",
+    lines: profileLines,
+    width,
+    accent: "none",
+  }));
   const readOnly = str(obj, "read_only");
   if (readOnly !== undefined) {
     out.push("");

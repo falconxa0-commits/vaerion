@@ -288,14 +288,14 @@ describe("`vae tour` — the guided, read-only walk (Phase 2)", () => {
 
 /* ───────────────────────  D-M′ help/dispatch agreement  ─────────────────────── */
 
-describe("D-M′ — help and dispatch never disagree (v1.2 surface)", () => {
-  test("MAIN_HELP lists every ratified command including `tour`, and the welcome door is announced", async () => {
+describe("D-M′ — help and dispatch never disagree (v1.3 surface)", () => {
+  test("MAIN_HELP lists every ratified command including `tour` and `account`, and the welcome door is announced", async () => {
     const { MAIN_HELP } = await import("../../src/cli/vae.ts");
-    for (const command of ["init", "run", "resume", "explain", "journal", "doctor", "dev", "serve", "package", "provenance", "repo", "ci", "release", "tour"]) {
+    for (const command of ["init", "run", "resume", "explain", "journal", "doctor", "dev", "serve", "package", "provenance", "repo", "ci", "release", "tour", "account"]) {
       expect(MAIN_HELP).toContain(command);
     }
     expect(MAIN_HELP).toContain("welcome front door");
-    expect(MAIN_HELP).toContain("VAERION_CONSTITUTION_v1.2.md");
+    expect(MAIN_HELP).toContain("VAERION_CONSTITUTION_v1.3.md");
   });
 
   test("the full first-run journey: bare vae → init → bare vae → tour, all exit 0", async () => {

@@ -64,6 +64,7 @@ import { agentGrants, extensionGrants } from "../agents/grants.ts";
 import { WorkflowEngine, workflowStateFromRecords, assertWorkflowDag, type WorkflowDag } from "../workflow/index.ts";
 import { buildBundle, resolveBundleOutPath, verifyBundleBytes, lockFromBundle, serializeLock, readLock, pinsEqual, parseLock } from "../package/index.ts";
 import { blake3HexOf } from "../kernel/hash.ts";
+import { LOCAL_HUMAN_ACTOR, humanPrincipal, agentPrincipalForRun, workflowAgentPrincipal, researchActorFor, measureIdentity } from "../identity/identity.ts";
 
 export interface CommandContext {
   io: CliIo;
@@ -315,11 +316,11 @@ async function runModel(ctx: CommandContext): Promise<number> {
   const spin = renderer.spinner();
 
   try {
-    // The canonical local-human principal: graphFromConfig grants the "human"
-    // node the model.invoke ceiling scopes (gateway.providers) and every
-    // declared secret.read name. An undeclared model therefore hits the
+    // The canonical local-human principal (identity law, Phase 3): graphFromConfig
+    // grants the "human" node the model.invoke ceiling scopes (gateway.providers)
+    // and every declared secret.read name. An undeclared model therefore hits the
     // BROKER ceiling deny (journaled + refusal-logged), never a silent skip.
-    const principal = { kind: "human" as const, id: "human", runId };
+    const principal = humanPrincipal(runId);
     const gateway = new GatewayService({
       clock,
       rng: new SystemRng(),
@@ -466,7 +467,7 @@ async function runAgent(ctx: CommandContext): Promise<number> {
   // The agent principal acts inside the config ceiling; tool.call and
   // model.invoke grants come ONLY from declared policy rules (fail-closed).
   const policy = policyFromConfig(config);
-  const principal = { kind: "agent" as const, id: `agent:${runId.slice(-8).toLowerCase()}` };
+  const principal = agentPrincipalForRun(runId);
   // The agent acts inside the ceiling: derived grants live INSIDE declared
   // ceilings (graphFromConfig enforces coverage); declare nothing, grant nothing.
   // Ceiling covers BOTH the agent principal and the declared extension
@@ -492,7 +493,7 @@ async function runAgent(ctx: CommandContext): Promise<number> {
     );
   }
   const research = capabilities.size > 0
-    ? new LocalResearchPort({ workspaceDir: ws.root, host: harness, clock, idGen, blobStore: new BlobStore(ws.blobsDir), capabilities, actor: { kind: "research", id: principal.id } })
+    ? new LocalResearchPort({ workspaceDir: ws.root, host: harness, clock, idGen, blobStore: new BlobStore(ws.blobsDir), capabilities, actor: researchActorFor(principal.id) })
     : null;
 
   const maxSteps = Number.isInteger(stepsFlag) && stepsFlag > 0 ? stepsFlag : (config.agents?.maxSteps ?? 24);
@@ -605,7 +606,7 @@ async function runWorkflow(ctx: CommandContext): Promise<number> {
   const clock = new SystemClock();
   const idGen = new SystemIdGen();
   const resumeRunId = typeof ctx.flags.resume === "string" && ctx.flags.resume.length > 0 ? String(ctx.flags.resume) : null;
-  const principal = { kind: "agent" as const, id: "agent:workflow" };
+  const principal = workflowAgentPrincipal();
   const policy = policyFromConfig(config);
   let openHarness: RunHarness | null = null;
 
@@ -1402,11 +1403,11 @@ export async function cmdDev(ctx: CommandContext): Promise<number> {
     layers: {
       L0: ["kernel(errors,ids,clock,canonical,redact,hash)", "config"],
       L1: ["spine", "journal", "store(blob-cas)", "receipts", "broker/contracts", "gateway"],
-      L2: ["runtime(run)", "research", "agents", "workflow", "evals", "extensions", "package", "repo"],
+      L2: ["runtime(run)", "research", "agents", "workflow", "evals", "extensions", "package", "repo", "identity"],
       L4: ["cli"],
     },
     daily_seven: ["init", "run", "resume", "explain", "journal", "doctor", "dev"],
-    additive_commands: ["serve (MS-5 daemon, ADR-0010)", "package (MS-6 bundles, ADR-0016)", "provenance (Ω — artifact evidence)", "repo (XVIII-8 — git trust, D-P/D-Q)", "ci (XVIII-8 — CI understanding, D-R)", "release (XVIII-8 — measured readiness, D-S/D-T)", "tour (XVIII-2 — the guided, read-only walk)"],
+    additive_commands: ["serve (MS-5 daemon, ADR-0010)", "package (MS-6 bundles, ADR-0016)", "provenance (Ω — artifact evidence)", "repo (XVIII-8 — git trust, D-P/D-Q)", "ci (XVIII-8 — CI understanding, D-R)", "release (XVIII-8 — measured readiness, D-S/D-T)", "tour (XVIII-2 — the guided, read-only walk)", "account (XVIII-3 — identity & attribution, P5/D-D/D-P)"],
     gateway: {
       single_gate: "gateway/service.ts — decide(model.invoke) → journal → act",
       egress: "gateway/transport.ts — the ONE sanctioned egress site",
@@ -1414,8 +1415,8 @@ export async function cmdDev(ctx: CommandContext): Promise<number> {
     },
     workspace: { root: ws.root, runs: runs.length },
     spec: "spec/ (single source of truth)",
-    constitution: "docs/constitution/VAERION_CONSTITUTION_v1.2.md",
-    next_milestone: "ASCENSION XVIII — Productization Era: Phase 2 (the empty-laptop experience: welcome front door + guided tour) in flight at v0.1.8-rc1 · Phase 8 (git/CI/constitution synchronization) complete · phases 3–7 have no repository evidence (recorded NOT complete, D-T) · MS-6 close-out (native installers, performance, accessibility) + release train remain Founder-gated",
+    constitution: "docs/constitution/VAERION_CONSTITUTION_v1.3.md",
+    next_milestone: "ASCENSION XVIII — Productization Era: the Founder program (Phases 3–6: account · ai · init-templates · command-center) in flight under Constitution v1.3 (A3) · Phase 2 (the empty-laptop experience) complete · Phase 8 (git/CI/constitution synchronization) complete · Phase 7 awaits Founder re-issue or cancellation · MS-6 close-out (native installers, performance, accessibility) + release train remain Founder-gated",
   });
   return ExitCode.ok;
 }
@@ -1692,7 +1693,7 @@ export async function cmdPackage(ctx: CommandContext): Promise<number> {
           pins: built.manifest.pins,
           config_fingerprint: configFingerprint,
         },
-        { kind: "human", id: "local-user" },
+        LOCAL_HUMAN_ACTOR,
         { kind: "origin", ref: null },
       );
       const closed = await harness.close(`package build ${outRel}: ${built.manifest.entries.length} entry(ies), ${built.bytes.length} bytes, digest ${built.bundleBlake3.slice(0, 12)}…; vaerion.lock regenerated`);
@@ -1761,7 +1762,7 @@ export async function cmdPackage(ctx: CommandContext): Promise<number> {
           entries_verified: report.entriesVerified,
           pins_checked: report.pinsChecked,
         },
-        { kind: "human", id: "local-user" },
+        LOCAL_HUMAN_ACTOR,
         { kind: "origin", ref: null },
       );
       const closed = await harness.close(`package verify ${bundleArg}: ${report.ok ? "VERIFIED" : "NOT VERIFIED"} (${report.findings.length} finding(s), ${report.entriesVerified}/${report.entryCount} entries, ${report.pinsChecked} pins)`);
@@ -1985,7 +1986,7 @@ export async function cmdRelease(ctx: CommandContext): Promise<number> {
         blockers: report.blockers.map((b) => ({ check: b.check, code: b.code ?? "E2308", detail: b.detail })),
         root: report.root,
       },
-      { kind: "human", id: "local-user" },
+      LOCAL_HUMAN_ACTOR,
       { kind: "origin", ref: null },
     );
     const closed = await harness.close(`release readiness: ${report.verdict} (${report.passed}/${report.total} checks passed, ${report.blockers.length} blocker(s), ${report.warnings.length} warning(s))`);
@@ -1997,6 +1998,34 @@ export async function cmdRelease(ctx: CommandContext): Promise<number> {
     await harness.release().catch(() => undefined);
   }
   return report.ready ? ExitCode.ok : ExitCode.partial;
+}
+
+/* ────────────────────  account — identity & attribution (XVIII-3)  ──────────────────── */
+
+/** `vae account` — the identity & attribution surface (constitution v1.3 A3,
+ *  Phase 3; P5/D-D/D-P). Read-only: it MEASURES who acts in this workspace —
+ *  the actor law, the actors observed in the journals, the repository commit
+ *  identity, and the declared secret PROFILES (names only, never values).
+ *  Vaerion has no cloud accounts (P1): account is local identity, by law. */
+export async function cmdAccount(ctx: CommandContext): Promise<number> {
+  if (ctx.flags._positional1 !== "") {
+    throw new VaerionError("E1600", "usage: `vae account` takes no arguments — it measures identity in this workspace");
+  }
+  const ws = workspaceAt(ctx.cwd);
+  const hasConfig = await configExists(ws);
+  let configState: "present" | "absent" | "invalid" = hasConfig ? "present" : "absent";
+  let secrets: Readonly<Record<string, { grant?: string[] }>> | null = null;
+  if (hasConfig) {
+    try {
+      const loaded = await loadOrAdhocConfig(ws);
+      if (!loaded.adhoc) secrets = loaded.config.secrets ?? {};
+    } catch {
+      configState = "invalid"; // doctor reports the exact defect; account reports honestly and continues
+    }
+  }
+  const report = await measureIdentity({ root: ws.root, journalDir: ws.journalDir, secrets });
+  r(ctx).result({ command: "account", engine_version: ENGINE_VERSION, config_state: configState, ...report });
+  return ExitCode.ok;
 }
 
 /* ────────────────────  welcome front door + tour (XVIII-2)  ──────────────────── */
@@ -2030,7 +2059,7 @@ export async function buildWelcomePayload(ctx: CommandContext): Promise<Record<s
       "vae --help — the command surface of record (help always teaches)",
       "vae tour — a guided, read-only walk of the engine, measured against this machine",
       "docs/QUICKSTART.md — the first-run journey",
-      "docs/constitution/VAERION_CONSTITUTION_v1.2.md — the ratified law",
+      "docs/constitution/VAERION_CONSTITUTION_v1.3.md — the ratified law",
     ],
     read_only: "nothing was created or modified",
   };
@@ -2129,7 +2158,7 @@ export async function cmdTour(ctx: CommandContext): Promise<number> {
     {
       step: 9,
       title: "Where to go next",
-      measured: ["docs/QUICKSTART.md", "docs/constitution/VAERION_CONSTITUTION_v1.2.md", "spec/ (the contracts)"],
+      measured: ["docs/QUICKSTART.md", "docs/constitution/VAERION_CONSTITUTION_v1.3.md", "spec/ (the contracts)"],
       try: "vae --help",
       note: "Help always teaches, --json is stable, --dry-run is pure, receipts close every run, and exit codes tell the truth. Build with discipline. Build with receipts. Build Vaerion.",
     },
