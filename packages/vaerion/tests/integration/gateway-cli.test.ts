@@ -429,10 +429,20 @@ describe("PHASE Ω design language (rich profile, TTY-gated)", () => {
       const joined = rich.lines.out.join("\n");
       expect(joined).toContain("V A E R I O N");
       expect(joined).toContain("Gateway — the single gate");
+      expect(joined).toContain("Position");
       // Milestone position pin (updated with reality, as in a4206fe): the
-      // position of record is the ASCENSION XVIII productization era.
-      expect(joined).toContain("ASCENSION XVIII");
-      expect(joined).toContain("Phase 8");
+      // position of record is the ASCENSION XVIII GA campaign (v1.4, A4).
+      // The painted panel wraps long words across lines, so the CONTRACT
+      // assertion runs against the stable --json face, not painted bytes.
+      const jsonLines: string[] = [];
+      const jr = await runCli(["dev", "--json"], { out: (l) => jsonLines.push(l), err: () => undefined }, ws);
+      expect(jr.code).toBe(ExitCode.ok);
+      const devPayload = jsonLines.map((l) => JSON.parse(l) as Record<string, unknown>).find((p) => typeof p.next_milestone === "string")!;
+      const milestone = String(devPayload.next_milestone);
+      expect(milestone).toContain("ASCENSION XVIII");
+      expect(milestone).toContain("GA CAMPAIGN");
+      expect(milestone).toContain("Phases 7–10");
+      expect(milestone).toContain("performance budget law");
     });
   });
 

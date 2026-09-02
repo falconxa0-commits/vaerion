@@ -323,7 +323,7 @@ vae ci simulate --event push|pull_request|workflow_dispatch|tag [--ref NAME]
   measured only. Each check carries an honesty label and a Fix:
 
     verification-gates     the measured verify.ts record (--live-gates re-runs
-                           the six gates live through the single authority)
+                           the seven gates live through the single authority)
     git-tree-clean         a release is cut from a clean, fully committed tree
     git-identity-head      HEAD authored by the ratified identity (D-P)
     git-identity-history   identity audit of recent commits (recorded, immutable)

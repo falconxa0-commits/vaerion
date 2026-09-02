@@ -8,7 +8,8 @@
  *      bunfig coverageThreshold; a floor breach fails the gate)
  *   4. layerlint (architecture boundaries)
  *   5. constitutional-check (invariants + contract sync + secrets)
- *   6. repository lint (eslint, app + tooling)
+ *   6. perf-budget (Phase 7 — the performance budget law, v1.4 A4)
+ *   7. repository lint (eslint, app + tooling)
  *
  * Every gate must be green before any commit (release blocker #1).
  * Emits .vaerion-verification.json for reports and the status dashboard.
@@ -59,6 +60,7 @@ gates.push(run("typecheck-sdk", ["bunx", "tsc", "--noEmit", "-p", "tsconfig.json
 gates.push(run("tests", ["bun", "test", "tests/", "--coverage"], { cwd: ENGINE }));
 gates.push(run("layerlint", ["bun", "run", join2(ROOT, "tools", "layerlint.ts")]));
 gates.push(run("constitutional-check", ["bun", "run", join2(ROOT, "tools", "constitutional-check.ts")]));
+gates.push(run("perf-budget", ["bun", "run", join2(ROOT, "tools", "perf-gate.ts")]));
 gates.push(run("repo-lint", ["bun", "run", "lint"]));
 
 const allOk = gates.every((g) => g.ok);

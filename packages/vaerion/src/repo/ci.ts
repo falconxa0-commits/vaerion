@@ -254,7 +254,7 @@ export function validateWorkflowDoc(doc: WorkflowDoc): CiFinding[] {
     findings.push({
       file, code: "E2305", severity: "blocker",
       detail: "workflow runs gate logic (typecheck/tests/lint signatures) without invoking the single verification authority (tools/verify.ts)",
-      fix: "make every verification surface run `bun run tools/verify.ts` — no surface may re-implement the six gates (Constitution D-R)",
+      fix: "make every verification surface run `bun run tools/verify.ts` — no surface may re-implement the seven gates (Constitution D-R)",
     });
   }
   return findings;

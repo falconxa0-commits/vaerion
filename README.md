@@ -55,7 +55,7 @@ Or from source:
 ```sh
 git clone <repository-url> vaerion && cd vaerion
 bun install
-bun run tools/verify.ts              # six gates must be green
+bun run tools/verify.ts              # seven gates must be green
 alias vae="bun run packages/vaerion/src/cli/vae.ts"
 
 vae init
@@ -67,7 +67,7 @@ vae repo                         # measure the repository you are standing in
 vae account                      # who acts in this workspace — local identity, measured
 vae ai ask --question "..." --capability sources   # grounded Q&A through the single gate
 vae center                       # the operator cockpit: runs, metering, integrity
-vae ci validate                  # CI must re-run the same six gates (D-R)
+vae ci validate                  # CI must re-run the same seven gates (D-R)
 vae release readiness            # can this repository ship? measured only
 ```
 
@@ -107,13 +107,14 @@ same behavior.
 
 ## Verification law
 
-`bun run tools/verify.ts` runs six gates and writes the measured record
+`bun run tools/verify.ts` runs seven gates and writes the measured record
 to `.vaerion-verification.json`: strict typechecks (engine, SDK), the
 test suite with enforced coverage floors, layerlint architecture
 boundaries, the constitutional invariants (zero telemetry, determinism,
 no placeholder debt, contract sync, secret scan, config guard, egress
-confinement), and repository lint. **All six must be green before any
-commit.** CI re-runs the same suite on every push (`.github/workflows/`).
+confinement), the performance budget law (Phase 7: seven engine-critical
+operations measured against typed budget ceilings), and repository lint.
+**All seven must be green before any commit.** CI re-runs the same suite on every push (`.github/workflows/`).
 
 ## Repository map
 
