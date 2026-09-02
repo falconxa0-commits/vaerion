@@ -1,50 +1,50 @@
 {
-  "generatedAt": "2026-09-02T21:13:00.930Z",
+  "generatedAt": "2026-09-02T21:15:51.077Z",
   "engineVersion": "0.1.10-rc1",
   "substrate": "TypeScript on Bun (ADR-0018 — provisional with recorded migration path; Founder ratification pending)",
   "verification": {
-    "generatedAt": "2026-09-02T21:12:50.232Z",
+    "generatedAt": "2026-09-02T21:13:38.359Z",
     "ok": true,
     "gates": [
       {
         "gate": "typecheck-engine",
         "ok": true,
-        "durationMs": 3983
+        "durationMs": 3770
       },
       {
         "gate": "typecheck-sdk",
         "ok": true,
-        "durationMs": 3167
+        "durationMs": 3070
       },
       {
         "gate": "tests",
         "ok": true,
-        "durationMs": 6503
+        "durationMs": 6231
       },
       {
         "gate": "layerlint",
         "ok": true,
-        "durationMs": 39
+        "durationMs": 28
       },
       {
         "gate": "constitutional-check",
         "ok": true,
-        "durationMs": 254
+        "durationMs": 203
       },
       {
         "gate": "perf-budget",
         "ok": true,
-        "durationMs": 357
+        "durationMs": 276
       },
       {
         "gate": "a11y-structural",
         "ok": true,
-        "durationMs": 28
+        "durationMs": 26
       },
       {
         "gate": "repo-lint",
         "ok": true,
-        "durationMs": 11086
+        "durationMs": 10562
       }
     ]
   },
@@ -262,17 +262,16 @@
     "measured": true,
     "ready": false,
     "verdict": "BLOCKED",
-    "passed": 8,
+    "passed": 10,
     "total": 12,
     "blockers": [
-      "git-tree-clean: working tree dirty: 0 staged, 21 unstaged, 0 untracked",
-      "release-tag-binding: HEAD is not exactly at a v* release tag"
+      "git-tree-clean: working tree dirty: 0 staged, 3 unstaged, 0 untracked"
     ]
   },
   "commandCenter": {
     "workspace": {
       "root": "/home/z/my-project/examples/vaerion-demo",
-      "runs": 2
+      "runs": 3
     },
     "operations": {
       "runs": [
@@ -289,10 +288,17 @@
           "events": 3,
           "verified": true,
           "receipt": true
+        },
+        {
+          "run_id": "crn_run_01M1HZGSD943QCCEXDPDYSVV3J",
+          "records": 5,
+          "events": 3,
+          "verified": true,
+          "receipt": true
         }
       ],
       "journals_verified": true,
-      "receipts": 2,
+      "receipts": 3,
       "metering": {
         "invocations": 0,
         "failed": 0,
@@ -323,16 +329,12 @@
       "measured": true,
       "ready": false,
       "verdict": "BLOCKED",
-      "passed": 8,
+      "passed": 10,
       "total": 12,
       "blockers": [
         {
           "check": "git-tree-clean",
-          "detail": "working tree dirty: 0 staged, 21 unstaged, 0 untracked"
-        },
-        {
-          "check": "release-tag-binding",
-          "detail": "HEAD is not exactly at a v* release tag"
+          "detail": "working tree dirty: 0 staged, 3 unstaged, 0 untracked"
         }
       ]
     },
