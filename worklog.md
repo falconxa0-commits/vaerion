@@ -489,3 +489,24 @@ Stage Summary:
 - Attribution now has ONE law and ONE module: who acts in Vaerion is a measurement (`vae account`), not a scatter of literals. The broker ceiling, the journal actor, and the commit identity (D-P) agree by construction.
 - Honest ledger: no new E-codes or events (C4 untouched — the identity surface measures existing contracts); secret VALUES never cross any face (canary-proven).
 - Next: Phase 4 — ai (the grounded-question surface through the One Context Path + the gateway single gate; research pipeline folds into ONE shared L2 implementation).
+
+---
+Task ID: ASC-XVIII-PHASE-4
+Agent: Auren — Principal Vaerion Architect (THE GROUNDED QUESTION — the ai surface)
+Task: ASCENSION XVIII Phase 4 (Founder program, phase 2 of 4) — the grounded-question surface: the research pipeline folds into ONE shared L2 implementation, and `vae ai` answers questions through the One Context Path + the gateway single gate.
+
+Work Log:
+- ARCHITECTURE FIRST (debt measured, then collapsed): the research pipeline lived inline in the L4 CLI with a module-global `cwdHolder` ambient hack. research/pipeline.ts (L2) is now the ONE implementation: collectDocs with an EXPLICIT cwd (the global is gone by construction), assembleResearchContext (the journaled fold: fingerprint → fence → blob CAS → evidence → index → hits → citations → prepareContext → research.context.prepared — identical event sequence and payload shapes, pins hold), and renderPackAsSystemPrompt. `run research`/`run demo` execute the shared pipeline; a second implementation is now structurally impossible to justify.
+- DETERMINISM ROOT-CAUSE FIX (found by MY OWN determinism test): the system-prompt render initially carried the pack fingerprint — which includes retrieval-time provenance (P8: retrievedAt) — tainting the seeded request so identical workspaces produced different mockbrain answers. Fixed at root: renderPackAsSystemPrompt carries ONLY deterministic material (instruction + fences + citation ids); fingerprint/provenance stay on the payload faces as metadata, never prompt material. Cross-workspace answer equality now test-pinned.
+- `vae ai ask` (L4): capability from a vaerion.yaml research.capabilities entry (--capability) or explicit --sources (never ambient; unknown → E1600 naming the declared set) → ONE broker decision PER SOURCE (deny → exit 3 with the journaled denial + receipt; prompt → durable gate, exit 0 awaiting) → the shared pipeline → the answer through the gateway SINGLE GATE as the human principal (research principal stays attributed to every context step — two identities, each on its own actions) → metering folded from the journal → receipt. Default model mockbrain/mock-1 (P1: works offline).
+- `vae ai models` (L4, read-only): the gateway capability matrix; directory-hash-proven untouched.
+- parseArgs allow-list +question, +capability (+template reserved for the next phase).
+- Zero new E-codes, ZERO new event types (C4 untouched): the One Context Path already journals every step — the surface is porcelain over existing law.
+- TESTS: +14 in tests/integration/ai.test.ts: happy path with journal-path assertions (research.capability.declared → … → research.context.prepared → gateway.invoke.recorded; attribution split proven), cross-workspace answer determinism, declared-capability path, unknown-capability usage law, missing-flag laws, dry-run purity (side_effects 0 + byte-identical dir), deny law (exit 3 + journaled decision + receipt), prompt law (durable gate + resume hint), surface law (bare `ai`, unknown sub), help purity, rich face, canary (secret-shaped doc content reaches no face). D-M′ agreement → 16 commands. Full suite: 377 pass / 0 fail / 2441 expectations / 29 files.
+- SIX GATES GREEN on the final tree: typecheck-engine, typecheck-sdk, tests 377/0/2441/29 (floors held), layerlint 101 files/474 edges, constitutional C1–C7/80 codes, repo-lint clean.
+- Committed as Auren: `af5608d` (feat(phase4)) → canonical push (fast-forward, D-Q enforced); ledger reconciliation follows this entry.
+
+Stage Summary:
+- The grounded question is real: declared sources → fenced, attributed, journaled context → ONE gate → receipt. `run research` and `ai ask` are the same pipeline with different last steps — zero parallel systems.
+- Honest ledger: pack fingerprint is honestly documented as retrieval-time metadata (never prompt material); mockbrain answers are byte-deterministic per seed; real providers work identically behind the same gate when declared.
+- Next: Phase 5 — init-templates (the deterministic template registry + `vae init --template`).
