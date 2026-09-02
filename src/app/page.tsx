@@ -103,7 +103,7 @@ export default function Home() {
           {status && (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 pt-2">
               {status.milestones.map((m) => (
-                <Card key={m.id} className="p-0 gap-0 border-zinc-200 dark:border-zinc-800">
+                <Card key={m.id} className="min-w-0 p-0 gap-0 border-zinc-200 dark:border-zinc-800">
                   <CardHeader className="p-4 pb-2">
                     <CardTitle className="text-sm font-semibold flex items-center justify-between">
                       <span>{m.id} · {m.name}</span>
@@ -129,7 +129,7 @@ export default function Home() {
 
         {/* Verification gates */}
         <section aria-label="Verification gates" className="grid gap-4 lg:grid-cols-2">
-          <Card className="border-zinc-200 dark:border-zinc-800">
+          <Card className="min-w-0 border-zinc-200 dark:border-zinc-800">
             <CardHeader className="p-6 pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <ListChecks className="w-4 h-4" aria-hidden /> Verification gates
@@ -155,7 +155,7 @@ export default function Home() {
             </CardContent>
           </Card>
 
-          <Card className="border-zinc-200 dark:border-zinc-800">
+          <Card className="min-w-0 border-zinc-200 dark:border-zinc-800">
             <CardHeader className="p-6 pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <FlaskConical className="w-4 h-4" aria-hidden /> Built &amp; tested inventory
@@ -184,7 +184,7 @@ export default function Home() {
             </div>
             <div className="grid gap-4 lg:grid-cols-3">
               {/* Release readiness digest */}
-              <Card className="border-zinc-200 dark:border-zinc-800">
+              <Card className="min-w-0 border-zinc-200 dark:border-zinc-800">
                 <CardHeader className="p-6 pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
                     <Gauge className="w-4 h-4" aria-hidden /> Release readiness
@@ -212,7 +212,7 @@ export default function Home() {
               </Card>
 
               {/* Companion workspace cockpit */}
-              <Card className="border-zinc-200 dark:border-zinc-800">
+              <Card className="min-w-0 border-zinc-200 dark:border-zinc-800">
                 <CardHeader className="p-6 pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
                     <Wallet className="w-4 h-4" aria-hidden /> Demo workspace cockpit
@@ -228,7 +228,7 @@ export default function Home() {
               </Card>
 
               {/* The phase program ledger (D-T) */}
-              <Card className="border-zinc-200 dark:border-zinc-800">
+              <Card className="min-w-0 border-zinc-200 dark:border-zinc-800">
                 <CardHeader className="p-6 pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
                     <History className="w-4 h-4" aria-hidden /> Phase program (D-T)
@@ -259,7 +259,7 @@ export default function Home() {
         {/* Next work + risks */}
         {status && (
           <section aria-label="Next work and risks" className="grid gap-4 lg:grid-cols-2">
-            <Card className="border-zinc-200 dark:border-zinc-800">
+            <Card className="min-w-0 border-zinc-200 dark:border-zinc-800">
               <CardHeader className="p-6 pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <ArrowRight className="w-4 h-4" aria-hidden /> Recommended next work
@@ -273,7 +273,7 @@ export default function Home() {
                 </ol>
               </CardContent>
             </Card>
-            <Card className="border-zinc-200 dark:border-zinc-800">
+            <Card className="min-w-0 border-zinc-200 dark:border-zinc-800">
               <CardHeader className="p-6 pb-3">
                 <CardTitle className="text-base">Technical risks</CardTitle>
               </CardHeader>

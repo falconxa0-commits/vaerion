@@ -21,7 +21,7 @@ hands argv over unchanged.
 
 | Target | Verified evidence |
 |---|---|
-| npm package | tarball built; `npm install -g --prefix <tmp>`; `vae version` → 0.1.8-rc1; `dev --json` pure; E1600 → exit 2; 95 engine files in package |
+| npm package | tarball built; `npm install -g --prefix <tmp>`; `vae version` → 0.1.9-rc1; `dev --json` pure; E1600 → exit 2; 95 engine files in package |
 | PyPI wheel | wheel built (95 engine files + entry_points); venv install; `vae version` OK; missing-Bun → E1600 exit 2 |
 | Universal installer | source-method install from the signed release tarball; `vae version`; exit-code contract; `current` symlink; clean uninstall (nothing left behind) |
 | deb | built via `dpkg-deb`; metadata + extraction checks pass (vae executable, engine present) |

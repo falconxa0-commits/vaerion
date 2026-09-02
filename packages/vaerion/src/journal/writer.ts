@@ -35,7 +35,7 @@ import { acquireJournalLock, type JournalLockHandle } from "./lock.ts";
 import { readJournal } from "./reader.ts";
 import { firstChainError, firstIndexError } from "./hashchain.ts";
 
-export const ENGINE_VERSION = "0.1.8-rc1";
+export const ENGINE_VERSION = "0.1.9-rc1";
 
 export interface OpenJournalOptions {
   journalPath: string;

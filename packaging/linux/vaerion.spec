@@ -7,7 +7,7 @@
 # (RPM versions cannot contain '-'; use 0.1.7~rc2 equivalent 0.1.7_rc2 or
 #  0.1.7.rc2 per distro convention — release train picks and documents.)
 
-%global version_string 0.1.8-rc1
+%global version_string 0.1.9-rc1
 %global rpm_version    0.1.7.rc2
 
 Name:           vaerion

@@ -1,40 +1,40 @@
 {
-  "generatedAt": "2026-09-02T14:22:43.123Z",
-  "engineVersion": "0.1.8-rc1",
+  "generatedAt": "2026-09-02T14:32:10.035Z",
+  "engineVersion": "0.1.9-rc1",
   "substrate": "TypeScript on Bun (ADR-0018 — provisional with recorded migration path; Founder ratification pending)",
   "verification": {
-    "generatedAt": "2026-09-02T14:22:31.016Z",
+    "generatedAt": "2026-09-02T14:32:09.758Z",
     "ok": true,
     "gates": [
       {
         "gate": "typecheck-engine",
         "ok": true,
-        "durationMs": 4391
+        "durationMs": 4285
       },
       {
         "gate": "typecheck-sdk",
         "ok": true,
-        "durationMs": 3255
+        "durationMs": 3500
       },
       {
         "gate": "tests",
         "ok": true,
-        "durationMs": 5362
+        "durationMs": 6068
       },
       {
         "gate": "layerlint",
         "ok": true,
-        "durationMs": 32
+        "durationMs": 39
       },
       {
         "gate": "constitutional-check",
         "ok": true,
-        "durationMs": 390
+        "durationMs": 245
       },
       {
         "gate": "repo-lint",
         "ok": true,
-        "durationMs": 11318
+        "durationMs": 10962
       }
     ]
   },
@@ -56,7 +56,7 @@
     },
     "engineTests": {
       "files": 31,
-      "lines": 9425
+      "lines": 9427
     },
     "sdk": {
       "files": 3,
@@ -211,8 +211,8 @@
     },
     {
       "phase": "6",
-      "status": "▶ in flight",
-      "evidence": "command-center — the Founder program continues; boundary reconciles its row (D-T)"
+      "status": "✅ complete",
+      "evidence": "six gates green (397/0/2538/31); worklog `ASC-XVIII-PHASE-6`; the ONE center fold + `vae center` + the web face command-center section (A3); release tag + version lockstep land at program close"
     },
     {
       "phase": "7",
@@ -227,7 +227,7 @@
     "passed": 8,
     "total": 12,
     "blockers": [
-      "git-tree-clean: working tree dirty: 0 staged, 8 unstaged, 2 untracked",
+      "git-tree-clean: working tree dirty: 0 staged, 25 unstaged, 0 untracked",
       "release-tag-binding: HEAD is not exactly at a v* release tag",
       "release-artifacts: artifact set incomplete: dist/MANIFEST.json, dist/MANIFEST.json.sig, dist/SHA256SUMS, dist/VERIFY.md missing"
     ]
@@ -276,7 +276,7 @@
       "blockers": [
         {
           "check": "git-tree-clean",
-          "detail": "working tree dirty: 0 staged, 8 unstaged, 2 untracked"
+          "detail": "working tree dirty: 0 staged, 25 unstaged, 0 untracked"
         },
         {
           "check": "release-tag-binding",

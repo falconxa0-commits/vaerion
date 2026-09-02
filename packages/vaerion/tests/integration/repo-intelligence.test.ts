@@ -719,9 +719,11 @@ describe("constitution and version lockstep regression (Phase 8)", () => {
     expect(constitution).toContain("tour, account, ai, center`");
     expect(constitution).toContain("--template NAME");
     expect(constitution).toContain("welcome front door");
-    // Phases 3–6 are the in-flight Founder program; 7 remains NOT complete.
-    expect(constitution).toContain("▶ in flight");
+    // The Founder program (Phases 3–6) is recorded complete with per-phase evidence;
+    // its close-out lands the release tag + version lockstep; phase 7 remains NOT complete.
+    expect(constitution).toContain("release tag + version lockstep land at program close");
     expect(constitution).toContain("zero repository evidence");
+    expect(constitution).not.toContain("▶ in flight");
     // History is retained unmodified: v1.2 (with the A2 surface), v1.1 (with the
     // v1.1-era adjudication) and v1.0.
     const v12 = await readFile(join(root, "docs", "constitution", "VAERION_CONSTITUTION_v1.2.md"), "utf8");
