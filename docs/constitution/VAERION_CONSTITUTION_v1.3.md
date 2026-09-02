@@ -314,7 +314,8 @@ double-check, accessibility sweep remain); GA pending.
 | 2 | ASCENSION XVIII | ✅ complete | commits `1a810d8`, `39027c4`; six gates green (352/0/2302/27); worklog `ASC-XVIII-PHASE-2`; Constitution v1.2 (A2) |
 | 3 | ASCENSION XVIII | ✅ complete | commit `c16de89`; six gates green (363/0/2362/28); worklog `ASC-XVIII-PHASE-3`; one L2 identity module + `vae account` (A3) |
 | 4 | ASCENSION XVIII | ✅ complete | commit `af5608d`; six gates green (377/0/2441/29); worklog `ASC-XVIII-PHASE-4`; the ONE shared research pipeline + `vae ai` (A3) |
-| 5–6 | ASCENSION XVIII | ▶ in flight | init-templates · command-center — the Founder program continues; each boundary reconciles its row (D-T) |
+| 5 | ASCENSION XVIII | ✅ complete | commit `60c2d3e`; six gates green (388/0/2498/30); worklog `ASC-XVIII-PHASE-5`; the deterministic template registry + `vae init --template` + E1203 (A3) |
+| 6 | ASCENSION XVIII | ▶ in flight | command-center — the Founder program continues; boundary reconciles its row (D-T) |
 | 7 | ASCENSION XVIII | ❌ NOT complete | zero repository evidence (no commands, no spec entries, no tests, no worklog records) — Founder re-issue or cancellation required |
 
 ### Synchronization ledger (D-Q + D-S — the operational record of every synchronization audit)

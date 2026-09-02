@@ -1,40 +1,40 @@
 {
-  "generatedAt": "2026-09-02T14:06:03.423Z",
+  "generatedAt": "2026-09-02T14:14:57.064Z",
   "engineVersion": "0.1.8-rc1",
   "substrate": "TypeScript on Bun (ADR-0018 — provisional with recorded migration path; Founder ratification pending)",
   "verification": {
-    "generatedAt": "2026-09-02T14:05:06.087Z",
+    "generatedAt": "2026-09-02T14:13:46.130Z",
     "ok": true,
     "gates": [
       {
         "gate": "typecheck-engine",
         "ok": true,
-        "durationMs": 3961
+        "durationMs": 4168
       },
       {
         "gate": "typecheck-sdk",
         "ok": true,
-        "durationMs": 3389
+        "durationMs": 3313
       },
       {
         "gate": "tests",
         "ok": true,
-        "durationMs": 5329
+        "durationMs": 5859
       },
       {
         "gate": "layerlint",
         "ok": true,
-        "durationMs": 29
+        "durationMs": 33
       },
       {
         "gate": "constitutional-check",
         "ok": true,
-        "durationMs": 228
+        "durationMs": 231
       },
       {
         "gate": "repo-lint",
         "ok": true,
-        "durationMs": 10849
+        "durationMs": 10804
       }
     ]
   },
@@ -51,12 +51,12 @@
   },
   "code": {
     "engine": {
-      "files": 101,
-      "lines": 20293
+      "files": 102,
+      "lines": 20446
     },
     "engineTests": {
-      "files": 29,
-      "lines": 9016
+      "files": 30,
+      "lines": 9217
     },
     "sdk": {
       "files": 3,

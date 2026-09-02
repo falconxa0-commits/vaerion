@@ -510,3 +510,23 @@ Stage Summary:
 - The grounded question is real: declared sources → fenced, attributed, journaled context → ONE gate → receipt. `run research` and `ai ask` are the same pipeline with different last steps — zero parallel systems.
 - Honest ledger: pack fingerprint is honestly documented as retrieval-time metadata (never prompt material); mockbrain answers are byte-deterministic per seed; real providers work identically behind the same gate when declared.
 - Next: Phase 5 — init-templates (the deterministic template registry + `vae init --template`).
+
+---
+Task ID: ASC-XVIII-PHASE-5
+Agent: Auren — Principal Vaerion Architect (THE DETERMINISTIC TEMPLATE REGISTRY — init-templates)
+Task: ASCENSION XVIII Phase 5 (Founder program, phase 3 of 4) — `vae init --template` from a deterministic, validated, byte-stable template registry; unknown templates are a stable usage error.
+
+Work Log:
+- L0 config/templates.ts is the ONE source of scaffold intent: three templates (minimal / demo / agent), each a static byte-stable document parameterized ONLY by the project name — no wall-clock, no ambient state, no computed content. Bare `vae init` is EXACTLY `--template minimal`: the pre-A3 default bytes preserved verbatim and PINNED byte-for-byte against the historical literal (evolution without betrayal, P11).
+- Contract law moved first: NEW stable diagnostic **E1203 init_template_unknown** (exit 2) — C4-synced into spec/errors.yaml AND the kernel catalog (80 → 81 codes); spec/openapi.json regenerated via the sanctioned generator (`x-vaerion-contracts.errorCodes` 81 — the C4 mirror caught the drift exactly as designed); E1203 mapped to usage(2) in the exit-code law.
+- `vae init` now validates the project name against the config law BEFORE any write — the old flow could write an invalid scaffold and fail on load; fail-early, no partial state. `--dry-run` names the template in the plan and writes nothing; `--json` carries `template`.
+- The `agent` template wires a real workspace: mockbrain planner, declared tools, explicit policy rule (agent model.invoke over mockbrain/mock-1 with rationale) — declared-before-used, granted by policy, never ambient.
+- TESTS: +11 in tests/integration/init-templates.test.ts: registry identity (exactly agent/demo/minimal, deterministic order), bare-init byte equality with the pre-A3 literal, per-template render byte-stability + strict loadConfig validation + telemetry-false, name-refusal before write, E1203 usage law (available set named in the error, nothing written), dry-run purity, agent template passes `vae doctor` END-TO-END (config green + mockbrain in the gateway matrix), demo template's declared capability drives `vae ai --capability sources`, json contract, overwrite refusal. Full suite: 388 pass / 0 fail / 2498 expectations / 30 files.
+- DOCS: MAIN_HELP init row + COMMAND_HELP.init (template registry teaching), QUICKSTART §1 (template pointer), TROUBLESHOOTING E1203 entry.
+- SIX GATES GREEN on the final tree: typecheck-engine, typecheck-sdk, tests 388/0/2498/30 (floors held), layerlint 102 files/476 edges, constitutional C1–C7/81 codes, repo-lint clean.
+- Committed as Auren: `60c2d3e` (feat(phase5)) → canonical push (fast-forward, D-Q enforced); ledger reconciliation follows this entry.
+
+Stage Summary:
+- Scaffolding is now a registry, not a string: deterministic, validated, pinned, and extensible by the same law (add a template, pin its bytes, keep telemetry false).
+- The Phase 4 surface composes with Phase 5: a scaffolded demo workspace's declared capability drives `vae ai ask --capability sources` — phases strengthen each other, as directed.
+- Next: Phase 6 — command-center (the operator cockpit: `vae center` + the web face, one measured core).

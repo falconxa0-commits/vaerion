@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| **Date** | 2026-09-02 (ASCENSION XVIII Phase 4) |
+| **Date** | 2026-09-02 (ASCENSION XVIII Phase 5) |
 | **Overall progress** | **86%** of the milestone arc (MS-0 → GA) — measured: milestone board average, `tools/status.ts` → `site-data/vaerion-status.json`; MS-6 at 85% (reproducible bundles + distribution packaging + docs sweep done; native installers / performance double-check / accessibility sweep remain) |
-| **Verification** | ALL 6 GATES GREEN (`VERIFICATION_REPORT.md`) — 377 tests / 2441 expectations / 29 files; floors held (86/74/86/90) |
+| **Verification** | ALL 6 GATES GREEN (`VERIFICATION_REPORT.md`) — 388 tests / 2498 expectations / 30 files; floors held (86/74/86/90) |
 | **Release** | **v0.1.8-rc1** (ASCENSION XVIII Phase 8 — git/CI/constitution synchronization) version lockstep; the constitutional release evaluator: `vae release readiness` (measured only, fail-closed) |
-| **Phase ledger (D-T)** | Phases Ω, 0, 1, 8, 2, 3, **4** complete; **Phase 4 = the grounded-question surface (the ONE shared research pipeline + `vae ai`; Constitution v1.3 A3)**; **phases 5–6 in flight (the Founder program: init-templates · command-center)**; phase 7 awaits Founder re-issue or cancellation |
+| **Phase ledger (D-T)** | Phases Ω, 0, 1, 8, 2, 3, 4, **5** complete; **Phase 5 = the deterministic template registry (`vae init --template`, E1203; Constitution v1.3 A3)**; **phase 6 in flight (the Founder program: command-center)**; phase 7 awaits Founder re-issue or cancellation |
 
 ---
 
@@ -41,7 +41,7 @@
 
 ## Recommended next work (priority order)
 
-1. **ASCENSION phase 5–6 program (in flight)** — init-templates (the deterministic template registry), command-center (the operator cockpit); phase 7 awaits Founder re-issue or cancellation.
+1. **ASCENSION phase 6 program (in flight)** — command-center (the operator cockpit); phase 7 awaits Founder re-issue or cancellation.
 2. **MS-6 installers + docs sweep** — then accessibility + performance double-check, completing the exit criteria.
 3. **Daemon packages route group** (wire parity; spec/openapi regen) — Machine Parity law for the new subsystem.
 4. **Record real-provider planning cassettes** (scripts/record-cassettes.ts) when network access exists.
