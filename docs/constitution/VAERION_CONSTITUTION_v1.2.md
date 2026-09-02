@@ -259,9 +259,9 @@ double-check, accessibility sweep remain); GA pending.
 | Ω + artifacts | PHASE Ω | ✅ complete | tag `v0.1.7-rc2`; commits `9d6cbd2`, `6ab6068`; six gates green |
 | 0 | ASCENSION XVIII | ✅ complete | commit `34b015d`; `docs/ga/FOUNDATION-AUDIT-ASCENSION-XVIII.md` |
 | 1 | ASCENSION XVIII | ✅ complete | commits `1c6892f`→`f8f341e`; four install channels verified; trust chain rebuilt; worklog `ASC-XVIII-PHASE-1` |
-| 3–7 | ASCENSION XVIII | ❌ NOT complete | **zero repository evidence** (no commands, no spec entries, no tests, no worklog records) — claims from prior sessions falsified by the repository; Phase 2 re-issued and executing below (A2) |
+| 3–7 | ASCENSION XVIII | ❌ NOT complete | **zero repository evidence** (no commands, no spec entries, no tests, no worklog records) — claims from prior sessions falsified by the repository; Phase 2 was re-issued and is recorded complete below (A2) |
 | 8 | ASCENSION XVIII | ✅ complete | commits `68ef1e5`→`9d3dad8`; tag `v0.1.8-rc1`; six gates green (335/0/2191/26); worklog `ASC-XVIII-PHASE-8` + `ASC-XVIII-PHASE-8-OPS` |
-| 2 | ASCENSION XVIII | ▶ this phase | the empty-laptop experience (bare `vae`, welcome, tour, doctor flow) — ratified by A2; executed at v0.1.8-rc1 |
+| 2 | ASCENSION XVIII | ✅ complete | commits `1a810d8`, `39027c4`; six gates green (352/0/2302/27); worklog `ASC-XVIII-PHASE-2`; Constitution v1.2 (A2) |
 
 ### Synchronization ledger (D-Q + D-S — the operational record of every synchronization audit)
 
