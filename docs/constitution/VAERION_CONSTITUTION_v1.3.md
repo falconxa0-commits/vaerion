@@ -327,13 +327,22 @@ taken on the dated audit, honestly labeled.
 | Date (UTC) | Remote | Commit of record | Tag of record | Measured evidence |
 |---|---|---|---|---|
 | 2026-09-02 | `canonical` — `/home/z/vaerion-canonical.git` | `9d3dad8` — local HEAD == remote `main`, divergence 0/0 | `v0.1.8-rc1` — tag object `7d75198` identical on both sides | `git fetch` clean; ahead/behind measured `0 0`; D-Q pre-receive hook present and law-verified (ff-only `main`, no deletion, `v*` immutable); release trust chain re-verified live (`dist-verify` → signature OK Ed25519, ALL CHECKS PASSED, exit 0); git tag is annotated (`Auren <auren@vaerion.dev>`), **not** git-cryptographically signed — the artifact-level Ed25519 manifest signature is the signature of record |
+| 2026-09-02 (program close) | `canonical` — `/home/z/vaerion-canonical.git` | `4b9aa9c` — local HEAD == remote `main` | `v0.1.9-rc1` — tag object `38a59f9`, peeled commit `8c76203` (the release lockstep commit) identical both sides | fast-forward push accepted by the D-Q hook; tag pushed once (immutability respected); consumer trust chain re-verified (`dist-verify` → signature OK Ed25519 fp sha256:2c835b94…, ALL CHECKS PASSED, exit 0) |
+| 2026-09-02 (program close) | `github` — `https://github.com/falconxa0-commits/vaerion.git` | `4b9aa9c` — remote `main` == local `main`, divergence 0/0 | all four release tags (`v0.1.7-rc1`, `v0.1.7-rc2`, `v0.1.8-rc1`, `v0.1.9-rc1`) — every tag object SHA identical local↔remote (`4c20529`, `9a0e2d0`, `7d75198`, `38a59f9`) | `git push github main` fast-forward accepted (`c1cc3fe..4b9aa9c`); tags pushed as NEW refs (no overwrite — D-Q law untested on GitHub remote by design, GitHub branch protection is Founder-gated); `git ls-remote github` re-measured post-push: HEAD == `main` == `4b9aa9c`; authentication via the Founder-provided PAT (stored OUTSIDE the repository, git credential-store); `archive/parallel-generation` left untouched as found |
 
-**GitHub status (measured 2026-09-02; D-S labels).** The repository carries no
-GitHub remote (`git remote -v` lists only `canonical`), the `gh` CLI is not
-installed, and no `GITHUB_TOKEN`/`GH_TOKEN` credentials exist in the environment.
-GitHub synchronization is **NEVER EXECUTED** — root cause, measured: missing
-remote + missing authentication. The only measured GitHub surface is network
-reachability (`https://github.com` → HTTP 200). A GitHub remote and credentials
-are Founder-gated provisioning; until then `canonical` is the sole
-synchronization authority of record, and no GitHub claim may be made beyond this
-paragraph (Honesty Law).
+**GitHub status (measured 2026-09-02, program close; D-S labels).** Superseding
+the earlier NEVER EXECUTED finding: the Founder provisioned the remote
+(`falconxa0-commits/vaerion`, measured: public, default branch `main`, admin/push
+permissions, remote `main` at `c1cc3fe` — a strict ancestor of local `main`,
+divergence 30/0 measured via authenticated ls-remote) and provided a classic PAT
+(scopes measured incl. `repo`+`workflow`; stored at `/home/z/.vaerion-github-token`,
+mode 0600, OUTSIDE the repository — blocker 3 honored; git credential-store
+configured so the token never touches a command line or the tree). GitHub
+synchronization is now **VERIFIED**: `main` fast-forwarded `c1cc3fe..4b9aa9c`,
+all four release tags pushed and re-measured identical via `git ls-remote`
+(tag objects + peeled commits, see the synchronization ledger). The remote
+`archive/parallel-generation` branch was left untouched as found. Honest
+limits (D-S): GitHub Actions execution, GitHub-side branch protection, and the
+secret-provisioned key path remain NEVER EXECUTED/Founder-gated in this
+environment; `canonical` remains the protection-law authority of record (D-Q
+hook) while GitHub main is currently unprotected.
