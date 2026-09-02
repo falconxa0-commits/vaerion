@@ -427,6 +427,7 @@ export function renderRichResult(a: Ansi, obj: Obj, width: number): string[] {
     case "welcome": return welcomeReport(a, obj, width);
     case "tour": return tourReport(a, obj, width);
     case "account": return accountReport(a, obj, width);
+    case "ai": return aiReport(a, obj, width);
     default: return genericRich(a, obj, width);
   }
 }
@@ -1364,6 +1365,82 @@ function tourReport(a: Ansi, obj: Obj, width: number): string[] {
   if (readOnly !== undefined) {
     out.push("");
     out.push(badge(a, "ok", readOnly));
+  }
+  return out;
+}
+
+interface CitationShape { citation_id?: string; evidence_id?: string; score?: number; source_path?: string | null }
+interface MatrixEntry { provider?: string; ops?: string[]; requiresSecret?: boolean; secretName?: string | null }
+
+function aiReport(a: Ansi, obj: Obj, width: number): string[] {
+  const out: string[] = [];
+  if (str(obj, "kind") === "models") {
+    const matrix = Array.isArray(obj.matrix) ? (obj.matrix as MatrixEntry[]) : [];
+    out.push(...panel(a, {
+      title: "Gateway capability matrix",
+      lines: matrix.map((m) => `${a.dim(SYM.dot)} ${m.provider ?? "?"}[${(m.ops ?? []).join("/")}]${m.requiresSecret ? ` (secret: ${m.secretName ?? "?"})` : " (local)"}`),
+      width,
+      accent: "gold",
+      subtitle: "mockbrain is the local seeded provider — no network, byte-identical for the same seed",
+    }));
+    const note = str(obj, "read_only");
+    if (note !== undefined) {
+      out.push("");
+      out.push(badge(a, "ok", note));
+    }
+    return out;
+  }
+  if (obj.dry_run === true) {
+    out.push(...dryRunPanel(a, obj, width));
+    return out;
+  }
+  const grounded = sub(obj, "grounded") ?? {};
+  out.push(...panel(a, {
+    title: str(obj, "question") ?? "Grounded question",
+    lines: kvBlock(a, [
+      ["model", `${str(obj, "provider") ?? "?"}/${str(obj, "model") ?? "?"}`],
+      ["capability", str(grounded, "capability") ?? "?"],
+      ["documents", String(grounded.documents ?? 0)],
+      ["context pack", `${str(grounded, "pack_fingerprint") ?? "?"} · ${grounded.blocks ?? 0} block(s), ${grounded.dropped ?? 0} dropped`],
+    ], width),
+    width,
+    accent: "gold",
+    subtitle: "the ONE research pipeline → the gateway single gate (constitution v1.3 A3)",
+  }));
+  out.push("");
+  out.push(...panel(a, {
+    title: "Answer",
+    lines: wrapText(str(obj, "answer") ?? "(no text)", Math.max(20, width - 6)),
+    width,
+    accent: "info",
+  }));
+  const citations = Array.isArray(obj.citations) ? (obj.citations as CitationShape[]) : [];
+  if (citations.length > 0) {
+    out.push("");
+    out.push(a.dim("citations — every answer is grounded in attributed, fenced evidence:"));
+    out.push(...tableBlock(a, {
+      headers: ["citation", "evidence", "score", "source"],
+      rows: citations.map((c) => [c.citation_id ?? "", c.evidence_id ?? "", String(c.score ?? 0), c.source_path ?? ""]),
+      width,
+    }));
+  }
+  const usage = sub(obj, "usage");
+  const cost = sub(obj, "cost");
+  out.push("");
+  out.push(...panel(a, {
+    title: "Metering",
+    lines: kvBlock(a, [
+      ["tokens", `${usage?.inputTokens ?? 0} in / ${usage?.outputTokens ?? 0} out`],
+      ["cost", str(cost ?? {}, "display") ?? "unpriced"],
+      ["attempts", String(obj.attempts ?? 1)],
+    ], width),
+    width,
+    accent: "none",
+  }));
+  const receiptLines = receiptPanel(a, sub(obj, "receipt") as Obj | null | undefined, width);
+  if (receiptLines) {
+    out.push("");
+    out.push(...receiptLines);
   }
   return out;
 }

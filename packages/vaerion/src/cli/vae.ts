@@ -9,7 +9,7 @@
  */
 
 import { ExitCode, type CliIo } from "./io.ts";
-import { buildWelcomePayload, cmdAccount, cmdDev, cmdExplain, cmdInit, cmdJournal, cmdDoctor, cmdPackage, cmdProvenance, cmdRepo, cmdRelease, cmdResume, cmdRun, cmdServe, cmdCi, cmdTour, type CommandContext } from "./commands.ts";
+import { buildWelcomePayload, cmdAccount, cmdAi, cmdDev, cmdExplain, cmdInit, cmdJournal, cmdDoctor, cmdPackage, cmdProvenance, cmdRepo, cmdRelease, cmdResume, cmdRun, cmdServe, cmdCi, cmdTour, type CommandContext } from "./commands.ts";
 import { VaerionError } from "../kernel/errors.ts";
 import { isVaerionError } from "./workspace.ts";
 import { Renderer, setBannerVersion } from "./render.ts";
@@ -108,6 +108,14 @@ Command surface (the Daily Seven + additive commands):
                              commit identity (D-P), and declared secret
                              PROFILES — names only. Read-only. Local identity,
                              never a cloud account.
+  ai ask --question Q [--sources P,P | --capability NAME] [--model P/M]
+          [--seed N] [--max-docs N]
+                             the grounded question (XVIII-4): the ONE research
+                             pipeline assembles a journaled, provenance-
+                             carrying context pack from declared local
+                             sources, then the answer crosses the gateway
+                             single gate — attributed, metered, receipted
+  ai models                  the gateway capability matrix (read-only)
 
 Global flags:
   --json                     stable NDJSON output (machine mode, guaranteed)
@@ -337,6 +345,31 @@ vae ci simulate --event push|pull_request|workflow_dispatch|tag [--ref NAME]
 
   Vaerion has no cloud accounts (P1): your identity is local, attributed,
   and yours. Exit 0; the same workspace yields byte-identical --json output.`,
+  ai: `vae ai ask --question TEXT [--sources P,P | --capability NAME]
+                [--model P/M] [--seed N] [--max-tokens N] [--max-docs N]
+                [--intent TEXT] [--dry-run]
+vae ai models
+
+  ask (constitution v1.3 A3, Phase 4; P8/D-J/D-O) — the grounded question:
+
+    1. capability: a vaerion.yaml research.capabilities entry (--capability)
+       or an explicit --sources declaration — never ambient, never network
+    2. ONE broker decision PER SOURCE (journaled; deny exits 3, a prompt
+       policy pauses with a durable gate for 'vae resume')
+    3. the ONE research pipeline (the same fold 'vae run research' executes):
+       fingerprint → fence → blob CAS → evidence → index → citations →
+       context pack, journaled and provenance-carrying
+    4. the answer crosses the gateway SINGLE GATE (decide model.invoke →
+       journal → act) with the fenced pack as the system prompt
+    5. metering (tokens + integer micro-USD) folded from the journal;
+       the run closes with a receipt
+
+  Default model: mockbrain/mock-1 — the local seeded virtual provider. No
+  network, byte-identical answers for the same question, sources, and seed.
+  Untrusted source content travels ONLY inside its fence; the answer face is
+  redacted like every other.
+
+  models reports the gateway capability matrix (secret NAMES only). Read-only.`,
 };
 
 interface ParsedArgs {
@@ -363,7 +396,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
       const value = eq === -1 ? undefined : a.slice(eq + 1);
       if (value !== undefined) {
         parsed.flags[name] = value;
-      } else if (i + 1 < argv.length && !(argv[i + 1] as string).startsWith("--") && ["cwd", "sources", "query", "max-docs", "answer", "out", "name", "profile", "model", "prompt", "system", "op", "seed", "max-tokens", "intent", "input-json", "docs-json", "goal", "planner", "steps", "plan-json", "dag", "resume", "port", "host", "event", "ref", "limit"].includes(name)) {
+      } else if (i + 1 < argv.length && !(argv[i + 1] as string).startsWith("--") && ["cwd", "sources", "query", "max-docs", "answer", "out", "name", "profile", "model", "prompt", "system", "op", "seed", "max-tokens", "intent", "input-json", "docs-json", "goal", "planner", "steps", "plan-json", "dag", "resume", "port", "host", "event", "ref", "limit", "question", "capability", "template"].includes(name)) {
         parsed.flags[name] = argv[i + 1] as string;
         i++;
       } else {
@@ -453,6 +486,7 @@ export async function runCli(argv: string[], io: CliIo, cwd: string): Promise<Cl
       case "release": code = await cmdRelease(ctx); break;
       case "tour": code = await cmdTour(ctx); break;
       case "account": code = await cmdAccount(ctx); break;
+      case "ai": code = await cmdAi(ctx); break;
       case "version":
         if (renderer.rich) {
           for (const line of banner(new Ansi(true), VERSION, renderer.width)) io.out(line);

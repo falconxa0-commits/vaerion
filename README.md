@@ -85,7 +85,7 @@ welcome front door):
 `init` · `run research|demo|model|agent|workflow` · `resume` · `explain` ·
 `journal ls|show|verify|recover|export` · `doctor` · `dev` · `serve` ·
 `package build|verify` · `provenance` · `repo` · `account` ·
-`ci validate|simulate` · `release readiness` · `tour`
+`ai ask|models` · `ci validate|simulate` · `release readiness` · `tour`
 
 Every command honors `--json` (stable machine output), `--dry-run`
 (plan only, nothing written), and exit codes 0–5 with the E-code

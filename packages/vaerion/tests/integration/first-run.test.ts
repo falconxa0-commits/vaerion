@@ -291,7 +291,7 @@ describe("`vae tour` — the guided, read-only walk (Phase 2)", () => {
 describe("D-M′ — help and dispatch never disagree (v1.3 surface)", () => {
   test("MAIN_HELP lists every ratified command including `tour` and `account`, and the welcome door is announced", async () => {
     const { MAIN_HELP } = await import("../../src/cli/vae.ts");
-    for (const command of ["init", "run", "resume", "explain", "journal", "doctor", "dev", "serve", "package", "provenance", "repo", "ci", "release", "tour", "account"]) {
+    for (const command of ["init", "run", "resume", "explain", "journal", "doctor", "dev", "serve", "package", "provenance", "repo", "ci", "release", "tour", "account", "ai"]) {
       expect(MAIN_HELP).toContain(command);
     }
     expect(MAIN_HELP).toContain("welcome front door");
