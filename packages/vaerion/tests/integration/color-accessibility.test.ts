@@ -131,3 +131,33 @@ describe("end-to-end: no ANSI escapes reach the ambient-degraded surface", () =>
     expect(out.join("\n")).toMatch(/\u001b\[/);
   });
 });
+
+/* ─────────────  D-N: `version --json` is stable NDJSON (Phase 9 finding)  ───────────── */
+
+describe("D-N five guarantees — the version face (gap found by the release-train rehearsal)", () => {
+  test("version --json emits stable NDJSON; plain face unchanged; rich banner untouched", async () => {
+    const ws = await makeWorkspace();
+    // Neutralize ambient profile vars (earlier tests in this file set them;
+    // the saved originals are restored by afterAll).
+    track("VAE_UI");
+    track("NO_COLOR");
+    track("CI");
+    track("TERM");
+    delete process.env.VAE_UI;
+    delete process.env.NO_COLOR;
+    delete process.env.CI;
+    process.env.TERM = "xterm-256color";
+
+    const jsonLines: string[] = [];
+    const rj = await runCli(["version", "--json"], { out: (l) => jsonLines.push(l), err: () => undefined }, ws);
+    expect(rj.code).toBe(0);
+    expect(jsonLines.length).toBe(1);
+    const parsed = JSON.parse(jsonLines[0]!) as { version: string };
+    expect(parsed.version).toBe((await import("../../src/cli/vae.ts")).VERSION);
+
+    const plain: string[] = [];
+    const rp = await runCli(["version"], { out: (l) => plain.push(l), err: () => undefined }, ws);
+    expect(rp.code).toBe(0);
+    expect(plain[plain.length - 1]).toBe(`vae ${parsed.version}`);
+  });
+});

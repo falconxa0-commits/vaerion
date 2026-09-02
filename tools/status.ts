@@ -112,7 +112,7 @@ const status = {
   engineVersion: ENGINE_VERSION,
   substrate: "TypeScript on Bun (ADR-0018 — provisional with recorded migration path; Founder ratification pending)",
   verification,
-  tests: { suites: 34, assertedExpectations: 2710, totalTests: 431, coverage: { lines: 86.82, branches: 91.18, floors: "bunfig.toml coverageThreshold (OBJ-Q6, ratcheted at MS-6 bundle close: 0.86/0.74/0.86/0.90; held at every ASCENSION phase close)" }, note: "counts from the latest full run of `bun test tests/ --coverage`" },
+  tests: { suites: 35, assertedExpectations: 2752, totalTests: 443, coverage: { lines: 86.52, branches: 90.60, floors: "bunfig.toml coverageThreshold (OBJ-Q6, ratcheted at MS-6 bundle close: 0.86/0.74/0.86/0.90; held at every ASCENSION phase close)" }, note: "counts from the latest full run of `bun test tests/ --coverage`" },
   code: { engine, engineTests, sdk, tools },
   contracts: { specFiles, adrCount: adrFiles.length, adrFiles },
   milestones,
@@ -129,7 +129,7 @@ const status = {
     "ModelPlanner success path needs a recorded real-provider cassette for end-to-end golden coverage (environment has no provider network access).",
   ],
   nextWork: [
-    "THE GA CAMPAIGN (Phases 7–10, v1.4 A4): Phase 7 (the performance budget law) and Phase 8 (the accessibility law) complete — verify.ts now carries EIGHT gates; Phase 9 (the release-train rehearsal) is next; Phase 10 (the GA gate) closes the program.",
+    "THE GA CAMPAIGN (Phases 7–10, v1.4 A4): Phases 7 (performance budget law), 8 (accessibility law), and 9 (release-train rehearsal — PASSED end-to-end at v0.1.9-rc1, docs/ga/RELEASE-TRAIN-REHEARSAL.md) complete — verify.ts carries EIGHT gates; Phase 10 (the GA gate) closes the program.",
     "MS-6 remaining exit criteria: native single-binary installers (host-gated: brew/winget/dmg/rpm authored in Phase 1, awaiting their platforms); then the daemon packages route group (wire parity, spec/openapi regen).",
     "Program close (Phase 10): version lockstep, release tag, artifact trust chain, canonical + GitHub synchronization, and the GO/NO-GO dossier.",
     "Release train steps (publish, announce, key ceremony) — Founder-gated; artifacts are reproducible via tools/dist-pack.ts at the release tag.",

@@ -1,60 +1,60 @@
 {
-  "generatedAt": "2026-09-02T20:56:01.910Z",
+  "generatedAt": "2026-09-02T21:06:44.315Z",
   "engineVersion": "0.1.9-rc1",
   "substrate": "TypeScript on Bun (ADR-0018 — provisional with recorded migration path; Founder ratification pending)",
   "verification": {
-    "generatedAt": "2026-09-02T20:54:44.460Z",
+    "generatedAt": "2026-09-02T21:05:51.254Z",
     "ok": true,
     "gates": [
       {
         "gate": "typecheck-engine",
         "ok": true,
-        "durationMs": 4094
+        "durationMs": 4322
       },
       {
         "gate": "typecheck-sdk",
         "ok": true,
-        "durationMs": 3303
+        "durationMs": 3522
       },
       {
         "gate": "tests",
         "ok": true,
-        "durationMs": 6594
+        "durationMs": 6969
       },
       {
         "gate": "layerlint",
         "ok": true,
-        "durationMs": 30
+        "durationMs": 32
       },
       {
         "gate": "constitutional-check",
         "ok": true,
-        "durationMs": 206
+        "durationMs": 227
       },
       {
         "gate": "perf-budget",
         "ok": true,
-        "durationMs": 293
+        "durationMs": 340
       },
       {
         "gate": "a11y-structural",
         "ok": true,
-        "durationMs": 32
+        "durationMs": 27
       },
       {
         "gate": "repo-lint",
         "ok": true,
-        "durationMs": 10157
+        "durationMs": 11157
       }
     ]
   },
   "tests": {
-    "suites": 34,
-    "assertedExpectations": 2710,
-    "totalTests": 431,
+    "suites": 35,
+    "assertedExpectations": 2752,
+    "totalTests": 443,
     "coverage": {
-      "lines": 86.82,
-      "branches": 91.18,
+      "lines": 86.52,
+      "branches": 90.6,
       "floors": "bunfig.toml coverageThreshold (OBJ-Q6, ratcheted at MS-6 bundle close: 0.86/0.74/0.86/0.90; held at every ASCENSION phase close)"
     },
     "note": "counts from the latest full run of `bun test tests/ --coverage`"
@@ -62,19 +62,19 @@
   "code": {
     "engine": {
       "files": 104,
-      "lines": 21064
+      "lines": 21068
     },
     "engineTests": {
-      "files": 34,
-      "lines": 9909
+      "files": 35,
+      "lines": 10099
     },
     "sdk": {
       "files": 3,
       "lines": 779
     },
     "tools": {
-      "files": 10,
-      "lines": 1548
+      "files": 11,
+      "lines": 1881
     }
   },
   "contracts": {
@@ -262,23 +262,37 @@
     "measured": true,
     "ready": false,
     "verdict": "BLOCKED",
-    "passed": 7,
+    "passed": 8,
     "total": 12,
     "blockers": [
-      "git-tree-clean: working tree dirty: 0 staged, 17 unstaged, 4 untracked",
-      "release-tag-binding: HEAD is not exactly at a v* release tag",
-      "release-artifacts: artifact set incomplete: dist/MANIFEST.json, dist/MANIFEST.json.sig, dist/SHA256SUMS, dist/VERIFY.md missing"
+      "git-tree-clean: working tree dirty: 0 staged, 6 unstaged, 4 untracked",
+      "release-tag-binding: HEAD is not exactly at a v* release tag"
     ]
   },
   "commandCenter": {
     "workspace": {
       "root": "/home/z/my-project/examples/vaerion-demo",
-      "runs": 0
+      "runs": 2
     },
     "operations": {
-      "runs": [],
+      "runs": [
+        {
+          "run_id": "crn_run_01M1HYV91Q7YPZHMEPWZK0WFZM",
+          "records": 5,
+          "events": 3,
+          "verified": true,
+          "receipt": true
+        },
+        {
+          "run_id": "crn_run_01M1HZ1ABXJN0W8WSFJ1E35KNC",
+          "records": 5,
+          "events": 3,
+          "verified": true,
+          "receipt": true
+        }
+      ],
       "journals_verified": true,
-      "receipts": 0,
+      "receipts": 2,
       "metering": {
         "invocations": 0,
         "failed": 0,
@@ -309,20 +323,16 @@
       "measured": true,
       "ready": false,
       "verdict": "BLOCKED",
-      "passed": 7,
+      "passed": 8,
       "total": 12,
       "blockers": [
         {
           "check": "git-tree-clean",
-          "detail": "working tree dirty: 0 staged, 17 unstaged, 4 untracked"
+          "detail": "working tree dirty: 0 staged, 6 unstaged, 4 untracked"
         },
         {
           "check": "release-tag-binding",
           "detail": "HEAD is not exactly at a v* release tag"
-        },
-        {
-          "check": "release-artifacts",
-          "detail": "artifact set incomplete: dist/MANIFEST.json, dist/MANIFEST.json.sig, dist/SHA256SUMS, dist/VERIFY.md missing"
         }
       ]
     },
@@ -337,7 +347,7 @@
     "ModelPlanner success path needs a recorded real-provider cassette for end-to-end golden coverage (environment has no provider network access)."
   ],
   "nextWork": [
-    "THE GA CAMPAIGN (Phases 7–10, v1.4 A4): Phase 7 (the performance budget law) and Phase 8 (the accessibility law) complete — verify.ts now carries EIGHT gates; Phase 9 (the release-train rehearsal) is next; Phase 10 (the GA gate) closes the program.",
+    "THE GA CAMPAIGN (Phases 7–10, v1.4 A4): Phases 7 (performance budget law), 8 (accessibility law), and 9 (release-train rehearsal — PASSED end-to-end at v0.1.9-rc1, docs/ga/RELEASE-TRAIN-REHEARSAL.md) complete — verify.ts carries EIGHT gates; Phase 10 (the GA gate) closes the program.",
     "MS-6 remaining exit criteria: native single-binary installers (host-gated: brew/winget/dmg/rpm authored in Phase 1, awaiting their platforms); then the daemon packages route group (wire parity, spec/openapi regen).",
     "Program close (Phase 10): version lockstep, release tag, artifact trust chain, canonical + GitHub synchronization, and the GO/NO-GO dossier.",
     "Release train steps (publish, announce, key ceremony) — Founder-gated; artifacts are reproducible via tools/dist-pack.ts at the release tag.",

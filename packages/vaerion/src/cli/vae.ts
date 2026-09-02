@@ -524,7 +524,11 @@ export async function runCli(argv: string[], io: CliIo, cwd: string): Promise<Cl
       case "ai": code = await cmdAi(ctx); break;
       case "center": code = await cmdCenter(ctx); break;
       case "version":
-        if (renderer.rich) {
+        // D-N: every command honors the Five Guarantees — `version --json`
+        // emits stable NDJSON (the rehearsal of Phase 9 caught this gap).
+        if (mode === "json") {
+          io.out(JSON.stringify({ version: VERSION }));
+        } else if (renderer.rich) {
           for (const line of banner(new Ansi(true), VERSION, renderer.width)) io.out(line);
         } else {
           io.out(`vae ${VERSION}`);

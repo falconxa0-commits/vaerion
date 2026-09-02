@@ -1,0 +1,25 @@
+# Vaerion project configuration (schema 0.1)
+# Unknown keys are rejected by law — see spec/schemas/vaerion-yaml.schema.json
+schemaVersion: "0.1"
+project:
+  name: my-project
+  description: "Vaerion project"
+research:
+  capabilities:
+    - name: project-docs
+      sources:
+        - { kind: local, path: "./docs" }
+      fencing: untrusted
+      maxItems: 100
+# Broker policy rules (MS-2) — first match wins; unmatched requests deny fail-closed.
+# Every rule must state its rationale:
+# policy:
+#   rules:
+#     - id: deny-secret-read
+#       principalKinds: [agent]
+#       domain: secret.read
+#       scope: "*"
+#       effect: deny
+#       rationale: "agents never read secrets; humans use the keychain directly"
+telemetry:
+  enabled: false
