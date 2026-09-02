@@ -23,8 +23,16 @@
 - [VERIFIED] descriptor.allow_deletions: measured allow_deletions=false — law requires false
 - [VERIFIED] descriptor.required_linear_history: measured required_linear_history=true — law requires true
 - [VERIFIED] descriptor.enforce_admins: measured enforce_admins=true — law requires true
-- [VERIFIED] staged.required_status_checks: required_status_checks=undefined — STAGED fail-closed until a measured green run exists (v1.6 A6, Phase 13 elevates)
+- [VERIFIED] staged.required_status_checks: required_status_checks=undefined — STAGED fail-closed until a measured green run exists
 
 ---
 
 *Measured, never assumed. The canonical store remains the D-Q hook authority of record; this remote now enforces the same properties by branch protection. Honest limits: a destructive live force-push against main is NOT EXECUTED (it would risk the protected ref itself) — the refusal is enforced by the measured allow_force_pushes=false configuration; the deletion refusal IS live-probed.*
+
+> **MEASURED DISCOVERY (Phase 13):** required status checks and the direct-push synchronization path are structurally
+> incompatible — with `verification (all gates)` required, a push of new commits is declined at pre-receive because the
+> check for those commits cannot exist before the push that triggers it (measured: `! [remote rejected] main -> main
+> (protected branch hook declined)`). The check of record therefore stays STAGED while the direct-push sync law (D-Q)
+> governs the remote; the elevation PERMISSION condition (a measured green run exists — run #7, artifact-verified) is
+> satisfied and preserved in the guard. Converting main to a merge-only (PR) flow to enable full elevation is a human
+> authority decision (P4) that changes the synchronization architecture, and is recorded as a Founder decision.*

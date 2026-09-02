@@ -27,20 +27,23 @@
  *     state (no wall-clock inputs), every claim D-S labeled.
  */
 
+import { readFileSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { join } from "node:path";
 
 export const REMOTE_PROTECTION_SCHEMA = "vaerion.remote-protection.v1" as const;
 
-/** The D-Q descriptor of record — the ONLY protection state this tool applies. */
+/**
+ * The D-Q descriptor of record — the ONLY protection state this tool applies.
+ * `required_status_checks` is STAGED in the constant (null) and elevated ONLY
+ * through --require-checks + a green committed record (the fail-closed guard
+ * in runLive: a check that cannot run is not a check).
+ */
 export const LAW_DESCRIPTOR = {
   allow_force_pushes: false,
   allow_deletions: false,
   required_linear_history: true,
   enforce_admins: true,
-  // STAGED fail-closed (P6): no check is required until a measured green run
-  // of it exists. Elevated only via --require-checks + a green committed
-  // record (Phase 13).
   required_status_checks: null,
   required_pull_request_reviews: null,
   restrictions: null,
@@ -55,11 +58,24 @@ export interface ProtectionFinding {
   readonly honesty: "VERIFIED" | "UNVERIFIED" | "NOT EXECUTED";
 }
 
+/** The descriptor in effect for a run — the law constant with the staged
+ *  checks field possibly elevated by --require-checks. */
+export interface EffectiveDescriptor {
+  readonly allow_force_pushes: boolean;
+  readonly allow_deletions: boolean;
+  readonly required_linear_history: boolean;
+  readonly enforce_admins: boolean;
+  readonly required_status_checks: readonly string[] | null;
+  readonly required_pull_request_reviews: null;
+  readonly restrictions: null;
+  readonly block_creations: boolean;
+}
+
 export interface RemoteProtectionReport {
   readonly schema: typeof REMOTE_PROTECTION_SCHEMA;
   readonly slug: string;
   readonly branch: "main";
-  readonly descriptor: typeof LAW_DESCRIPTOR;
+  readonly descriptor: EffectiveDescriptor;
   readonly applied: boolean;
   readonly probes: ProtectionFinding[];
   readonly findings: ProtectionFinding[];
@@ -112,17 +128,17 @@ async function api(method: string, path: string, token: string, body?: unknown):
   return { status: res.status, json };
 }
 
-/** The exact body this tool PUTs — the descriptor plus the API's required nulls. */
-export function protectionBody(descriptor: typeof LAW_DESCRIPTOR, requiredChecks?: { contexts: string[] }): Record<string, unknown> {
+/** The exact body this tool PUTs — every property from the descriptor in effect. */
+export function protectionBody(d: EffectiveDescriptor): Record<string, unknown> {
   return {
-    required_status_checks: requiredChecks ? { strict: false, contexts: requiredChecks.contexts } : descriptor.required_status_checks,
-    enforce_admins: descriptor.enforce_admins,
-    required_pull_request_reviews: descriptor.required_pull_request_reviews,
-    restrictions: descriptor.restrictions,
-    allow_force_pushes: descriptor.allow_force_pushes,
-    allow_deletions: descriptor.allow_deletions,
-    required_linear_history: descriptor.required_linear_history,
-    block_creations: descriptor.block_creations,
+    required_status_checks: d.required_status_checks === null ? null : { strict: false, contexts: [...d.required_status_checks] },
+    enforce_admins: d.enforce_admins,
+    required_pull_request_reviews: d.required_pull_request_reviews,
+    restrictions: d.restrictions,
+    allow_force_pushes: d.allow_force_pushes,
+    allow_deletions: d.allow_deletions,
+    required_linear_history: d.required_linear_history,
+    block_creations: d.block_creations,
   };
 }
 
@@ -134,8 +150,9 @@ function unwrapEnabled(raw: unknown): unknown {
   return raw;
 }
 
-/** Compare a measured protection object to the descriptor; name every drift. */
-export function verifyAgainstDescriptor(measured: Record<string, unknown>): ProtectionFinding[] {
+/** Compare a measured protection object to the descriptor; name every drift.
+ *  `expectedChecks`: the required-check contexts of record (null = STAGED). */
+export function verifyAgainstDescriptor(measured: Record<string, unknown>, expectedChecks: readonly string[] | null = null): ProtectionFinding[] {
   const findings: ProtectionFinding[] = [];
   const expect = (key: string, want: unknown): void => {
     const got = unwrapEnabled((measured as Record<string, unknown>)[key]);
@@ -150,13 +167,26 @@ export function verifyAgainstDescriptor(measured: Record<string, unknown>): Prot
   expect("allow_deletions", LAW_DESCRIPTOR.allow_deletions);
   expect("required_linear_history", LAW_DESCRIPTOR.required_linear_history);
   expect("enforce_admins", LAW_DESCRIPTOR.enforce_admins);
-  const checks = (measured as { required_status_checks?: unknown }).required_status_checks;
-  findings.push({
-    check: "staged.required_status_checks",
-    ok: checks === null || checks === undefined,
-    detail: `required_status_checks=${JSON.stringify(checks)} — STAGED fail-closed until a measured green run exists (v1.6 A6, Phase 13 elevates)`,
-    honesty: "VERIFIED",
-  });
+  const checks = (measured as { required_status_checks?: { contexts?: string[] } | null }).required_status_checks;
+  if (expectedChecks === null) {
+    findings.push({
+      check: "staged.required_status_checks",
+      ok: checks === null || checks === undefined,
+      detail: `required_status_checks=${JSON.stringify(checks)} — STAGED fail-closed until a measured green run exists`,
+      honesty: "VERIFIED",
+    });
+  } else {
+    const contexts = checks?.contexts ?? [];
+    const missing = expectedChecks.filter((c) => !contexts.includes(c));
+    findings.push({
+      check: "elevated.required_status_checks",
+      ok: missing.length === 0,
+      detail: missing.length === 0
+        ? `required checks of record present: ${expectedChecks.join(", ")} (elevated after the measured green run, v1.6 A6 Phase 13)`
+        : `required checks missing from the measured state: ${missing.join(", ")}`,
+      honesty: "VERIFIED",
+    });
+  }
   return findings;
 }
 
@@ -188,11 +218,38 @@ export function renderProtectionReport(r: RemoteProtectionReport): string {
     "",
     "*Measured, never assumed. The canonical store remains the D-Q hook authority of record; this remote now enforces the same properties by branch protection. Honest limits: a destructive live force-push against main is NOT EXECUTED (it would risk the protected ref itself) — the refusal is enforced by the measured allow_force_pushes=false configuration; the deletion refusal IS live-probed.*",
     "",
+    "> **MEASURED DISCOVERY (Phase 13):** required status checks and the direct-push synchronization path are structurally",
+    "> incompatible — with `verification (all gates)` required, a push of new commits is declined at pre-receive because the",
+    "> check for those commits cannot exist before the push that triggers it (measured: `! [remote rejected] main -> main",
+    "> (protected branch hook declined)`). The check of record therefore stays STAGED while the direct-push sync law (D-Q)",
+    "> governs the remote; the elevation PERMISSION condition (a measured green run exists — run #7, artifact-verified) is",
+    "> satisfied and preserved in the guard. Converting main to a merge-only (PR) flow to enable full elevation is a human",
+    "> authority decision (P4) that changes the synchronization architecture, and is recorded as a Founder decision.*",
+    "",
   ];
   return lines.join("\n");
 }
 
 /* ──────────────────────────────  the live run  ────────────────────────────── */
+
+/**
+ * The fail-closed elevation guard (P6: a check that cannot run is not a
+ * check). `--require-checks` is REFUSED unless the committed verification
+ * record is a measured green run — the evidence that the check both runs
+ * and passes on the sanctioned pipeline.
+ */
+export function guardElevation(recordPath: string, checks: readonly string[] | null): void {
+  if (checks === null) return;
+  let rec: { ok?: boolean; measured?: { testsFailed?: number } };
+  try {
+    rec = JSON.parse(readFileSync(recordPath, "utf8"));
+  } catch {
+    throw new Error("remote-protect: --require-checks refused — the committed verification record is missing or unreadable (a check that cannot run is not a check)");
+  }
+  if (rec?.ok !== true || rec?.measured?.testsFailed !== 0) {
+    throw new Error("remote-protect: --require-checks refused — the committed verification record is not a measured green run (a check that cannot run is not a check)");
+  }
+}
 
 async function runLive(): Promise<number> {
   const token = loadToken();
@@ -200,18 +257,28 @@ async function runLive(): Promise<number> {
   const branch = "main";
   const base = `/repos/${slug}/branches/${branch}/protection`;
 
+  const argv = process.argv.slice(2);
+  const requireIdx = argv.indexOf("--require-checks");
+  const requireChecks = requireIdx >= 0 ? [argv[requireIdx + 1] ?? ""] : null;
+  if (requireChecks && (requireChecks[0] === "" || requireChecks[0]!.startsWith("--"))) {
+    console.error("remote-protect: --require-checks needs the check context name (e.g. \"verification (all gates)\")");
+    return 2;
+  }
+  guardElevation(join(import.meta.dir, "..", ".vaerion-verification.json"), requireChecks);
+  const effectiveDescriptor: EffectiveDescriptor = { ...LAW_DESCRIPTOR, required_status_checks: requireChecks };
+
   // 1. Apply the descriptor of record (idempotent PUT).
-  const put = await api("PUT", base, token, protectionBody(LAW_DESCRIPTOR));
+  const put = await api("PUT", base, token, protectionBody(effectiveDescriptor));
   const applied = put.status === 200;
   if (!applied) {
     console.error(`remote-protect: PUT refused (HTTP ${put.status}) — ${JSON.stringify(put.json).slice(0, 300)}`);
     return 1;
   }
 
-  // 2. Verify the measured state against the descriptor.
+  // 2. Verify the measured state against the descriptor in effect.
   const get = await api("GET", base, token);
   const measured = (get.json ?? {}) as Record<string, unknown>;
-  const findings = verifyAgainstDescriptor(measured);
+  const findings = verifyAgainstDescriptor(measured, requireChecks);
 
   // 3. The LIVE adversarial probe: deletion must be refused, ref untouched.
   // Measured semantics: GitHub refuses deletion of a protected default branch
@@ -247,7 +314,7 @@ async function runLive(): Promise<number> {
     schema: REMOTE_PROTECTION_SCHEMA,
     slug,
     branch,
-    descriptor: LAW_DESCRIPTOR,
+    descriptor: effectiveDescriptor,
     applied,
     probes,
     findings,

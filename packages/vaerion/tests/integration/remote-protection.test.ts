@@ -15,11 +15,13 @@
  */
 
 import { describe, expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   LAW_DESCRIPTOR,
   REMOTE_PROTECTION_SCHEMA,
+  guardElevation,
   loadToken,
   protectionBody,
   renderProtectionReport,
@@ -57,10 +59,10 @@ describe("the D-Q descriptor of record (v1.6 A6)", () => {
     expect(body.required_status_checks).toBeNull();
   });
 
-  test("the PUT body can elevate checks ONLY through the explicit staged parameter", () => {
-    const body = protectionBody(LAW_DESCRIPTOR, { contexts: ["verification (all gates)"] });
+  test("the PUT body can elevate checks ONLY through the descriptor's staged field", () => {
+    const body = protectionBody({ ...LAW_DESCRIPTOR, required_status_checks: ["verification (all gates)"] });
     expect(body.required_status_checks).toEqual({ strict: false, contexts: ["verification (all gates)"] });
-    // Every other property stays at the descriptor values — elevation cannot drift the rest.
+    // Elevation cannot drift the rest of the descriptor.
     expect(body.allow_force_pushes).toBe(false);
     expect(body.enforce_admins).toBe(true);
   });
@@ -95,14 +97,46 @@ describe("the D-Q descriptor of record (v1.6 A6)", () => {
 
 /* ─────────────────────────────  2. token discipline  ───────────────────────────── */
 
+describe("the elevation guard — staged fail-closed (P6)", () => {
+  test("elevation is REFUSED without a measured green record", () => {
+    expect(() => guardElevation("/nonexistent/record.json", ["verification (all gates)"])).toThrow(/a check that cannot run is not a check/);
+  });
+
+  test("elevation is REFUSED on a red or unmeasured record", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "vae-protect-guard-"));
+    try {
+      const red = join(dir, "red.json");
+      await writeFile(red, JSON.stringify({ ok: false, measured: { testsFailed: 3 } }));
+      expect(() => guardElevation(red, ["c"])).toThrow(/not a measured green run/);
+      const unmeasured = join(dir, "unmeasured.json");
+      await writeFile(unmeasured, JSON.stringify({ ok: true }));
+      expect(() => guardElevation(unmeasured, ["c"])).toThrow(/not a measured green run/);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("elevation is GRANTED on a measured green record; staging needs no guard", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "vae-protect-guard-"));
+    try {
+      const green = join(dir, "green.json");
+      await writeFile(green, JSON.stringify({ ok: true, measured: { testsFailed: 0, testsPassed: 475 } }));
+      expect(() => guardElevation(green, ["verification (all gates)"])).not.toThrow();
+      expect(() => guardElevation(green, null)).not.toThrow();
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+});
+
 describe("token discipline (blocker 3 — no secret material in the tree)", () => {
   test("the token is read from the environment only; absence fails closed with guidance", () => {
     expect(() => loadToken({})).toThrow(/VAE_GITHUB_TOKEN/);
     expect(() => loadToken({ VAE_GITHUB_TOKEN: "  " })).toThrow(/VAE_GITHUB_TOKEN/);
   });
 
-  test("the tool source carries no token material (structural hygiene pin)", () => {
-    const source = readFileSync(join(ROOT, "tools", "remote-protect.ts"), "utf8");
+  test("the tool source carries no token material (structural hygiene pin)", async () => {
+    const source = await readFile(join(ROOT, "tools", "remote-protect.ts"), "utf8");
     expect(source).not.toMatch(/ghp_[A-Za-z0-9]/);
     expect(source).not.toMatch(/github_pat_[A-Za-z0-9]/);
   });
@@ -157,17 +191,17 @@ describe("the remote protection wiring", () => {
     expect(() => slugFromRemoteUrl("https://gitlab.com/a/b.git")).toThrow(/cannot parse/);
   });
 
-  test("the workflow runs least-privileged (v1.6 A6 Phase 12)", () => {
-    const workflow = readFileSync(join(ROOT, ".github", "workflows", "verify.yml"), "utf8");
+  test("the workflow runs least-privileged (v1.6 A6 Phase 12)", async () => {
+    const workflow = await readFile(join(ROOT, ".github", "workflows", "verify.yml"), "utf8");
     expect(workflow).toContain("permissions:");
     expect(workflow).toContain("contents: read");
   });
 
-  test("the ONE applier: the tool lives in tools/ and is referenced by the report of record", () => {
+  test("the ONE applier: the tool lives in tools/ and is referenced by the report of record", async () => {
     // The applier exists at the sanctioned path (tools/ — D-R's domain of
     // operators); the report of record names it as its generator.
-    readFileSync(join(ROOT, "tools", "remote-protect.ts"), "utf8");
-    const md = readFileSync(join(ROOT, "docs", "security", "REMOTE-PROTECTION.md"), "utf8");
+    await readFile(join(ROOT, "tools", "remote-protect.ts"), "utf8");
+    const md = await readFile(join(ROOT, "docs", "security", "REMOTE-PROTECTION.md"), "utf8");
     expect(md).toContain("tools/remote-protect.ts");
   });
 });
