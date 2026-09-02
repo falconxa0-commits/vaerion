@@ -30,6 +30,7 @@ export type ErrorCode =
   | "E1200" // config_missing
   | "E1201" // config_unknown_key
   | "E1202" // config_schema_invalid
+  | "E1203" // init_template_unknown
   // 13xx — permission broker contracts
   | "E1300" // broker_denied
   | "E1301" // broker_fail_closed
@@ -130,6 +131,7 @@ export const ERROR_CATALOG: Readonly<Record<ErrorCode, ErrorDescriptor>> = {
   E1200: { code: "E1200", name: "config_missing", summary: "vaerion.yaml was not found.", fix: "Run `vae init` to scaffold a valid project configuration." },
   E1201: { code: "E1201", name: "config_unknown_key", summary: "vaerion.yaml contains a key outside the strict schema.", fix: "Remove the unknown key; Vaerion rejects drift instead of guessing intent." },
   E1202: { code: "E1202", name: "config_schema_invalid", summary: "vaerion.yaml violates the v0.1 schema.", fix: "See spec/schemas/vaerion-yaml.schema.json for the accepted shape." },
+  E1203: { code: "E1203", name: "init_template_unknown", summary: "The requested init template is not in the registry.", fix: "List the deterministic templates with `vae init --help` (available templates are named in the error); bare `vae init` is exactly --template minimal." },
   E1300: { code: "E1300", name: "broker_denied", summary: "Permission broker denied the requested capability.", fix: "Inspect the recorded decision (`vae explain <trace>`); request the narrowest needed grant in vaerion.yaml." },
   E1301: { code: "E1301", name: "broker_fail_closed", summary: "Broker could not evaluate the request and failed closed.", fix: "Resolve the underlying broker error; un-evaluable requests are never allowed by law." },
   E1302: { code: "E1302", name: "gate_pending", summary: "A durable gate is awaiting human authority.", fix: "Answer with `vae resume <run> --answer '{...}'`." },

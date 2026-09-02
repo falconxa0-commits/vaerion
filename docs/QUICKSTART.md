@@ -33,6 +33,8 @@ vae                            # the welcome front door: measures this
 vae tour                       # a guided, read-only walk of the engine —
                                # nine steps measured against your machine
 vae init                       # scaffolds vaerion.yaml + .vaerion/
+                               # (--template minimal is the default; try
+                               # --template demo or --template agent)
 ```
 
 The welcome and the tour are read-only: nothing is created, modified, or

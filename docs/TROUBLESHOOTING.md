@@ -28,6 +28,10 @@ guide maps the common ones.
 - **E1202 `config_schema_invalid`** — the YAML violates the v0.1 schema.
   The accepted shape is `spec/schemas/vaerion-yaml.schema.json`;
   `schemaVersion: "0.1"` is required.
+- **E1203 `init_template_unknown`** — `vae init --template NAME` named a
+  template that is not in the registry. Fix: pick from the available list
+  in the error (deterministic order); bare `vae init` is exactly
+  `--template minimal`.
 
 ### Journals and runs
 

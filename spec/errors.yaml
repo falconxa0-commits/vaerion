@@ -83,6 +83,10 @@ errors:
     name: config_schema_invalid
     summary: "vaerion.yaml violates the v0.1 schema."
     fix: "See spec/schemas/vaerion-yaml.schema.json for the accepted shape."
+  E1203:
+    name: init_template_unknown
+    summary: "The requested init template is not in the registry."
+    fix: "List the deterministic templates with `vae init --help` (available templates are named in the error); bare `vae init` is exactly --template minimal."
   E1300:
     name: broker_denied
     summary: "Permission broker denied the requested capability."

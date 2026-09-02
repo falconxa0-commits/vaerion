@@ -25,7 +25,10 @@ Usage: vae [global flags] <command> [args] [flags]
  points at the next step — read-only, exit 0.)
 
 Command surface (the Daily Seven + additive commands):
-  init                       scaffold vaerion.yaml + .vaerion/ workspace
+  init [--template minimal|demo|agent] [--name NAME]
+                             scaffold vaerion.yaml + .vaerion/ from the
+                             deterministic template registry (bare init is
+                             exactly --template minimal)
   run research --sources P[,P] --query Q [--max-docs N]
   run demo [--sources P,P] [--query Q]
                              index declared local sources; journal everything;
@@ -130,9 +133,21 @@ Learn more: docs/constitution/VAERION_CONSTITUTION_v1.3.md · spec/ (contracts)
 `;
 
 const COMMAND_HELP: Record<string, string> = {
-  init: `vae init [--name NAME] [--dry-run]
-  Scaffold vaerion.yaml (strict schema 0.1) and the .vaerion/ workspace.
-  Refuses to overwrite an existing vaerion.yaml. --dry-run prints the plan.`,
+  init: `vae init [--template minimal|demo|agent] [--name NAME] [--dry-run]
+  Scaffold vaerion.yaml (strict schema 0.1) and the .vaerion/ workspace from
+  the deterministic template registry (constitution v1.3 A3, Phase 5):
+
+    minimal   the default scaffold: declared project docs, policy examples
+              in comments — bare 'vae init' is exactly this template
+    demo      a demo workspace: ./docs + ./sources capabilities, ready for
+              'vae run demo --sources ./sources --query "..."'
+    agent     an agent workspace: mockbrain planner, declared tools, and an
+              explicit policy rule for the agent's model.invoke grant
+
+  Every template is byte-stable (the only parameter is --name) and validates
+  against the strict config law; telemetry is structurally false. Refuses to
+  overwrite an existing vaerion.yaml. Unknown templates are a usage error
+  (E1203). --dry-run prints the plan and writes nothing.`,
   run: `vae run research --sources P[,P] --query Q [--max-docs N] [--dry-run]
 vae run demo [--sources P,P] [--query Q]
 vae run model --model P/M [--prompt TEXT] [--system TEXT] [--seed N]
@@ -508,7 +523,7 @@ export async function runCli(argv: string[], io: CliIo, cwd: string): Promise<Cl
     if (isVaerionError(err)) {
       renderer.error(err);
       const code =
-        err.code === "E1600" || err.code === "E1700" || err.code === "E1701" || err.code === "E2204" || err.code === "E2300"
+        err.code === "E1600" || err.code === "E1203" || err.code === "E1700" || err.code === "E1701" || err.code === "E2204" || err.code === "E2300"
           ? ExitCode.usage
           : err.code === "E1300" || err.code === "E1301" || err.code === "E1302"
             ? ExitCode.brokerDenied

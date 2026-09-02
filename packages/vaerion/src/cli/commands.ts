@@ -37,6 +37,7 @@ import { verifyEvidence, type EvidenceVerificationItem } from "../research/verif
 import { renderUnified, assertReviewDiffShape, type ReviewDiff } from "../broker/contracts/review-diff.ts";
 import { type PolicyContract, type PolicyRule } from "../broker/contracts/decision.ts";
 import { policyFromConfig } from "../config/config.ts";
+import { DEFAULT_INIT_TEMPLATE, renderInitTemplate } from "../config/templates.ts";
 import { researchPrincipal } from "../research/principal.ts";
 import { declareResearchCapability, type ResearchCapabilityDeclaration } from "../research/capability.ts";
 import { assembleResearchContext, collectDocs, renderPackAsSystemPrompt } from "../research/pipeline.ts";
@@ -84,44 +85,19 @@ function reqFlag(ctx: CommandContext, name: string): string {
 
 /* ────────────────────────────────  init ──────────────────────────────── */
 
-const INIT_TEMPLATE = `# Vaerion project configuration (schema 0.1)
-# Unknown keys are rejected by law — see spec/schemas/vaerion-yaml.schema.json
-schemaVersion: "0.1"
-project:
-  name: {{NAME}}
-  description: "Vaerion project"
-research:
-  capabilities:
-    - name: project-docs
-      sources:
-        - { kind: local, path: "./docs" }
-      fencing: untrusted
-      maxItems: 100
-# Broker policy rules (MS-2) — first match wins; unmatched requests deny fail-closed.
-# Every rule must state its rationale:
-# policy:
-#   rules:
-#     - id: deny-secret-read
-#       principalKinds: [agent]
-#       domain: secret.read
-#       scope: "*"
-#       effect: deny
-#       rationale: "agents never read secrets; humans use the keychain directly"
-telemetry:
-  enabled: false
-`;
-
 export async function cmdInit(ctx: CommandContext): Promise<number> {
   const ws = workspaceAt(ctx.cwd);
   const name = typeof ctx.flags.name === "string" && ctx.flags.name.length > 0 ? ctx.flags.name : "my-project";
+  const templateName = typeof ctx.flags.template === "string" && ctx.flags.template.length > 0 ? ctx.flags.template : DEFAULT_INIT_TEMPLATE;
+  const yaml = renderInitTemplate(templateName, name);
   const exists = await stat(ws.configPath).then(() => true, () => false);
   if (exists) {
     throw new VaerionError("E1600", `vaerion.yaml already exists at ${ws.configPath}`);
   }
-  const yaml = INIT_TEMPLATE.replace("{{NAME}}", name);
   if (ctx.dryRun) {
     r(ctx).result({
       command: "init",
+      template: templateName,
       dry_run: true,
       planned: [
         { path: relative(ctx.cwd, ws.configPath), bytes: Buffer.byteLength(yaml) },
@@ -137,6 +113,7 @@ export async function cmdInit(ctx: CommandContext): Promise<number> {
   const { fingerprint } = await loadOrAdhocConfig(ws);
   r(ctx).result({
     command: "init",
+    template: templateName,
     dry_run: false,
     created: [relative(ctx.cwd, ws.configPath), relative(ctx.cwd, ws.journalDir), relative(ctx.cwd, ws.blobsDir)],
     config_fingerprint: fingerprint,
