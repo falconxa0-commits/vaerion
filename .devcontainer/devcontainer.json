@@ -1,0 +1,17 @@
+{
+  "name": "Vaerion",
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "context": ".."
+  },
+  "remoteUser": "vae",
+  "postCreateCommand": "bun install --frozen-lockfile",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "oven.bun-vscode"
+      ]
+    }
+  }
+}

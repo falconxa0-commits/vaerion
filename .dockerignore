@@ -1,0 +1,37 @@
+# Vaerion — build-context exclusions (keep the context minimal and free of
+# local state; the image copies only what the CLI runs).
+
+# dependencies
+node_modules
+**/node_modules
+
+# git and CI-local state
+.git
+.github
+.gitlab-ci.yml
+Jenkinsfile
+.devcontainer
+
+# build outputs
+dist
+.next
+out
+build
+coverage
+
+# engine-local state (journals, logs, verification records)
+.vaerion
+.vaerion-logs
+.vaerion-verification.json
+.vaerion-workspaces
+
+# environment and local data
+.env*
+db
+dev.log
+server.log
+*.pem
+.DS_Store
+
+# release-time artifacts (regenerable by tools/dist-pack.ts)
+keys/*.key

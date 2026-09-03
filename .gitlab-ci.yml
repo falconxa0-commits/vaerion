@@ -1,0 +1,29 @@
+# Vaerion CI — GitLab port of .github/workflows/verify.yml.
+#
+# The law this file honors (D-R): the workflows/CI recipes are the REMOTE
+# PROJECTION of the single verification authority — tools/verify.ts. No CI
+# surface may re-implement the gates. The pipeline fails on any violation
+# (non-zero gate exit):
+#   typecheck-engine · typecheck-sdk · tests (coverage floors) ·
+#   layerlint · constitutional-check · perf-budget · a11y-structural ·
+#   repo-lint
+# and archives the measured verification record.
+
+stages:
+  - verify
+
+verify:
+  stage: verify
+  image: oven/bun:1.3.14
+  timeout: 30 minutes
+  script:
+    - bun install --frozen-lockfile
+    - bun run tools/verify.ts
+  artifacts:
+    # GitLab tracks dotfiles normally — the hidden-file exclusion class that
+    # shaped the GitHub workflow's upload flag does not apply here.
+    when: always
+    paths:
+      - .vaerion-verification.json
+      - .vaerion-logs/
+    expire_in: 1 week
