@@ -762,3 +762,20 @@ Work Log:
 Stage Summary:
 - No surface in the repository hand-copies a law path or a campaign state anymore. The law references teach truth at every future amendment without anyone remembering to update them — the D-V root-cause standard applied to the reference class itself.
 - Next: Phase 17 — the provisioning law: the D-Q canonical hook versioned as engine law text, ONE sanctioned provisioner/prover, adversarial probes, executed for real.
+
+---
+Task ID: ASC-MD-PHASE-17
+Agent: Auren — Principal Vaerion Architect (THE PROVISIONING LAW — the D-Q hook becomes engine law)
+Task: MASTER DIRECTIVE Phase 17 — the canonical protection hook versioned as law text, the ONE sanctioned provisioner/prover, adversarial probes pinned by tests, executed for real (defect D1 from the Phase 15 ledger).
+
+Work Log:
+- THE LAW TEXT: packages/vaerion/src/repo/canonical.ts (L2, pure) — PRE_RECEIVE_HOOK is the D-Q synchronization protection law as versioned bytes (ff-only `main` via merge-base --is-ancestor; `main` deletion refused; `v*` tags immutable — overwrite AND deletion refused; fail-closed exit), plus the deterministic provisioning plan (bare init --initial-branch=main → hook install → chmod) that NEVER touches refs.
+- THE ONE APPLIER: tools/canonical-provision.ts — the sibling face of remote-protect.ts (TWO faces of ONE law, no duplicated logic): provisionStore (idempotent, refs untouched), probeStore (adversarial push probes through a throwaway clone), renderProbeReport (D-S: VERIFIED by execution).
+- MY OWN TOOL'S DEFECTS CAUGHT BEFORE THE REAL RUN (the checker is checked): (1) without --force, the non-ff and tag-overwrite refusals would come from the git CLIENT, not the hook — the probes would prove nothing; fixed (forced probes reach the law); (2) an EMPTY or depth-1 store would let the "refusal" probes MUTATE it (an empty store accepts a root commit: old==zero is a legal fast-forward) — fixed: no-main and shallow stores refuse to be probed (an unprobeable store is an error, never a mutated one); (3) a hookless store now refuses to be probed outright (the forced probes would push through an unprotected store).
+- +6 CONTRACT TESTS (tests/integration/canonical-provision.test.ts, all against REAL seeded bare stores): the hook bytes pin (three properties + fail-closed exit + generated-from provenance); idempotent provisioning (refs untouched, hook bytes identical to the engine law); the four adversarial refusals WITH the positive control (a legal ff push and a NEW v* tag are ACCEPTED — the law never over-refuses) and post-probe state unchanged; the fail-closed preconditions (empty, hookless).
+- EXECUTED FOR REAL: `bun tools/canonical-provision.ts /home/z/vaerion-canonical.git` → provisioned (new store; the auto-probe honestly refused the empty store — the precondition proven in production); synchronized `main` + all SIX release tags as NEW refs (hook's positive path; divergence 0/0 measured); `--probe-only` → non-ff REFUSED, main deletion REFUSED, tag overwrite (v0.1.10-rc1) REFUSED, tag deletion REFUSED, post-probe state UNCHANGED — PROTECTION LAW VERIFIED, exit 0; tag objects identical local↔canonical by ls-remote (4c20529, 9a0e2d0, 7d75198, 38a59f9, a22b32d6, 0a95fc5).
+- EIGHT GATES GREEN on the final tree (486/0/2942/38).
+
+Stage Summary:
+- The session-boundary loss class (D1) is closed at root: the protection law lives in the engine, re-provisioning is ONE deterministic command, and every provisioning proves itself with adversarial push probes. The canonical store is re-provisioned, synchronized (0/0), and VERIFIED under the law.
+- Next: Phase 18 — the program close: §11 synchronization-ledger rows (canonical + GitHub), the verification record, GitHub push, the Remaining Reality Report (D-W).

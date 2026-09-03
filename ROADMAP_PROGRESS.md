@@ -8,7 +8,7 @@
 - Engine version of record: `0.1.11-rc1`
 - Constitution of record: `v1.7` (Amendment Log §11)
 - Verification record: GREEN — 8/8 gates ok (`.vaerion-verification.json`)
-- Measured tests: 480 pass · 0 fail · 2888 expectations · 37 files
+- Measured tests: 486 pass · 0 fail · 2942 expectations · 38 files
 - Coverage floors: bunfig.toml coverageThreshold (OBJ-Q6, ratcheted at MS-6 bundle close: 0.86/0.74/0.86/0.90; held at every ASCENSION phase close)
 
 ## Milestone board (§7)
@@ -46,10 +46,12 @@
 | 13 | ASCENSION XIX | ✅ complete |
 | 14 | ASCENSION XIX | ✅ complete |
 | 15 | MASTER DIRECTIVE | ✅ complete |
+| 16 | MASTER DIRECTIVE | ✅ complete |
+| 17 | MASTER DIRECTIVE | ✅ complete |
 
 ## Recommended next work (priority order)
 
-1. No campaign is in flight: the D-T ledger records MASTER DIRECTIVE complete through Phase 15 (evidence of record in the constitution's §11 Amendment Log); the next program awaits Founder ratification (P4).
+1. No campaign is in flight: the D-T ledger records MASTER DIRECTIVE complete through Phase 17 (evidence of record in the constitution's §11 Amendment Log); the next program awaits Founder ratification (P4).
 2. GA remains rehearsed and PENDING FOUNDER GO (P4); the Founder gates (F-2 legal name, F-3 key ceremony, F-4 substrate ratification, F-5 publish, F-6 real-provider cassettes) are the remaining path to full GA.
 3. MS-6 leftovers: native single-binary installers (host-gated: brew/winget/dmg/rpm authored in Phase 1, awaiting their platforms); the daemon packages route group (wire parity, spec/openapi regen).
 4. Release train steps (publish, announce, key ceremony) — Founder-gated; artifacts are reproducible via tools/dist-pack.ts at the release tag.
