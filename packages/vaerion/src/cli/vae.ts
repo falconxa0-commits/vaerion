@@ -13,7 +13,8 @@ import { buildWelcomePayload, cmdAccount, cmdAi, cmdCenter, cmdDev, cmdExplain, 
 import { VaerionError } from "../kernel/errors.ts";
 import { isVaerionError } from "./workspace.ts";
 import { Renderer, setBannerVersion } from "./render.ts";
-import { Ansi, banner, errorBlock, footer, type RenderEnv } from "./ui.ts";
+import { Ansi, banner, footer, type RenderEnv } from "./ui.ts";
+import { completionScript } from "./completions.ts";
 
 export const VERSION = "0.1.12-rc1";
 setBannerVersion(VERSION);
@@ -123,6 +124,13 @@ Command surface (the Daily Seven + additive commands):
                              gateway metering, audit + refusal-log integrity,
                              referenced blobs, and the release readiness
                              digest — one measured core, read-only
+  version                    print the engine version and exit
+  help [COMMAND]             the help frames for COMMAND (unknown topics
+                             fall back to this help — help always teaches)
+  completions <shell>        emit shell completions for
+                             bash|zsh|fish|powershell (generated from the
+                             command registry of record; source into your
+                             shell profile)
 
 Global flags:
   --json                     stable NDJSON output (machine mode, guaranteed)
@@ -130,8 +138,13 @@ Global flags:
   --dry-run                  zero side effects — plan only, nothing written
   --cwd DIR                  operate on DIR as the workspace (default: .)
   --help                     show this help and exit (never executes)
+  --version                  print the engine version and exit (-V)
+  --quiet                    suppress decorative framing (banner/footer);
+                             data and errors are NEVER suppressed
 
 Exit codes: 0 ok · 1 internal · 2 usage · 3 broker-denied · 4 provider-down · 5 partial-with-repair-hint
+Debug: VAE_DEBUG=1 prints the underlying stack for engine errors (a
+diagnostics aid — never a data path).
 
 Learn more: docs/constitution/ — the ratified law of record · spec/ (contracts)
 `;
@@ -405,6 +418,32 @@ vae ai models
   Exit 0 when journals, both chains, and every blob verify; exit 5 with the
   failing section otherwise. The web face command-center section consumes
   the same fold through tools/status.ts — never a second implementation.`,
+  version: `vae version [--json]
+
+  Print the engine version of record. In --json mode, stable NDJSON:
+  {"version":"..."}. The same literal as the banner and every packaging
+  surface — the version-register test pins them together.`,
+  help: `vae help [COMMAND]
+
+  The help frames for COMMAND (the same text --help shows for that topic).
+  An unknown topic falls back to the main help — help always teaches and
+  never executes. Alias of the global --help flag.`,
+  completions: `vae completions <bash|zsh|fish|powershell>
+
+  Emit shell completion code for the chosen shell, generated from the ONE
+  completion model pinned against the command registry
+  (tests/integration/dx-surface.test.ts keeps model and registry disagreeing
+  from ever compiling). Install:
+
+    bash        source <(vae completions bash)   (measured: bash -n here)
+    zsh         save to ~/.vae/completions/_vae, fpath+=(~/.vae/completions),
+                then compinit                    (UNVERIFIED — ZSH)
+    fish        save to ~/.config/fish/completions/vae.fish
+                                                 (UNVERIFIED — FISH)
+    powershell  dot-source in $PROFILE           (UNVERIFIED — POWERSHELL)
+
+  The zsh/fish/powershell scripts carry the honest platform marker: no host
+  for them exists in the generating environment.`,
 };
 
 interface ParsedArgs {
@@ -422,6 +461,11 @@ export function parseArgs(argv: string[]): ParsedArgs {
     const a = argv[i] as string;
     if (a === "--help" || a === "-h") {
       parsed.flags.help = true;
+      i++;
+      continue;
+    }
+    if (a === "-V") {
+      parsed.flags.version = true;
       i++;
       continue;
     }
@@ -463,7 +507,7 @@ export async function runCli(argv: string[], io: CliIo, cwd: string): Promise<Cl
 
   // Guarantee #1 — help first, always, before any side effect.
   if (parsed.flags.help === true) {
-    const topic = parsed.command;
+    const topic = parsed.command ?? parsed.positional[0] ?? "";
     new Renderer(io, "plain", envOf()).helpFrame(
       topic && COMMAND_HELP[topic] ? COMMAND_HELP[topic] : MAIN_HELP,
     );
@@ -471,7 +515,19 @@ export async function runCli(argv: string[], io: CliIo, cwd: string): Promise<Cl
   }
 
   const mode = parsed.flags.json === true ? "json" : "plain";
+
+  // Phase XXII DX: `vae --version` / `vae -V` — the version line, before any
+  // side effect (it used to fall through to the welcome payload).
+  if (parsed.flags.version === true) {
+    if (mode === "json") io.out(JSON.stringify({ version: VERSION }));
+    else io.out(`vae ${VERSION}`);
+    return { code: ExitCode.ok };
+  }
+
   const renderer = new Renderer(io, mode, envOf());
+  // Phase XXII DX: --quiet suppresses decorative framing (banner/footer).
+  // Data and errors are NEVER suppressed — a quiet failure still teaches.
+  const quiet = parsed.flags.quiet === true;
   const dryRun = parsed.flags["dry-run"] === true;
   const cwdFlag = typeof parsed.flags.cwd === "string" ? (parsed.flags.cwd as string) : cwd;
   const ctx: CommandContext = {
@@ -491,12 +547,12 @@ export async function runCli(argv: string[], io: CliIo, cwd: string): Promise<Cl
     // Welcome front door (constitution v1.2 D-M′, amendment A2): the bare
     // invocation teaches — it measures this directory read-only and points
     // at the next step. Exit 0 in every output mode; never a usage error.
-    if (renderer.rich) {
+    if (renderer.rich && !quiet) {
       for (const line of banner(new Ansi(true), VERSION, renderer.width)) io.out(line);
       io.out("");
     }
     renderer.result(await buildWelcomePayload(ctx));
-    if (renderer.rich) {
+    if (renderer.rich && !quiet) {
       io.out("");
       for (const line of footer(new Ansi(true))) io.out(line);
     }
@@ -523,30 +579,53 @@ export async function runCli(argv: string[], io: CliIo, cwd: string): Promise<Cl
       case "account": code = await cmdAccount(ctx); break;
       case "ai": code = await cmdAi(ctx); break;
       case "center": code = await cmdCenter(ctx); break;
+      case "help": {
+        // Phase XXII DX: `vae help [COMMAND]` — the same frames as --help.
+        // An unknown topic falls back to the main help (help always teaches).
+        const topic = parsed.positional[0] ?? "";
+        new Renderer(io, "plain", envOf()).helpFrame(
+          topic && COMMAND_HELP[topic] ? COMMAND_HELP[topic] : MAIN_HELP,
+        );
+        code = ExitCode.ok;
+        break;
+      }
+      case "completions": {
+        // Phase XXII DX: shell completions generated from the ONE model
+        // pinned against the registry. An unknown shell is a usage error
+        // (E1600) rendered through the ONE renderer — the NDJSON guarantee
+        // holds here too.
+        const script = completionScript(parsed.positional[0] ?? "");
+        io.out(script.replace(/\n+$/, ""));
+        code = ExitCode.ok;
+        break;
+      }
       case "version":
         // D-N: every command honors the Five Guarantees — `version --json`
         // emits stable NDJSON (the rehearsal of Phase 9 caught this gap).
         if (mode === "json") {
           io.out(JSON.stringify({ version: VERSION }));
-        } else if (renderer.rich) {
+        } else if (renderer.rich && !quiet) {
           for (const line of banner(new Ansi(true), VERSION, renderer.width)) io.out(line);
         } else {
           io.out(`vae ${VERSION}`);
         }
         code = ExitCode.ok;
         break;
-      default:
-        if (renderer.rich) {
-          for (const line of errorBlock(new Ansi(true), { code: "E1600", message: `unknown command: ${parsed.command}`, fix: "run `vae --help` for the Daily Seven." }, renderer.width)) io.err(line);
-        } else {
-          io.err(`E1600 unknown command: ${parsed.command}. Fix: run \`vae --help\` for the Daily Seven.`);
-        }
+      default: {
+        // Phase XXII DX: the unknown-command error goes through the ONE
+        // renderer, restoring the --json NDJSON guarantee (it used to emit
+        // plain text in json mode — the renderer owns every mode now).
+        const unknown = new VaerionError("E1600", `unknown command: ${parsed.command}`);
+        renderer.error(unknown);
+        if (process.env.VAE_DEBUG === "1" && unknown.stack) io.err(unknown.stack);
         return { code: ExitCode.usage };
+      }
     }
     return { code };
   } catch (err) {
     if (isVaerionError(err)) {
       renderer.error(err);
+      if (process.env.VAE_DEBUG === "1" && err.stack) io.err(err.stack);
       const code =
         err.code === "E1600" || err.code === "E1203" || err.code === "E1700" || err.code === "E1701" || err.code === "E2204" || err.code === "E2300"
           ? ExitCode.usage
@@ -563,6 +642,7 @@ export async function runCli(argv: string[], io: CliIo, cwd: string): Promise<Cl
     }
     const msg = err instanceof Error ? err.message : String(err);
     io.err(`E1900 ${msg}`);
+    if (process.env.VAE_DEBUG === "1" && err instanceof Error && err.stack) io.err(err.stack);
     return { code: ExitCode.internal };
   }
 }
@@ -587,5 +667,6 @@ if (import.meta.main) {
   process.exit(await main(process.argv.slice(2)));
 }
 
-// Re-export for programmatic consumers (SDK reuses runCli).
-export { runCli as cli, MAIN_HELP };
+// Re-export for programmatic consumers (SDK reuses runCli; the completion
+// model test and generated docs read the registry).
+export { runCli as cli, MAIN_HELP, COMMAND_HELP };
