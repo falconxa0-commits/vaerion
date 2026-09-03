@@ -1055,3 +1055,20 @@ Work Log:
 
 Stage Summary:
 - The deployment pipeline is REAL and MEASURED: a tag dispatches -> the production-signed artifact set publishes to a public Release with verification taught inside it; an anonymous stranger discovered, downloaded, verified three ways, and RAN the engine. Rollback, migration, and operations law recorded with the honest limits (hosted site + registries remain F-5).
+
+---
+Task ID: 5
+Agent: Auren — Principal Release Commander (ASCENSION XXV, Phase XXIX)
+Task: Publication System — website/download/support/security surfaces, release notes flow, announcement process, changelog automation, community structure.
+
+Work Log:
+- STALE-SURFACE DEFECTS FIXED: SUPPORT.md claimed "the repository is currently private — access required" (FALSE since Phase XXV — public, measured); README's `git clone <repository-url>` placeholder replaced with the real URL; both now teach the real discovery path.
+- DOWNLOADS MADE FIRST-CLASS: docs/INSTALL.md Option F rewritten to the LIVE GitHub Releases path — the public URL, the full 8-asset list, the anonymous three-leg verification commands exactly as measured in Task 4, the install.sh --tarball step, and the honest "registry channels pending F-5" note.
+- COMMUNITY: GitHub Discussions ENABLED (API 200, has_discussions true; six categories measured via GraphQL); the routing law written into SUPPORT.md + CONTRIBUTING.md (defects -> issues with templates; proposals -> Ideas; questions -> Q&A; news -> Announcements).
+- ANNOUNCEMENT FLOW DOCUMENTED AND PROVEN LIVE: docs/operations/ANNOUNCEMENTS.md (release page = announcement of record -> Announcements discussion summary -> README status line -> CHANGELOG as cumulative history; the tone law: an announcement that outruns its release notes is a defect); discussion #1 posted for v0.1.13-rc1 via GraphQL (measured URL).
+- RELEASE-NOTES FLOW + CHANGELOG AUTOMATION: the flow was already real (release-publish.yml publishes the notes-of-record as the Release body — measured); now PINNED: the version-register suite refuses a release whose CHANGELOG lacks the `## [VERSION]` section or whose docs/RELEASE-NOTES-v<VERSION>.md is missing/ill-formed; CHANGELOG section order fixed (Unreleased first).
+- WEBSITE VERDICT (measured): landing = the public repo page (README) + sandbox dashboard; documentation = the docs/ universe; downloads = GitHub Releases LIVE; support = SUPPORT.md + Discussions Q&A LIVE; security = SECURITY.md + RISK-LEDGER + SIGNING-CEREMONY; hosted site (vaerion.dev) = F-5 Founder-gated, honestly labeled.
+- HONESTY DEFECTS IN MY OWN WORK, CAUGHT AND RECORDED: (1) the new changelog pin failed twice on first runs — first on the notes path (missing v-prefix, ENOENT), then on the header assertion (same prefix) — fixed by reading the files of record; (2) one gate run was executed through a pipe-to-tail that MASKED the non-zero exit and let a commit land while RED — the exact violation the no-pipe-masking law exists for; re-ran unmasked (exit 1), fixed, ALL GATES GREEN exit 0, and amended the LOCAL-ONLY commit (never pushed; no published history touched).
+
+Stage Summary:
+- The publication system is real end-to-end: a stranger can discover (public repo + release page), download (8 signed assets), verify (three legs), use (CLI runs), get help (Q&A + SUPPORT.md), propose (Ideas), and read the law (docs/). The remaining publication gap is exactly F-5: registries + hosted domain — Founder-owned.

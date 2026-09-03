@@ -1,0 +1,12 @@
+{
+  "cassette_id": "anthropic-chat-stream-error-v1",
+  "provider": "anthropic",
+  "op": "chat",
+  "request_fingerprint": "4522e254482a00d4127174be5a611965d86880c559347276508b7f4b970eaa84",
+  "status": 200,
+  "chunks": [
+    "event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"id\":\"msg_err\",\"type\":\"message\",\"role\":\"assistant\",\"content\":[],\"model\":\"claude-3-5-sonnet-latest\",\"usage\":{\"input_tokens\":9,\"output_tokens\":1}}}\n\n",
+    "event: ping\ndata: {\"type\":\"ping\"}\n\n",
+    "event: error\ndata: {\"type\":\"error\",\"error\":{\"type\":\"overloaded_error\",\"message\":\"Overloaded\"}}\n\n"
+  ]
+}

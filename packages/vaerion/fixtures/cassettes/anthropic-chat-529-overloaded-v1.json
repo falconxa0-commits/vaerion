@@ -1,0 +1,10 @@
+{
+  "cassette_id": "anthropic-chat-529-overloaded-v1",
+  "provider": "anthropic",
+  "op": "chat",
+  "request_fingerprint": "4522e254482a00d4127174be5a611965d86880c559347276508b7f4b970eaa84",
+  "status": 529,
+  "chunks": [
+    "{\"type\":\"error\",\"error\":{\"type\":\"overloaded_error\",\"message\":\"Overloaded\"}}"
+  ]
+}

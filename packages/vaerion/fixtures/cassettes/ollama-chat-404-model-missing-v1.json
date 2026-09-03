@@ -1,0 +1,10 @@
+{
+  "cassette_id": "ollama-chat-404-model-missing-v1",
+  "provider": "ollama",
+  "op": "chat",
+  "request_fingerprint": "e0fedb962228fdb36a88698bfb4292b5338bb7249a40c80ce3862b69e8f80391",
+  "status": 404,
+  "chunks": [
+    "{\"error\":\"model \\\"llama3.2\\\" not found, try pulling it first\"}"
+  ]
+}

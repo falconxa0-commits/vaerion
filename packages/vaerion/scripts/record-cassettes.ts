@@ -57,17 +57,25 @@ const OLLAMA_NDJSON: string[] = [
 ];
 
 /** Record one adapter invocation: capture the real request, pair with authored chunks. */
-async function record(adapter: ProviderAdapter, op: string, cassetteId: string, req: ModelRequest, chunks: string[]): Promise<Cassette> {
+async function record(adapter: ProviderAdapter, op: string, cassetteId: string, req: ModelRequest, chunks: string[], status = 200): Promise<Cassette> {
   let captured: TransportRequest | null = null;
+  // The adapter refuses non-200 responses BY DESIGN (fail-closed mapping to
+  // E1601) — so for an error transcript the fingerprint is captured with a
+  // 200 probe carrying an empty stream (the fingerprint depends ONLY on the
+  // request bytes), and the error status + wire chunks attach to the same
+  // captured request afterward.
+  const probeChunks = status === 200 ? chunks : [];
   const transport: GatewayTransport = {
     name: "recorder",
     async send(req2: TransportRequest): Promise<TransportResponse> {
       captured = req2;
       const iterable: AsyncIterable<{ text: string }> = {
         async *[Symbol.asyncIterator]() {
-          for (const text of chunks) yield { text };
+          for (const text of probeChunks) yield { text };
         },
       };
+      // The probe is ALWAYS 200 (the adapter refuses errors by design; the
+      // real error status attaches to the cassette below).
       return { status: 200, headers: {}, chunks: iterable };
     },
   };
@@ -87,7 +95,7 @@ async function record(adapter: ProviderAdapter, op: string, cassetteId: string, 
     provider: adapter.provider,
     op,
     request_fingerprint: await requestFingerprint(realRequest),
-    status: 200,
+    status,
     chunks,
   };
 }
@@ -130,6 +138,81 @@ async function main(): Promise<void> {
       "ollama-chat-basic-v1",
       { op: "chat", model: "ollama/llama3.2", messages: [{ role: "user", content: "Say hello in one word." }] },
       OLLAMA_NDJSON,
+    ),
+  );
+
+  // ── ASCENSION XXV Phase XXX: the failure-compatibility transcripts ──────
+  // Every shipping provider's error/limit wire format, recorded so the
+  // adapters' failure behavior is pinned the same way the happy path is.
+  // Same law as the happy path: the fingerprint comes from the REAL adapter
+  // request bytes; the chunks are the providers' DOCUMENTED error shapes.
+
+  // OpenAI rate limit (the 429 shape: error.type "rate_limit_error",
+  // code "rate_limit_exceeded") — the classic limit path.
+  cassettes.push(
+    await record(
+      openaiAdapter,
+      "chat",
+      "openai-chat-429-ratelimit-v1",
+      { op: "chat", model: "openai/gpt-4o", messages: [{ role: "user", content: "Say hello in one word." }], maxOutputTokens: 64 },
+      ['{"error":{"message":"Rate limit reached for gpt-4o: limit 3 RPM, please try again in 20s.","type":"rate_limit_error","param":"","code":"rate_limit_exceeded"}}'],
+      429,
+    ),
+  );
+
+  // OpenAI auth failure (401: error.type "invalid_request_error", code
+  // "invalid_api_key") — no retry can fix this; the breaker should.
+  cassettes.push(
+    await record(
+      openaiAdapter,
+      "chat",
+      "openai-chat-401-auth-v1",
+      { op: "chat", model: "openai/gpt-4o", messages: [{ role: "user", content: "Say hello in one word." }], maxOutputTokens: 64 },
+      ['{"error":{"message":"Incorrect API key provided: sk-live-***. You can find your API key at https://platform.openai.com/account/api-keys.","type":"invalid_request_error","param":null,"code":"invalid_api_key"}}'],
+      401,
+    ),
+  );
+
+  // Anthropic overloaded (529 with the streamed `error` event shape) — the
+  // provider's documented overload signal.
+  cassettes.push(
+    await record(
+      anthropicAdapter,
+      "chat",
+      "anthropic-chat-529-overloaded-v1",
+      { op: "chat", model: "anthropic/claude-3-5-sonnet-latest", messages: [{ role: "user", content: "Say hello in one word." }], maxOutputTokens: 64 },
+      ['{"type":"error","error":{"type":"overloaded_error","message":"Overloaded"}}'],
+      529,
+    ),
+  );
+
+  // Anthropic mid-stream error (HTTP 200, the SSE stream itself carries the
+  // error event) — the stream-level failure path the adapter must surface.
+  cassettes.push(
+    await record(
+      anthropicAdapter,
+      "chat",
+      "anthropic-chat-stream-error-v1",
+      { op: "chat", model: "anthropic/claude-3-5-sonnet-latest", messages: [{ role: "user", content: "Say hello in one word." }], maxOutputTokens: 64 },
+      [
+        'event: message_start\ndata: {"type":"message_start","message":{"id":"msg_err","type":"message","role":"assistant","content":[],"model":"claude-3-5-sonnet-latest","usage":{"input_tokens":9,"output_tokens":1}}}\n\n',
+        'event: ping\ndata: {"type":"ping"}\n\n',
+        'event: error\ndata: {"type":"error","error":{"type":"overloaded_error","message":"Overloaded"}}\n\n',
+      ],
+      200,
+    ),
+  );
+
+  // Ollama model-not-pulled (404 with its plain `{"error": string}` shape) —
+  // the most common real-world ollama failure.
+  cassettes.push(
+    await record(
+      ollamaAdapter,
+      "chat",
+      "ollama-chat-404-model-missing-v1",
+      { op: "chat", model: "ollama/llama3.2", messages: [{ role: "user", content: "Say hello in one word." }] },
+      ['{"error":"model \\"llama3.2\\" not found, try pulling it first"}'],
+      404,
     ),
   );
 

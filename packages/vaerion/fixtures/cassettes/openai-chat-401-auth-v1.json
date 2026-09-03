@@ -1,0 +1,10 @@
+{
+  "cassette_id": "openai-chat-401-auth-v1",
+  "provider": "openai",
+  "op": "chat",
+  "request_fingerprint": "732f8657a1c09c46731bf949c16da5537e954eb466ac58244968ca70b939b7c0",
+  "status": 401,
+  "chunks": [
+    "{\"error\":{\"message\":\"Incorrect API key provided: sk-live-***. You can find your API key at https://platform.openai.com/account/api-keys.\",\"type\":\"invalid_request_error\",\"param\":null,\"code\":\"invalid_api_key\"}}"
+  ]
+}

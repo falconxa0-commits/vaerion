@@ -408,7 +408,18 @@ export class GatewayService {
 
 async function collectFrames(iter: AsyncIterable<StreamFrame>): Promise<StreamFrame[]> {
   const frames: StreamFrame[] = [];
-  for await (const frame of iter) frames.push(frame);
+  for await (const frame of iter) {
+    // A provider that fails MID-STREAM (HTTP 200 + an error event, e.g.
+    // Anthropic's `event: error` overloaded_error) must surface as a loud
+    // engine failure — never a silent partial success. Throwing here routes
+    // into the failure path above: breaker failure, gateway.invoke.failed
+    // journal, failed metering (the ASCENSION XXV provider-compat defect,
+    // caught by the failure-leg cassettes and pinned there).
+    if (frame.type === "error") {
+      throw new VaerionError("E1601", `provider stream error (${frame.code}): ${frame.message}`, { providerError: frame.code });
+    }
+    frames.push(frame);
+  }
   return frames;
 }
 

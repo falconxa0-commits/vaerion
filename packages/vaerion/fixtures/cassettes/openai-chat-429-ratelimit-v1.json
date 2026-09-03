@@ -1,0 +1,10 @@
+{
+  "cassette_id": "openai-chat-429-ratelimit-v1",
+  "provider": "openai",
+  "op": "chat",
+  "request_fingerprint": "732f8657a1c09c46731bf949c16da5537e954eb466ac58244968ca70b939b7c0",
+  "status": 429,
+  "chunks": [
+    "{\"error\":{\"message\":\"Rate limit reached for gpt-4o: limit 3 RPM, please try again in 20s.\",\"type\":\"rate_limit_error\",\"param\":\"\",\"code\":\"rate_limit_exceeded\"}}"
+  ]
+}
