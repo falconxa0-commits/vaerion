@@ -707,15 +707,15 @@ describe("repo / ci / release CLI contracts (Five Guarantees)", () => {
 /* ───────────────────────────  law & lockstep regression  ─────────────────────────── */
 
 describe("constitution and version lockstep regression (Phase 8)", () => {
-  test("the ratified constitution is v1.6 with the production operations campaign ratified and the honest phase ledger", async () => {
+  test("the ratified constitution is v1.7 with the master-directive process law ratified and the honest phase ledger", async () => {
     const root = join(import.meta.dir, "..", "..", "..", "..");
-    const constitution = await readFile(join(root, "docs", "constitution", "VAERION_CONSTITUTION_v1.6.md"), "utf8");
-    expect(constitution).toContain("VAERION_CONSTITUTION_v1.6");
+    const constitution = await readFile(join(root, "docs", "constitution", "VAERION_CONSTITUTION_v1.7.md"), "utf8");
+    expect(constitution).toContain("VAERION_CONSTITUTION_v1.7");
     expect(constitution).toContain("D-M′");
-    for (const law of ["D-P", "D-Q", "D-R", "D-S", "D-T"]) {
+    for (const law of ["D-P", "D-Q", "D-R", "D-S", "D-T", "D-U", "D-V", "D-W", "D-X", "D-Y"]) {
       expect(constitution).toContain(`| ${law} |`);
     }
-    // The surface (A3, carried unchanged into v1.6): account, ai, center ratified;
+    // The surface (A3, carried unchanged into v1.7): account, ai, center ratified;
     // init carries the template face.
     expect(constitution).toContain("tour, account, ai, center`");
     expect(constitution).toContain("--template NAME");
@@ -743,9 +743,34 @@ describe("constitution and version lockstep regression (Phase 8)", () => {
     expect(constitution).toContain("Phase 12 — the remote protection law");
     expect(constitution).toContain("Phase 13 — the CI execution law");
     expect(constitution).toContain("Phase 14 — the program close");
+    // A7 — the master-directive process law: the Reality Recovery Protocol, the
+    // Implementation Rule + Root Cause Law, the Campaign Close Law, the Declaration
+    // Standard, and the Empty Machine Test, ratified as register law (D-U…D-Y).
+    expect(constitution).toContain("### A7 — v1.6 → v1.7");
+    expect(constitution).toContain("THE MASTER CONSTITUTIONAL DIRECTIVE");
+    expect(constitution).toContain("Reality Recovery Law");
+    expect(constitution).toContain("Nothing proceeds until reality is measured");
+    expect(constitution).toContain("Implementation Rule + Root Cause Law");
+    expect(constitution).toContain("fix the root cause → verify prevention");
+    expect(constitution).toContain("Campaign Close Law");
+    expect(constitution).toContain("Remaining Reality Report");
+    expect(constitution).toContain("Declaration Standard");
+    expect(constitution).toContain("Vaerion is progressing toward readiness");
+    expect(constitution).toContain("The Empty Machine Test");
+    expect(constitution).toContain("discover → install → verify → initialize → use → upgrade → remove");
+    expect(constitution).toContain("a package is a product only when it installs, executes, upgrades, and removes");
+    expect(constitution).toContain("Phase 15 — the materialization");
+    expect(constitution).toContain("Phase 16 — the live-reference law");
+    expect(constitution).toContain("Phase 17 — the provisioning law");
+    expect(constitution).toContain("Phase 18 — the program close");
     expect(constitution).not.toContain("▶ in flight"); // the campaign is complete — no rows in flight
-    // History is retained unmodified: v1.5, v1.4, v1.3 (with the A3 surface), v1.2
-    // (with the A2 surface), v1.1 (with the v1.1-era adjudication) and v1.0.
+    // History is retained unmodified: v1.6 (with the A6-era D-Q scope), v1.5,
+    // v1.4, v1.3 (with the A3 surface), v1.2 (with the A2 surface), v1.1 (with
+    // the v1.1-era adjudication) and v1.0.
+    const v16 = await readFile(join(root, "docs", "constitution", "VAERION_CONSTITUTION_v1.6.md"), "utf8");
+    expect(v16).toContain("VAERION_CONSTITUTION_v1.6");
+    expect(v16).toContain("Synchronization protection law"); // the A6-era D-Q scope, preserved in history
+    expect(v16).not.toContain("D-U"); // v1.6 predates the master-directive register additions
     const v15 = await readFile(join(root, "docs", "constitution", "VAERION_CONSTITUTION_v1.5.md"), "utf8");
     expect(v15).toContain("VAERION_CONSTITUTION_v1.5");
     expect(v15).toContain("Canonical protection law"); // the pre-A6 D-Q scope, preserved in history
