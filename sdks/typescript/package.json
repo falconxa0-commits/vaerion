@@ -1,6 +1,6 @@
 {
   "name": "@vaerion/sdk",
-  "version": "0.1.12-rc1",
+  "version": "0.1.13-rc1",
   "private": true,
   "description": "Vaerion TypeScript SDK \u2014 programmatic access to the engine via the same contracts the CLI honors (machine parity).",
   "type": "module",

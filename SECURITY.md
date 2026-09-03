@@ -74,9 +74,12 @@ pack time (the `dist/` directory is not tracked in the repository) — teaches
 consumer verification with `tools/dist-verify.ts`, which resolves the key
 explicit flag → key beside manifest → fail-closed.
 
-Known limit, stated openly: release signing currently trusts the bootstrap
-Ed25519 key tracked in the repository. The offline key ceremony that replaces it
-is pending — `RISK-LEDGER` R-2, Founder gate F-3
-(`docs/ga/FINAL-VERIFIED-REALITY-REPORT.md`). Until it closes, the signature
-proves integrity against the published key; it is not yet an offline-identity
-guarantee.
+Release trust chain (post-ceremony): releases are signed by the production
+Ed25519 key provisioned as the GitHub Actions secret `RELEASE_SIGNING_KEY`
+during the Phase XXVII key ceremony — process, rotation policy, and recovery
+procedure: `docs/security/SIGNING-CEREMONY.md`. The key of record is
+`keys/release-signing.pub`; each artifact set ships its own key beside it
+(manifest-bound), and historical (pre-ceremony) releases keep verifying
+against their shipped keys. The fail-closed bootstrap path remains only as a
+fallback whose disclosure line in a pack report is the tripwire that a
+release was NOT signed by the production key.

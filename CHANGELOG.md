@@ -1,10 +1,42 @@
 # Changelog
 
 All notable changes to the Vaerion engine. Entries derive from the measured
-records of record — the annotated git tags (`v0.1.7-rc1` … `v0.1.12-rc1`), the
+records of record — the annotated git tags (`v0.1.7-rc1` … `v0.1.13-rc1`), the
 reports in `docs/ga/`, and `worklog.md` — not from memory; dates are the
 measured tag dates. Keep a Changelog format; within v0.1 surfaces evolve
 additively — nothing removed or renamed (`BETA-ONBOARDING.md`).
+
+## [0.1.13-rc1] — 2026-09-03 — the ASCENSION XXV production-trust release (the first release signed by the production key)
+
+- Security: **the production signing key ceremony (F-3/R-2 closed)** — the
+  release trust anchor moved from the session-bound bootstrap key to the
+  production Ed25519 key provisioned as the GitHub Actions secret
+  `RELEASE_SIGNING_KEY` (sealed-box encrypted at rest); the key of record
+  `keys/release-signing.pub` rotated to the production public half
+  (fingerprint pinned in `VERIFY.md` of every artifact set); the local
+  private-key copy destroyed after provisioning; process, ownership, rotation
+  policy, and recovery procedure recorded in `docs/security/SIGNING-CEREMONY.md`.
+  Historical releases keep verifying against their own manifest-bound keys.
+  Residual (labeled): the key was generated under the Founder's written
+  directive in-session, not air-gapped — a hardware-custodied re-ceremony
+  remains available via the recorded rotation path.
+- Security: **branch protection enabled on `main`** (Phase XXXIII) — the
+  repository went public, which met the exact escape condition of the
+  previously plan-blocked item; required status check + no force pushes +
+  no deletions, enforced for administrators.
+- Added: the legal identity layer — `LEGAL.md` (identity table, ownership
+  statement, licensing documentation, inbound=outbound contributor terms,
+  unregistered-trademark policy, the F-2 pseudonym disclosure) (Phase XXVI).
+- Fixed: a real identity conflict found by the Phase XXVI sweep — the winget
+  locale manifest claimed `Copyright (c) Vaerion contributors` against the
+  LICENSE of record `Copyright 2026 Auren`; aligned. Package metadata gained
+  the repository/bugs/homepage identity fields; `pyproject.toml` gained real
+  `[project.urls]`.
+- Documentation: the ASCENSION XXV baseline audit
+  (`docs/ga/ASCENSION-XXV-BASELINE-AUDIT.md`) — every directive claim
+  re-measured; two reality changes found and handled (public repository;
+  the canonical bare mirror lost to an environment reset, lawfully
+  re-provisioned, parity 0/0 re-measured).
 
 ## [Unreleased]
 

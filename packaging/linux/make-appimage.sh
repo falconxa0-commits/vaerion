@@ -9,7 +9,7 @@
 set -eu
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../.." && pwd)
-VERSION="${1:-0.1.12-rc1}"
+VERSION="${1:-0.1.13-rc1}"
 OUT="${2:-$ROOT/dist/linux}"
 FETCH=0
 [ "${3:-}" = "--fetch" ] && FETCH=1

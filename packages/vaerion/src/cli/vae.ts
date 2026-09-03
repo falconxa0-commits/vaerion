@@ -16,7 +16,7 @@ import { Renderer, setBannerVersion } from "./render.ts";
 import { Ansi, banner, footer, type RenderEnv } from "./ui.ts";
 import { completionScript } from "./completions.ts";
 
-export const VERSION = "0.1.12-rc1";
+export const VERSION = "0.1.13-rc1";
 setBannerVersion(VERSION);
 
 const MAIN_HELP = `vae — Vaerion engine command line (v${VERSION})
