@@ -1,30 +1,30 @@
 {
-  "generatedAt": "2026-09-03T05:46:15.205Z",
+  "generatedAt": "2026-09-03T15:51:11.741Z",
   "engineVersion": "0.1.11-rc1",
   "substrate": "TypeScript on Bun (ADR-0018 — provisional with recorded migration path; Founder ratification pending)",
   "verification": {
-    "generatedAt": "2026-09-03T05:46:14.951Z",
+    "generatedAt": "2026-09-03T15:49:16.291Z",
     "ok": true,
     "gates": [
       {
         "gate": "typecheck-engine",
         "ok": true,
-        "durationMs": 4325
+        "durationMs": 4605
       },
       {
         "gate": "typecheck-sdk",
         "ok": true,
-        "durationMs": 3333
+        "durationMs": 3242
       },
       {
         "gate": "tests",
         "ok": true,
-        "durationMs": 6400
+        "durationMs": 6160
       },
       {
         "gate": "layerlint",
         "ok": true,
-        "durationMs": 32
+        "durationMs": 31
       },
       {
         "gate": "constitutional-check",
@@ -34,17 +34,17 @@
       {
         "gate": "perf-budget",
         "ok": true,
-        "durationMs": 283
+        "durationMs": 261
       },
       {
         "gate": "a11y-structural",
         "ok": true,
-        "durationMs": 34
+        "durationMs": 37
       },
       {
         "gate": "repo-lint",
         "ok": true,
-        "durationMs": 10970
+        "durationMs": 10649
       }
     ],
     "measured": {
@@ -90,44 +90,44 @@
   },
   "contracts": {
     "specFiles": [
+      "spec/README.md",
       "spec/wit/vaerion-extension@0.1.0.wit",
-      "spec/openapi.json",
       "spec/errors.yaml",
-      "spec/schemas/receipt.schema.json",
-      "spec/schemas/broker-decision.schema.json",
-      "spec/schemas/capability-declaration.schema.json",
-      "spec/schemas/envelope.schema.json",
+      "spec/CHANGELOG-SPEC.md",
+      "spec/events/registry.json",
       "spec/schemas/journal-record.schema.json",
+      "spec/schemas/vaerion-yaml.schema.json",
+      "spec/schemas/capability-declaration.schema.json",
+      "spec/schemas/receipt.schema.json",
       "spec/schemas/evidence-record.schema.json",
       "spec/schemas/gate.schema.json",
-      "spec/schemas/vaerion-yaml.schema.json",
-      "spec/README.md",
-      "spec/CHANGELOG-SPEC.md",
-      "spec/events/registry.json"
+      "spec/schemas/broker-decision.schema.json",
+      "spec/schemas/envelope.schema.json",
+      "spec/openapi.json"
     ],
     "adrCount": 21,
     "adrFiles": [
-      "docs/adr/0006-event-sourced-run-journals-checkpoint-chaining.md",
       "docs/adr/0003-contract-first-specs-drive-sdk-generation.md",
-      "docs/adr/0008-sqlite-wal-fts5-vec-local-store.md",
-      "docs/adr/0020-daemon-http-stack-ts-substrate.md",
-      "docs/adr/0005-tiered-intelligence-progressive-enhancement.md",
-      "docs/adr/0007-strict-subset-yaml-vaeryaml-manifests.md",
-      "docs/adr/0012-cassette-mockbrain-hermetic-evals.md",
-      "docs/adr/0011-tokio-axum-tower-stack.md",
-      "docs/adr/0014-stable-diagnostics-catalog-ecodes.md",
+      "docs/adr/README.md",
+      "docs/adr/0013-os-keychain-first-secrets-env-fallback.md",
+      "docs/adr/0009-wasi-p2-components-capability-broker.md",
+      "docs/adr/0002-versioned-event-spine-envelope.md",
       "docs/adr/0019-single-sanctioned-gateway-egress.md",
       "docs/adr/0010-loopback-daemon-pairing-token.md",
-      "docs/adr/0016-reproducible-vxn-bundles.md",
-      "docs/adr/0013-os-keychain-first-secrets-env-fallback.md",
-      "docs/adr/0002-versioned-event-spine-envelope.md",
-      "docs/adr/README.md",
-      "docs/adr/0015-per-platform-exec-sandbox-matrix.md",
-      "docs/adr/0009-wasi-p2-components-capability-broker.md",
-      "docs/adr/0017-reserved-cloud-seams.md",
-      "docs/adr/0004-centralized-permission-broker.md",
+      "docs/adr/0005-tiered-intelligence-progressive-enhancement.md",
+      "docs/adr/0018-engine-substrate-typescript-bun.md",
+      "docs/adr/0020-daemon-http-stack-ts-substrate.md",
       "docs/adr/0001-monorepo-single-version-policy.md",
-      "docs/adr/0018-engine-substrate-typescript-bun.md"
+      "docs/adr/0016-reproducible-vxn-bundles.md",
+      "docs/adr/0015-per-platform-exec-sandbox-matrix.md",
+      "docs/adr/0007-strict-subset-yaml-vaeryaml-manifests.md",
+      "docs/adr/0014-stable-diagnostics-catalog-ecodes.md",
+      "docs/adr/0008-sqlite-wal-fts5-vec-local-store.md",
+      "docs/adr/0012-cassette-mockbrain-hermetic-evals.md",
+      "docs/adr/0011-tokio-axum-tower-stack.md",
+      "docs/adr/0006-event-sourced-run-journals-checkpoint-chaining.md",
+      "docs/adr/0004-centralized-permission-broker.md",
+      "docs/adr/0017-reserved-cloud-seams.md"
     ]
   },
   "milestones": [
@@ -342,10 +342,10 @@
     "measured": true,
     "ready": false,
     "verdict": "BLOCKED",
-    "passed": 8,
+    "passed": 9,
     "total": 12,
     "blockers": [
-      "git-tree-clean: working tree dirty: 0 staged, 3 unstaged, 0 untracked",
+      "git-tree-clean: working tree dirty: 0 staged, 1 unstaged, 0 untracked",
       "release-tag-binding: HEAD is not exactly at a v* release tag",
       "release-artifacts: artifact set incomplete: dist/MANIFEST.json, dist/MANIFEST.json.sig, dist/SHA256SUMS, dist/VERIFY.md missing"
     ]
@@ -389,12 +389,12 @@
       "measured": true,
       "ready": false,
       "verdict": "BLOCKED",
-      "passed": 8,
+      "passed": 9,
       "total": 12,
       "blockers": [
         {
           "check": "git-tree-clean",
-          "detail": "working tree dirty: 0 staged, 3 unstaged, 0 untracked"
+          "detail": "working tree dirty: 0 staged, 1 unstaged, 0 untracked"
         },
         {
           "check": "release-tag-binding",
