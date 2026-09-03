@@ -43,6 +43,11 @@ npm install -g vaerion        # requires Bun 1.2+ on PATH
 vae --help
 ```
 
+If the system npm prefix is not writable (no sudo), the universal installer
+(`install.sh --method npm`) falls back to a user prefix (`~/.npm-global`)
+automatically, adds it to your shell PATH, and says so. To do it by hand:
+`npm config set prefix ~/.npm-global` and add `~/.npm-global/bin` to PATH.
+
 ## Option C — PyPI
 
 ```sh

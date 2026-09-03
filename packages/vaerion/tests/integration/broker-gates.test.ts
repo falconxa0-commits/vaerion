@@ -151,9 +151,11 @@ describe("CLI review loop parity", () => {
         "utf8",
       );
       // A workspace-level policy file is the MS-2 surface; write it as part of config:
+      // the declared capability exercises the config-derived demo default (XX-D6 fix)
+      // while the standing policy denies it — the broker must still refuse, exit 3.
       await writeFile(
         join(project, "vaerion.yaml"),
-        `schemaVersion: "0.1"\nproject:\n  name: deny-demo\npolicy:\n  rules:\n    - id: no-research-index\n      principalKinds: [research]\n      domain: research.index\n      scope: "*"\n      effect: deny\n      rationale: "indexing is disabled in this project"\ntelemetry:\n  enabled: false\n`,
+        `schemaVersion: "0.1"\nproject:\n  name: deny-demo\nresearch:\n  capabilities:\n    - name: project-docs\n      sources:\n        - { kind: local, path: "./docs" }\n      fencing: untrusted\npolicy:\n  rules:\n    - id: no-research-index\n      principalKinds: [research]\n      domain: research.index\n      scope: "*"\n      effect: deny\n      rationale: "indexing is disabled in this project"\ntelemetry:\n  enabled: false\n`,
         "utf8",
       );
       const io = { out: () => undefined, err: () => undefined };
@@ -189,7 +191,7 @@ describe("CLI review loop parity", () => {
       await writeFile(join(project, "docs", "b.md"), "content b\n", "utf8");
       await writeFile(
         join(project, "vaerion.yaml"),
-        `schemaVersion: "0.1"\nproject:\n  name: prompt-demo\npolicy:\n  rules:\n    - id: gate-research-index\n      principalKinds: [research]\n      domain: research.index\n      scope: "*"\n      effect: prompt\n      gateLabel: "Indexing needs your approval"\n      rationale: "human approves every index build"\ntelemetry:\n  enabled: false\n`,
+        `schemaVersion: "0.1"\nproject:\n  name: prompt-demo\nresearch:\n  capabilities:\n    - name: project-docs\n      sources:\n        - { kind: local, path: "./docs" }\n      fencing: untrusted\npolicy:\n  rules:\n    - id: gate-research-index\n      principalKinds: [research]\n      domain: research.index\n      scope: "*"\n      effect: prompt\n      gateLabel: "Indexing needs your approval"\n      rationale: "human approves every index build"\ntelemetry:\n  enabled: false\n`,
         "utf8",
       );
       const io = { out: () => undefined, err: () => undefined };
@@ -248,7 +250,7 @@ describe("CLI review loop parity", () => {
       // Force the prompt path by using a config policy prompt rule.
       await writeFile(
         join(project, "vaerion.yaml"),
-        `schemaVersion: "0.1"\nproject:\n  name: denyans\npolicy:\n  rules:\n    - id: gate-all-index\n      principalKinds: [research]\n      domain: research.index\n      scope: "*"\n      effect: prompt\n      rationale: "approval required"\ntelemetry:\n  enabled: false\n`,
+        `schemaVersion: "0.1"\nproject:\n  name: denyans\nresearch:\n  capabilities:\n    - name: project-docs\n      sources:\n        - { kind: local, path: "./docs" }\n      fencing: untrusted\npolicy:\n  rules:\n    - id: gate-all-index\n      principalKinds: [research]\n      domain: research.index\n      scope: "*"\n      effect: prompt\n      rationale: "approval required"\ntelemetry:\n  enabled: false\n`,
         "utf8",
       );
       const io = { out: () => undefined, err: () => undefined };

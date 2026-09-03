@@ -163,17 +163,47 @@ describe("`vae init --template` — the CLI face (Phase 5)", () => {
     expect(String(matrixCheck?.["detail"] ?? "")).toContain("mockbrain");
   });
 
-  test("the demo template scaffolds a workspace whose declared capability exists for 'vae ai'", async () => {
+  test("the demo template scaffolds its declared capability — no manual setup (XX-D6)", async () => {
     const dir = await freshDir("demo-cap");
     expect(await runCode(["init", "--template", "demo", "--name", "demo-probe"], captureIo().io, dir)).toBe(ExitCode.ok);
-    await mkdir(join(dir, "sources"), { recursive: true });
-    await writeFile(join(dir, "sources", "note.md"), "# Note\n\njournals are append-only.\n", "utf8");
+    // D-Y: the template scaffolds EXACTLY what its config declares. The old
+    // test created ./sources by hand — teaching the workaround instead of
+    // proving the journey; the empty machine measured the consequence.
+    const scaffolded = await readFile(join(dir, "sources", "demo.md"), "utf8");
+    expect(scaffolded).toContain("append-only hash chain");
     const { captured, io } = captureIo();
     // The declared capability name resolves in the config law (unknown → E1600).
     const code = await runCode(["ai", "ask", "--question", "q", "--capability", "sources", "--dry-run", "--json"], io, dir);
     expect(code).toBe(ExitCode.ok);
     const payload = JSON.parse(captured.out[0] as string) as Record<string, unknown>;
     expect((payload["plan"] as Record<string, unknown>)["capability"]).toBe("sources");
+  });
+
+  test("the demo first-run journey works AS TAUGHT — bare 'run demo', no --sources (D-Y, XX-D6)", async () => {
+    const dir = await freshDir("demo-journey");
+    expect(await runCode(["init", "--template", "demo", "--name", "journey"], captureIo().io, dir)).toBe(ExitCode.ok);
+    // Dry-run: the default derives from the workspace config of record —
+    // the hardcoded ["./docs/constitution", "./docs/adr"] literal is dead.
+    const dry = captureIo();
+    expect(await runCode(["run", "demo", "--query", "journal", "--dry-run", "--json"], dry.io, dir)).toBe(ExitCode.ok);
+    const dryPayload = JSON.parse(dry.captured.out[0] as string) as Record<string, unknown>;
+    expect((dryPayload["plan"] as Record<string, unknown>)["sources"]).toEqual(["./sources"]);
+    // The real journey: index the scaffolded source, query, receipt, verified.
+    const real = captureIo();
+    const code = await runCode(["run", "demo", "--query", "journal", "--json"], real.io, dir);
+    expect(code).toBe(ExitCode.ok);
+    const payload = JSON.parse(real.captured.out[0] as string) as Record<string, unknown>;
+    expect(payload["journal_verified"]).toBe(true);
+    expect(payload["documents"]).toBe(1); // the scaffolded source, indexed
+    expect(payload["hits"]).toBe(1);
+  });
+
+  test("a configless demo run with no --sources fails closed with teaching (E1600)", async () => {
+    const dir = await freshDir("demo-configless");
+    const { captured, io } = captureIo();
+    const code = await runCode(["run", "demo", "--query", "q"], io, dir);
+    expect(code).toBe(ExitCode.usage);
+    expect(captured.lines.join("\n")).toContain("declare research.capabilities");
   });
 
   test("--json face is a single pure line with the stable contract", async () => {

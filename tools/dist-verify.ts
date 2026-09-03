@@ -2,10 +2,16 @@
  * Vaerion dist-verify — verify a release artifact set (consumer side).
  *
  * Usage (from a directory containing MANIFEST.json, MANIFEST.json.sig and
- * the artifacts, with --pub pointing at the release public key):
+ * the artifacts):
  *
  *   bun run tools/dist-verify.ts --manifest MANIFEST.json \
- *     --sig MANIFEST.json.sig --pub keys/release-signing.pub
+ *     --sig MANIFEST.json.sig [--pub release-signing.pub]
+ *
+ * The public key resolves, in order (fail-closed when none is found):
+ *   1. the explicit --pub flag;
+ *   2. release-signing.pub BESIDE the manifest — the key that signed THIS
+ *      artifact set, manifest-bound like every other shipped file (XX-D4:
+ *      the consumer journey works with no repository and no session state).
  *
  * Checks, in order, fail-closed:
  *   1. the Ed25519 signature verifies over the canonical (sorted-key)
@@ -34,8 +40,18 @@ function arg(name: string): string {
 
 const manifestPath = resolve(arg("manifest"));
 const sigPath = resolve(arg("sig"));
-const pubPath = resolve(arg("pub"));
 const base = dirname(manifestPath);
+// The key resolution law: explicit flag → the key beside the manifest →
+// fail-closed with teaching (a consumer without the key must be TAUGHT,
+// never left guessing).
+const pubIdx = process.argv.indexOf("--pub");
+const pubFlag = pubIdx !== -1 && process.argv[pubIdx + 1] ? process.argv[pubIdx + 1] : undefined;
+const pubBeside = join(base, "release-signing.pub");
+const pubPath = pubFlag ? resolve(pubFlag) : existsSync(pubBeside) ? pubBeside : null;
+if (!pubPath) {
+  console.error("dist-verify: no public key — pass --pub <path>, or place release-signing.pub beside MANIFEST.json (it ships with every artifact set)");
+  process.exit(2);
+}
 
 function sortDeep(v: unknown): unknown {
   if (Array.isArray(v)) return v.map(sortDeep);

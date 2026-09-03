@@ -57,23 +57,43 @@ const demoTemplate: string = `# Vaerion demo workspace (schema 0.1) — ready fo
 schemaVersion: "0.1"
 project:
   name: {{NAME}}
-  description: "A Vaerion demo workspace: declared local sources, journaled research runs"
+  description: "A Vaerion demo workspace: a scaffolded local source, journaled research runs"
 research:
   capabilities:
-    - name: project-docs
-      sources:
-        - { kind: local, path: "./docs" }
-      fencing: untrusted
-      maxItems: 100
     - name: sources
       sources:
         - { kind: local, path: "./sources" }
       fencing: untrusted
       maxItems: 32
-# Try: vae run demo --sources ./sources --query "event spine journal deterministic"
+# Try: vae run demo --query "event spine journal deterministic"
+#      (no --sources needed: the run derives its paths from the declared
+#       capabilities above — the workspace config is the only authority)
+# Or be explicit: vae run demo --sources ./sources --query "..."
 telemetry:
   enabled: false
 `;
+
+/**
+ * The scaffold files a template installs BESIDES its vaerion.yaml (D-B: the
+ * registry of record is the only authority on what a template creates — the
+ * declared capabilities and the scaffolded files can never disagree, because
+ * both derive from this registry; XX-D6: the demo journey must work as
+ * taught on an empty machine, D-Y).
+ */
+export const TEMPLATE_SCAFFOLD_FILES: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+  demo: {
+    "sources/demo.md": [
+      "# Demo source",
+      "",
+      "The journal is an append-only hash chain: every record carries the blake3",
+      "hash of its predecessor, so verification is deterministic and replay is",
+      "faithful. Damaged tails are recovered; corrupted chains are refused.",
+      "",
+      "Every run closes with a receipt — evidence, not branding.",
+      "",
+    ].join("\n"),
+  },
+};
 
 const agentTemplate: string = `# Vaerion agent workspace (schema 0.1) — the supervised agent loop, wired
 # Unknown keys are rejected by law — see spec/schemas/vaerion-yaml.schema.json
@@ -123,7 +143,7 @@ export const INIT_TEMPLATES: Readonly<Record<string, InitTemplate>> = {
   },
   demo: {
     name: "demo",
-    description: "a demo workspace: ./docs + ./sources capabilities for 'vae run demo'",
+    description: "a demo workspace: a scaffolded ./sources capability, ready for 'vae run demo'",
     body: demoTemplate,
   },
   agent: {

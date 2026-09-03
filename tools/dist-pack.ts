@@ -16,8 +16,13 @@
  *     building the archive twice and byte-comparing.
  *   - Signature: Ed25519 over the canonical (sorted-key) manifest JSON.
  *     The signing key is the bootstrap release key (keys/release-signing.key,
- *     untracked); the public key ships in keys/release-signing.pub and is
- *     rotated at the Founder key ceremony (docs/security/RISK-LEDGER.md R-2).
+ *     untracked, session-bound); its public half ships BESIDE the artifacts
+ *     (dist/release-signing.pub, manifest-bound). The tracked
+ *     keys/release-signing.pub is the KEY OF RECORD as of the last release
+ *     close — only the Founder key ceremony (F-3) moves it. A pack run NEVER
+ *     writes tracked files (XX-D4: the old behavior mutated the tracked pub
+ *     key on every fresh-host pack, breaking the taught consumer path across
+ *     every session boundary).
  *   - The signature is verified in-process before the run reports success.
  */
 
@@ -70,15 +75,18 @@ async function blake3File(path: string): Promise<string> {
 
 function loadOrCreateSigningKey(): { priv: KeyObject; pub: KeyObject; generated: boolean } {
   const keyPath = join(ROOT, "keys", "release-signing.key");
+  let priv: KeyObject;
+  let generated = false;
   if (existsSync(keyPath)) {
-    const priv = createPrivateKey(readFileSync(keyPath));
-    return { priv, pub: createPublicKey(priv), generated: false };
+    priv = createPrivateKey(readFileSync(keyPath));
+  } else {
+    const pair = generateKeyPairSync("ed25519");
+    priv = pair.privateKey;
+    mkdirSync(join(ROOT, "keys"), { recursive: true });
+    writeFileSync(keyPath, priv.export({ type: "pkcs8", format: "pem" }));
+    generated = true;
   }
-  const { publicKey, privateKey } = generateKeyPairSync("ed25519");
-  mkdirSync(join(ROOT, "keys"), { recursive: true });
-  writeFileSync(keyPath, privateKey.export({ type: "pkcs8", format: "pem" }));
-  writeFileSync(join(ROOT, "keys", "release-signing.pub"), publicKey.export({ type: "spki", format: "pem" }));
-  return { priv: privateKey, pub: publicKey, generated: true };
+  return { priv, pub: createPublicKey(priv), generated };
 }
 
 // ---- 0. Gates must be green (fail-closed) -----------------------------------
@@ -145,6 +153,10 @@ console.log(`dist-pack: tarball reproducibility PROVEN (two builds byte-identica
 
 // ---- 3. Signing key (needed for the VERIFY.md fingerprint) -------------------
 const { priv, pub, generated } = loadOrCreateSigningKey();
+const pubPem = pub.export({ type: "spki", format: "pem" });
+// The public half ships BESIDE the artifacts (manifest-bound below) — the
+// tracked keys/release-signing.pub is NEVER touched by a pack run (XX-D4).
+writeFileSync(join(DIST, "release-signing.pub"), pubPem);
 const pubFp = createHash("sha256").update(pub.export({ type: "spki", format: "der" })).digest("hex").slice(0, 32);
 
 // ---- 4. VERIFY.md (bound by the manifest below) ------------------------------
@@ -156,18 +168,27 @@ Verify this release in under a minute:
 sha256sum --check SHA256SUMS                       # integrity of every artifact
 
 # Ed25519 signature over MANIFEST.json (canonical JSON, sorted keys):
-#   public key: keys/release-signing.pub in the repository at commit ${head.slice(0, 12)}
+#   public key: release-signing.pub — shipped BESIDE this artifact set
+#   (it is manifest-bound: the signature below covers it too)
 #   fingerprint: sha256:${pubFp}
-#   one-command verification:
-bun run tools/dist-verify.ts --manifest MANIFEST.json --sig MANIFEST.json.sig --pub ../keys/release-signing.pub
+#   one-command verification (no repository needed):
+bun run tools/dist-verify.ts --manifest MANIFEST.json --sig MANIFEST.json.sig --pub release-signing.pub
 \`\`\`
+
+Key provenance: this artifact set is signed by the key in release-signing.pub
+(bootstrap key ${generated ? "GENERATED this run — session-bound, disclosed" : "loaded from the release-signing key file"}).
+The repository-tracked keys/release-signing.pub at commit ${head.slice(0, 12)} is the
+key of record as of the last release close; the Founder key ceremony (F-3)
+rotates it. Verify the key you received through the channel that delivered
+these artifacts — a signature proves integrity, never provenance by itself.
 
 | Artifact | Bytes | blake3 |
 |---|---|---|
 ${[
   { name: `${NAME}-source.tar.gz`, bytes: a.length, blake3: await blake3File(tarball) },
   { name: "vaerion-demo.vxn", bytes: statSync(vxnDst).size, blake3: await blake3File(vxnDst) },
-].map((a2) => `| ${a2.name} | ${a2.bytes} | \`${a2.blake3.slice(0, 16)}…\` |`).join("\n")}
+  { name: "release-signing.pub", bytes: pubPem.length, blake3: "" },
+].map((a2) => `| ${a2.name} | ${a2.bytes} | \`${a2.blake3 ? a2.blake3.slice(0, 16) + "…" : "(manifest-covered)"}…\` |`).join("\n")}
 
 The source tarball is a deterministic git archive of commit ${head}
 (gzip -n, fixed content): rebuilding it from the same commit reproduces the
@@ -176,10 +197,10 @@ examples/vaerion-demo (ADR-0016): \`vae package build\` twice from the same
 workspace produces byte-identical bundles.
 
 Trust-chain coverage: MANIFEST.json (signature-bound) carries sha256+blake3
-for EVERY file a consumer needs — the tarball, the reference bundle, this
-file, dist-report.json, and SHA256SUMS itself. SHA256SUMS then covers
-MANIFEST.json and its signature too (everything except itself), so the two
-lists overlap and no shipped file sits outside the signed set.
+for EVERY file a consumer needs — the tarball, the reference bundle, the
+signing public key, this file, dist-report.json, and SHA256SUMS itself.
+SHA256SUMS then covers MANIFEST.json and its signature too (everything except
+itself), so the two lists overlap and no shipped file sits outside the signed set.
 `;
 writeFileSync(join(DIST, "VERIFY.md"), verifyMd);
 
@@ -194,7 +215,7 @@ const report = {
   gates: verification.gates,
   reproducibleTarball: { proven: reproducible, bytes: a.length, method: "git archive | gzip -n, built twice, byte-compared" },
   referenceBundle: { file: "vaerion-demo.vxn", bytes: statSync(vxnDst).size, blake3: await blake3File(vxnDst) },
-  signatureProvenance: "see VERIFY.md — the Ed25519 public key fingerprint and one-command verification",
+  signatureProvenance: "the Ed25519 public key ships beside the artifacts (release-signing.pub, manifest-bound) — see VERIFY.md",
 };
 writeFileSync(join(DIST, "dist-report.json"), JSON.stringify(report, null, 2) + "\n");
 
@@ -206,11 +227,12 @@ const manifest = {
   artifacts: [
     { name: `${NAME}-source.tar.gz`, bytes: a.length, sha256: sha256File(tarball), blake3: await blake3File(tarball) },
     { name: "vaerion-demo.vxn", bytes: statSync(vxnDst).size, sha256: sha256File(vxnDst), blake3: await blake3File(vxnDst) },
+    { name: "release-signing.pub", bytes: pubPem.length, sha256: sha256File(join(DIST, "release-signing.pub")), blake3: await blake3File(join(DIST, "release-signing.pub")) },
     { name: "VERIFY.md", bytes: statSync(join(DIST, "VERIFY.md")).size, sha256: sha256File(join(DIST, "VERIFY.md")), blake3: await blake3File(join(DIST, "VERIFY.md")) },
     { name: "dist-report.json", bytes: statSync(join(DIST, "dist-report.json")).size, sha256: sha256File(join(DIST, "dist-report.json")), blake3: await blake3File(join(DIST, "dist-report.json")) },
   ],
   verification: { ok: verification.ok, gates: verification.gates },
-  manifestVersion: 2,
+  manifestVersion: 3,
 };
 const manifestBytes = canon(manifest);
 const manifestPath = join(DIST, "MANIFEST.json");
@@ -225,10 +247,10 @@ if (!sigOk) {
   console.error("dist-pack: ABORT — signature failed self-verification.");
   process.exit(1);
 }
-console.log(`dist-pack: Ed25519 signature self-verified (public key fp sha256:${pubFp}…, ${generated ? "bootstrap key GENERATED this run" : "bootstrap key loaded"})`);
+console.log(`dist-pack: Ed25519 signature self-verified (public key shipped beside the artifacts: release-signing.pub, fp sha256:${pubFp}…, ${generated ? "bootstrap key GENERATED this run — session-bound, disclosed" : "bootstrap key loaded"})`);
 
 // ---- 8. SHA256SUMS last: covers EVERYTHING except itself ----------------------
-const sumTargets = [TARBALL, "vaerion-demo.vxn", "VERIFY.md", "dist-report.json", "MANIFEST.json", "MANIFEST.json.sig"];
+const sumTargets = [TARBALL, "vaerion-demo.vxn", "release-signing.pub", "VERIFY.md", "dist-report.json", "MANIFEST.json", "MANIFEST.json.sig"];
 const sums = sumTargets.map((n) => `${sha256File(join(DIST, n))}  ${n}`).join("\n") + "\n";
 writeFileSync(join(DIST, "SHA256SUMS"), sums);
 

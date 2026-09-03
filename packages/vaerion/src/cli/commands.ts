@@ -38,7 +38,7 @@ import { verifyEvidence, type EvidenceVerificationItem } from "../research/verif
 import { renderUnified, assertReviewDiffShape, type ReviewDiff } from "../broker/contracts/review-diff.ts";
 import { type PolicyContract, type PolicyRule } from "../broker/contracts/decision.ts";
 import { policyFromConfig } from "../config/config.ts";
-import { DEFAULT_INIT_TEMPLATE, renderInitTemplate } from "../config/templates.ts";
+import { DEFAULT_INIT_TEMPLATE, renderInitTemplate, TEMPLATE_SCAFFOLD_FILES } from "../config/templates.ts";
 import { measureCenter } from "../center/center.ts";
 import { researchPrincipal } from "../research/principal.ts";
 import { declareResearchCapability, type ResearchCapabilityDeclaration } from "../research/capability.ts";
@@ -92,6 +92,7 @@ export async function cmdInit(ctx: CommandContext): Promise<number> {
   const name = typeof ctx.flags.name === "string" && ctx.flags.name.length > 0 ? ctx.flags.name : "my-project";
   const templateName = typeof ctx.flags.template === "string" && ctx.flags.template.length > 0 ? ctx.flags.template : DEFAULT_INIT_TEMPLATE;
   const yaml = renderInitTemplate(templateName, name);
+  const scaffold = TEMPLATE_SCAFFOLD_FILES[templateName] ?? {};
   const exists = await stat(ws.configPath).then(() => true, () => false);
   if (exists) {
     throw new VaerionError("E1600", `vaerion.yaml already exists at ${ws.configPath}`);
@@ -105,6 +106,7 @@ export async function cmdInit(ctx: CommandContext): Promise<number> {
         { path: relative(ctx.cwd, ws.configPath), bytes: Buffer.byteLength(yaml) },
         { path: relative(ctx.cwd, ws.journalDir), kind: "dir" },
         { path: relative(ctx.cwd, ws.blobsDir), kind: "dir" },
+        ...Object.entries(scaffold).map(([path, body]) => ({ path, bytes: Buffer.byteLength(body) })),
       ],
       side_effects: 0,
     });
@@ -112,12 +114,19 @@ export async function cmdInit(ctx: CommandContext): Promise<number> {
   }
   await ensureWorkspaceDirs(ws);
   await writeFile(ws.configPath, yaml, "utf8");
+  const createdExtra: string[] = [];
+  for (const [path, body] of Object.entries(scaffold)) {
+    const target = join(ctx.cwd, path);
+    await mkdir(dirname(target), { recursive: true });
+    await writeFile(target, body, "utf8");
+    createdExtra.push(path);
+  }
   const { fingerprint } = await loadOrAdhocConfig(ws);
   r(ctx).result({
     command: "init",
     template: templateName,
     dry_run: false,
-    created: [relative(ctx.cwd, ws.configPath), relative(ctx.cwd, ws.journalDir), relative(ctx.cwd, ws.blobsDir)],
+    created: [relative(ctx.cwd, ws.configPath), relative(ctx.cwd, ws.journalDir), relative(ctx.cwd, ws.blobsDir), ...createdExtra],
     config_fingerprint: fingerprint,
     engine_version: ENGINE_VERSION,
   });
@@ -605,6 +614,24 @@ async function runWorkflow(ctx: CommandContext): Promise<number> {
   }
 }
 
+/**
+ * The demo default (no --sources) derives from the workspace config of record:
+ * every declared local source path, deduped, declaration order preserved.
+ * (XX-D6 root cause: the previous hardcoded engine-docs default — a literal
+ * that only made sense inside the Vaerion checkout — exceeded every user
+ * workspace's permission ceiling; the stale-literal class, reborn and dead
+ * again. The exact literal is pinned ABSENT by ecosystem-journeys.test.ts.)
+ */
+function demoSourcesFromConfig(config: import("../config/config.ts").VaerionConfig): string[] {
+  const out: string[] = [];
+  for (const cap of config.research?.capabilities ?? []) {
+    for (const src of cap.sources ?? []) {
+      if (src.kind === "local" && !out.includes(src.path)) out.push(src.path);
+    }
+  }
+  return out;
+}
+
 export async function cmdRun(ctx: CommandContext): Promise<number> {
   const kind = ctx.flags._positional1;
   if (kind !== "research" && kind !== "demo" && kind !== "model" && kind !== "agent" && kind !== "workflow") {
@@ -614,14 +641,25 @@ export async function cmdRun(ctx: CommandContext): Promise<number> {
   if (kind === "agent") return runAgent(ctx);
   if (kind === "workflow") return runWorkflow(ctx);
   const ws = workspaceAt(ctx.cwd);
+  // D-B one authority: a demo run with no --sources derives its paths from the
+  // workspace config of record (the DECLARED capabilities) — never a hardcoded
+  // literal that only makes sense inside the Vaerion checkout (XX-D6: the old
+  // engine-docs default exceeded every user workspace's ceiling; the
+  // stale-literal class stays dead).
+  const { config, fingerprint: configFingerprint, adhoc } = await loadOrAdhocConfig(ws);
   const sources =
-    kind === "demo"
-      ? typeof ctx.flags.sources === "string"
+    kind === "demo" && typeof ctx.flags.sources !== "string"
+      ? demoSourcesFromConfig(config)
+      : kind === "demo"
         ? String(ctx.flags.sources).split(",").map((s) => s.trim()).filter(Boolean)
-        : ["./docs/constitution", "./docs/adr"]
-      : String(ctx.flags.sources ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+        : String(ctx.flags.sources ?? "").split(",").map((s) => s.trim()).filter(Boolean);
   if (sources.length === 0) {
-    throw new VaerionError("E1600", "missing required flag --sources (comma-separated local paths)");
+    throw new VaerionError(
+      "E1600",
+      kind === "demo"
+        ? "no local sources to demo: declare research.capabilities in vaerion.yaml (vae init --template demo scaffolds one) or pass --sources"
+        : "missing required flag --sources (comma-separated local paths)",
+    );
   }
   const query = kind === "demo" && typeof ctx.flags.query !== "string"
     ? "event spine journal deterministic"
@@ -651,7 +689,8 @@ export async function cmdRun(ctx: CommandContext): Promise<number> {
   }
 
   await ensureWorkspaceDirs(ws);
-  const { config, fingerprint: configFingerprint, adhoc } = await loadOrAdhocConfig(ws);
+  // (config/configFingerprint/adhoc were loaded above — the demo derivation
+  // needs them before the dry-run branch, so this is the single load, D-B.)
   const renderer = r(ctx);
   if (adhoc && ctx.mode === "plain") renderer.result({ note: "no vaerion.yaml found — using ad-hoc config (Fix: run `vae init`)" });
 
