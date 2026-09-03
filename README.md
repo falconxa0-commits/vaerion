@@ -146,4 +146,6 @@ Vaerion is maintained under an explicit engineering constitution
 substrate-level decisions are explicitly marked until the project owner
 ratifies them. Copyright (c) 2026 Auren. Licensed under the Apache
 License 2.0 — see `LICENSE`. Contributions agree to the same license
-(`CONTRIBUTING.md`).
+(`CONTRIBUTING.md`). The full legal identity layer — ownership,
+trademark policy, contributor terms, and the pseudonym disclosure
+(F-2) — is `LEGAL.md`.

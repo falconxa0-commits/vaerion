@@ -23,7 +23,11 @@ classifiers = [
 ]
 
 [project.urls]
-# Homepage/Changelog URLs are added at the release train ( Founder-gated remote provisioning ).
+# Identity of record: LEGAL.md §1. The repository is public; the remaining
+# URLs land with the Founder's publication step (risk-ledger F-5).
+Repository = "https://github.com/falconxa0-commits/vaerion"
+Issues = "https://github.com/falconxa0-commits/vaerion/issues"
+Changelog = "https://github.com/falconxa0-commits/vaerion/blob/main/CHANGELOG.md"
 
 [project.scripts]
 vae = "vaerion.cli:main"

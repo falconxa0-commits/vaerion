@@ -984,3 +984,21 @@ Work Log:
 
 Stage Summary:
 - THE FINAL FOUR PHASES CAMPAIGN IS CLOSED AND MEASURED: local tree GREEN (523/0/41), GitHub CI GREEN on the close commit, the dashboard browser-verified at both widths, the three deliverables of record on disk, the ledger at row 26, three-remote parity 0/0. What remains is exactly what REMAINING-REALITY-REPORT.md names — nothing more, nothing hidden. The Founder holds the packet.
+
+---
+Task ID: 1
+Agent: Auren — Principal Architect / Verification Authority (ASCENSION XXV, Phase XXV)
+Task: LAW 1 reality audit of the whole repository, CI, security, and infrastructure before any GA campaign implementation; produce docs/ga/ASCENSION-XXV-BASELINE-AUDIT.md.
+
+Work Log:
+- MEASURED FRESH: main @ 4bd5f48 clean; 7 tags; tag of record v0.1.12-rc1 = 888758a -> 485016f (annotated, byte-identical to GitHub via ls-remote); version register spot-check OK (python surface 0.1.12-rc1; root package.json 0.1.7-rc2 = recorded out-of-register decision).
+- GATES RE-RUN COLD: ALL GATES GREEN 523/0/41, exit 0 — the directive's "523/0 tests locally" is VERIFIED, not inherited.
+- CI MEASURED VIA API (token env-only, /tmp chmod 600, never printed): 20 runs; latest run 33810311685 on main @ 4bd5f48 (the CURRENT HEAD) = completed/success on GitHub infrastructure; the v0.1.12-rc1 tag run (33805318732) success with the signed-release job.
+- SECURITY MEASURED: Actions secrets total_count=0 (RELEASE_SIGNING_KEY absent -> bootstrap-key state confirmed, fail-closed + disclosed in the workflow); branch protection 404 NOT protected; keys/ hygiene verified (public half tracked, /keys/*.key gitignored).
+- TWO REALITY CHANGES THE RECORDS DID NOT KNOW: (1) the GitHub repository is now PUBLIC (API: private:false) — the plan-blocked branch-protection item's own escape condition ("make this repository public") is met; BLOCKED -> enableable engineering work. (2) the canonical bare remote /home/z/vaerion-canonical.git was LOST with the environment reset — the "three-remote parity 0/0" record was true then and un-claimable now.
+- REPAIRED CANONICALLY: git init --bare restored the mirror; pushed main + all 7 tags as NEW refs (ff-only, no force, no rewrite); parity re-measured 0/0 on all three remotes, tag object 888758a identical everywhere.
+- A measurement-hygiene defect caught and recorded: the first cat of .github/workflows/verify.yml rendered "branches: [main]" as "branches: ain]" (terminal mangling); re-read via the Read tool proved the file intact — even reading is measurement that can fail once.
+- DELIVERABLE: docs/ga/ASCENSION-XXV-BASELINE-AUDIT.md (8 sections: repo/gates/CI/security/infra reality, the two §6 reality changes, the explicit not-claimed list, the baseline verdict).
+
+Stage Summary:
+- The campaign opens from a TRUE baseline: every directive claim confirmed by fresh measurement; two new realities exploited (branch protection now enableable) and repaired (canonical restored). No implementation performed beyond the audit doc + the lawful canonical re-provision. Token hygiene held (env-only, no repo artifact); rotation still recommended post-campaign.

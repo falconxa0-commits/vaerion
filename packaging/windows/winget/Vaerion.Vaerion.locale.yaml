@@ -13,7 +13,9 @@ PackageDescription: |-
   provenance for everything it creates. Evidence, not branding.
 License: Apache-2.0
 LicenseUrl: https://www.apache.org/licenses/LICENSE-2.0
-Copyright: Copyright (c) Vaerion contributors
+# Copyright aligned to the LICENSE of record ("Copyright 2026 Auren") and
+# LEGAL.md — the Phase XXVI identity sweep found and fixed this conflict.
+Copyright: Copyright 2026 Auren
 ShortDescription: AI-native development engine — deterministic, auditable, local-first.
 Tags:
   - ai

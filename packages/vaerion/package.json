@@ -25,5 +25,13 @@
     "typescript": "^5"
   },
   "license": "Apache-2.0",
-  "author": "Auren"
+  "author": "Auren",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/falconxa0-commits/vaerion.git"
+  },
+  "bugs": {
+    "url": "https://github.com/falconxa0-commits/vaerion/issues"
+  },
+  "homepage": "https://github.com/falconxa0-commits/vaerion#readme"
 }
