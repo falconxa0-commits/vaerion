@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ShieldCheck, GitBranch, FileCode2, ListChecks, Scale, FlaskConical, ArrowRight, Gauge, History, Wallet } from "lucide-react";
+import { ShieldCheck, GitBranch, FileCode2, ListChecks, Scale, FlaskConical, ArrowRight, Gauge, History, Wallet, Terminal, PackageCheck, BookOpen } from "lucide-react";
 
 interface Status {
   generatedAt: string;
@@ -90,6 +90,68 @@ export default function Home() {
             fed by the verification gates.
           </p>
         </header>
+
+        {/* Install — the measured paths, honestly labeled (Phase XXIII) */}
+        <section aria-label="Install Vaerion" className="grid gap-4 lg:grid-cols-2">
+          <Card className="min-w-0 border-zinc-200 dark:border-zinc-800">
+            <CardHeader className="p-6 pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Terminal className="w-4 h-4" aria-hidden /> Install from source — the measured path
+              </CardTitle>
+              <CardDescription className="text-sm">
+                The path the Empty Machine Test executed end-to-end on a fresh $HOME: install, verify, init, first run, upgrade, clean removal.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6 pt-0 space-y-3">
+              <pre className="overflow-x-auto rounded-lg bg-zinc-100 dark:bg-zinc-900 p-3 text-xs leading-relaxed font-mono" aria-label="Install commands">{"git clone https://github.com/falconxa0-commits/vaerion.git\ncd vaerion && ./packaging/install.sh\nvae doctor && vae init"}</pre>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                Needs the Bun runtime (1.2+). The installer teaches every step, persists PATH on a fresh home, and <code className="font-mono">--uninstall</code> removes everything it created.
+              </p>
+              <div className="flex flex-wrap gap-2 pt-1">
+                <Badge variant="outline" className="border-[#3F9B6E]/40 text-emerald-700 dark:text-[#3F9B6E] text-xs">measured on Linux</Badge>
+                <Badge variant="outline" className="border-zinc-300 dark:border-zinc-700 text-xs">offline-capable at the release tag</Badge>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="min-w-0 border-zinc-200 dark:border-zinc-800">
+            <CardHeader className="p-6 pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <PackageCheck className="w-4 h-4" aria-hidden /> Package channels — authored, honestly labeled
+              </CardTitle>
+              <CardDescription className="text-sm">
+                Every manifest exists and is version-locked to the engine register. Registry publication and host-platform verification are Founder/external gates — never claimed here.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6 pt-0 space-y-3">
+              <div className="flex flex-wrap gap-2">
+                {[
+                  ["npm tarball", "consumer install measured"],
+                  ["Python wheel", "offline pip measured"],
+                  ["Homebrew", "UNVERIFIED — host"],
+                  ["winget", "UNVERIFIED — host"],
+                  ["deb / rpm", "UNVERIFIED — host"],
+                  ["AppImage", "UNVERIFIED — host"],
+                  ["DMG / PKG", "UNVERIFIED — host"],
+                ].map(([name, label]) => (
+                  <Badge
+                    key={name}
+                    variant="outline"
+                    className={
+                      label.startsWith("UNVERIFIED")
+                        ? "text-xs border-zinc-300 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400"
+                        : "text-xs border-[#3F9B6E]/40 text-emerald-700 dark:text-[#3F9B6E]"
+                    }
+                  >
+                    {name} · {label}
+                  </Badge>
+                ))}
+              </div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                Release artifacts verify in under a minute without this repository: <code className="font-mono">sha256sum --check SHA256SUMS</code>, then the Ed25519 check taught in the shipped VERIFY.md (key ships beside the artifacts).
+              </p>
+            </CardContent>
+          </Card>
+        </section>
 
         {/* Progress */}
         <section aria-label="Roadmap progress" className="space-y-3">
@@ -289,12 +351,17 @@ export default function Home() {
         )}
 
         {/* Reports pointer */}
-        <section aria-label="Reports" className="flex flex-wrap gap-2">
-          {["BUILD_REPORT.md", "VERIFICATION_REPORT.md", "ARCHITECTURE_REPORT.md", "ROADMAP_PROGRESS.md"].map((f) => (
-            <Badge key={f} variant="outline" className="font-mono text-xs border-zinc-300 dark:border-zinc-700">
-              {f}
-            </Badge>
-          ))}
+        <section aria-label="Reports and documentation" className="space-y-2">
+          <div className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
+            <BookOpen className="w-4 h-4" aria-hidden /> Reports &amp; documentation of record
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {["BUILD_REPORT.md", "VERIFICATION_REPORT.md", "ARCHITECTURE_REPORT.md", "ROADMAP_PROGRESS.md", "CHANGELOG.md", "SECURITY.md", "docs/CLI.md", "docs/SDK.md", "docs/LIMITATIONS.md", "docs/RELEASE-NOTES-v0.1.12-rc1.md", "docs/ga/GO-NO-GO.md"].map((f) => (
+              <Badge key={f} variant="outline" className="font-mono text-xs border-zinc-300 dark:border-zinc-700">
+                {f}
+              </Badge>
+            ))}
+          </div>
         </section>
       </main>
 

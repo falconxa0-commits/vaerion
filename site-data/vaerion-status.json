@@ -1,57 +1,57 @@
 {
-  "generatedAt": "2026-09-03T16:45:39.635Z",
+  "generatedAt": "2026-09-03T21:48:03.562Z",
   "engineVersion": "0.1.12-rc1",
   "substrate": "TypeScript on Bun (ADR-0018 — provisional with recorded migration path; Founder ratification pending)",
   "verification": {
-    "generatedAt": "2026-09-03T16:45:33.532Z",
+    "generatedAt": "2026-09-03T21:43:56.103Z",
     "ok": true,
     "gates": [
       {
         "gate": "typecheck-engine",
         "ok": true,
-        "durationMs": 4214
+        "durationMs": 4342
       },
       {
         "gate": "typecheck-sdk",
         "ok": true,
-        "durationMs": 3385
+        "durationMs": 3398
       },
       {
         "gate": "tests",
         "ok": true,
-        "durationMs": 7039
+        "durationMs": 6913
       },
       {
         "gate": "layerlint",
         "ok": true,
-        "durationMs": 39
+        "durationMs": 30
       },
       {
         "gate": "constitutional-check",
         "ok": true,
-        "durationMs": 248
+        "durationMs": 250
       },
       {
         "gate": "perf-budget",
         "ok": true,
-        "durationMs": 302
+        "durationMs": 328
       },
       {
         "gate": "a11y-structural",
         "ok": true,
-        "durationMs": 25
+        "durationMs": 27
       },
       {
         "gate": "repo-lint",
         "ok": true,
-        "durationMs": 10957
+        "durationMs": 10700
       }
     ],
     "measured": {
-      "testsPassed": 499,
+      "testsPassed": 523,
       "testsFailed": 0,
-      "expectations": 2979,
-      "testFiles": 39
+      "expectations": 3200,
+      "testFiles": 41
     }
   },
   "constitution": {
@@ -59,9 +59,9 @@
     "version": "v1.7"
   },
   "tests": {
-    "suites": 39,
-    "assertedExpectations": 2979,
-    "totalTests": 499,
+    "suites": 41,
+    "assertedExpectations": 3200,
+    "totalTests": 523,
     "testsFailed": 0,
     "coverage": {
       "lines": 86.52,
@@ -72,12 +72,12 @@
   },
   "code": {
     "engine": {
-      "files": 106,
-      "lines": 21382
+      "files": 107,
+      "lines": 21649
     },
     "engineTests": {
-      "files": 39,
-      "lines": 10934
+      "files": 41,
+      "lines": 11311
     },
     "sdk": {
       "files": 3,
@@ -90,44 +90,44 @@
   },
   "contracts": {
     "specFiles": [
+      "spec/openapi.json",
       "spec/README.md",
-      "spec/wit/vaerion-extension@0.1.0.wit",
-      "spec/errors.yaml",
       "spec/CHANGELOG-SPEC.md",
       "spec/events/registry.json",
-      "spec/schemas/journal-record.schema.json",
-      "spec/schemas/vaerion-yaml.schema.json",
-      "spec/schemas/capability-declaration.schema.json",
+      "spec/errors.yaml",
       "spec/schemas/receipt.schema.json",
-      "spec/schemas/evidence-record.schema.json",
+      "spec/schemas/capability-declaration.schema.json",
       "spec/schemas/gate.schema.json",
+      "spec/schemas/journal-record.schema.json",
+      "spec/schemas/evidence-record.schema.json",
+      "spec/schemas/vaerion-yaml.schema.json",
       "spec/schemas/broker-decision.schema.json",
       "spec/schemas/envelope.schema.json",
-      "spec/openapi.json"
+      "spec/wit/vaerion-extension@0.1.0.wit"
     ],
     "adrCount": 21,
     "adrFiles": [
-      "docs/adr/0003-contract-first-specs-drive-sdk-generation.md",
-      "docs/adr/README.md",
-      "docs/adr/0013-os-keychain-first-secrets-env-fallback.md",
-      "docs/adr/0009-wasi-p2-components-capability-broker.md",
-      "docs/adr/0002-versioned-event-spine-envelope.md",
-      "docs/adr/0019-single-sanctioned-gateway-egress.md",
-      "docs/adr/0010-loopback-daemon-pairing-token.md",
-      "docs/adr/0005-tiered-intelligence-progressive-enhancement.md",
-      "docs/adr/0018-engine-substrate-typescript-bun.md",
-      "docs/adr/0020-daemon-http-stack-ts-substrate.md",
-      "docs/adr/0001-monorepo-single-version-policy.md",
-      "docs/adr/0016-reproducible-vxn-bundles.md",
-      "docs/adr/0015-per-platform-exec-sandbox-matrix.md",
-      "docs/adr/0007-strict-subset-yaml-vaeryaml-manifests.md",
-      "docs/adr/0014-stable-diagnostics-catalog-ecodes.md",
-      "docs/adr/0008-sqlite-wal-fts5-vec-local-store.md",
       "docs/adr/0012-cassette-mockbrain-hermetic-evals.md",
-      "docs/adr/0011-tokio-axum-tower-stack.md",
+      "docs/adr/0009-wasi-p2-components-capability-broker.md",
+      "docs/adr/0015-per-platform-exec-sandbox-matrix.md",
+      "docs/adr/README.md",
+      "docs/adr/0010-loopback-daemon-pairing-token.md",
+      "docs/adr/0001-monorepo-single-version-policy.md",
+      "docs/adr/0008-sqlite-wal-fts5-vec-local-store.md",
       "docs/adr/0006-event-sourced-run-journals-checkpoint-chaining.md",
-      "docs/adr/0004-centralized-permission-broker.md",
-      "docs/adr/0017-reserved-cloud-seams.md"
+      "docs/adr/0013-os-keychain-first-secrets-env-fallback.md",
+      "docs/adr/0002-versioned-event-spine-envelope.md",
+      "docs/adr/0018-engine-substrate-typescript-bun.md",
+      "docs/adr/0005-tiered-intelligence-progressive-enhancement.md",
+      "docs/adr/0007-strict-subset-yaml-vaeryaml-manifests.md",
+      "docs/adr/0016-reproducible-vxn-bundles.md",
+      "docs/adr/0020-daemon-http-stack-ts-substrate.md",
+      "docs/adr/0019-single-sanctioned-gateway-egress.md",
+      "docs/adr/0014-stable-diagnostics-catalog-ecodes.md",
+      "docs/adr/0011-tokio-axum-tower-stack.md",
+      "docs/adr/0003-contract-first-specs-drive-sdk-generation.md",
+      "docs/adr/0017-reserved-cloud-seams.md",
+      "docs/adr/0004-centralized-permission-broker.md"
     ]
   },
   "milestones": [
@@ -364,78 +364,57 @@
       "era": "ASCENSION XX",
       "status": "✅ complete",
       "evidence": "the program close: version lockstep 0.1.12-rc1 across 17 measured surfaces (3×package.json + ENGINE_VERSION + CLI VERSION + packaging npm/python/macos×2/linux×2/homebrew/winget×3 + pyproject + packaging README); spec/openapi.json regenerated via the sanctioned generator; goldens re-blessed via the ONLY sanctioned path (VAE_BLESS=1 — the sole movement the engine_version cascade); release commit `485016f` → annotated tag `v0.1.12-rc1` (`888758a`) → dist-pack --ref the tag (reproducibility PROVEN, Ed25519 self-verified, public key shipped beside the artifacts) → the empty-machine spot check installed `engine_version: 0.1.12-rc1` and the demo journey exited 0; canonical synchronized (ff `b6c5fac..485016f`+docs, divergence 0/0, tag as a NEW ref, tag object identical `888758a`) and adversarially probed (4 refusals + state unchanged, exit 0); GitHub honestly UNVERIFIED this session (credentials absent — the env-only discipline; last-known main `b6c5fac` is recorded history, not a live claim); EIGHT gates green (499/0) on the close tree; ROADMAP_PROGRESS.md + site-data regenerated from the GREEN record; worklog `ASC-XX-PROGRAM-CLOSE`"
+    },
+    {
+      "id": "dt-25",
+      "phase": "23",
+      "era": "FINAL FOUR PHASES",
+      "status": "✅ complete",
+      "evidence": "Phase XXI — ecosystem & platform readiness: the inherited lockstep claim measured INCOMPLETE (GAP-1) — three version-bearing release surfaces outside the register (python `__version__`, the RPM spec internally inconsistent three ways, the Windows installer default) + one half-updated teaching line; all aligned to `0.1.12-rc1` by fix-forward and the register COMPLETED + CLOSED mechanically (tests/integration/version-register.test.ts: 18 positive surfaces, ENGINE≡CLI parity, RPM-changelog epoch order, negative sweep over packaging/ + sdks/; scope decision recorded: root package.json = private dashboard host); GitHub LAWFULLY synchronized with the Founder-provisioned token (env-only discipline; ff `b6c5fac..7a1e44f` after an ff-check, the missing `v0.1.12-rc1` pushed ONCE as a NEW ref, no force anywhere); branch protection measured BLOCKED by GitHub plan (403 — \"Upgrade to GitHub Pro or make this repository public\"); worklog Task 2-a/3"
+    },
+    {
+      "id": "dt-26",
+      "phase": "24",
+      "era": "FINAL FOUR PHASES",
+      "status": "✅ complete",
+      "evidence": "Phase XXII — world-class DX: the six measured audit gaps closed at root + pinned (tests/integration/dx-surface.test.ts, 19 tests): DX-1 `--version`/`-V` (plain + NDJSON, byte-agrees with the `version` subcommand), DX-2 `help [COMMAND]` (unknown topics fall back — help always teaches), DX-3 `completions <bash|zsh|fish|powershell>` from ONE model pinned both ways against COMMAND_HELP (bash -n measured on host; zsh/fish/pwsh honest UNVERIFIED markers in-script), DX-4 the unknown-command error through the ONE renderer (the --json NDJSON guarantee restored on the usage path), DX-5 `--quiet` framing-only, DX-6 `VAE_DEBUG=1` stacks; D-M′ parity extended; ALL GATES GREEN 523/0/41; worklog Task 4-a"
+    },
+    {
+      "id": "dt-27",
+      "phase": "25",
+      "era": "FINAL FOUR PHASES",
+      "status": "✅ complete",
+      "evidence": "Phase XXIII — documentation & publication: 18 authored artifacts verified live by the authoring agents (root trust set SECURITY/SUPPORT/CODE_OF_CONDUCT/CHANGELOG from measured records — SUPPORT states there is no top-level `vae verify`, SECURITY follows the repo's R-7 private-disclosure posture; PR/issue templates; examples index; docs/CLI.md from the 17 live topics + measured exit codes + 81 E-codes; docs/SDK.md per real exports + ADR-0010 pairing + the parity law; Dockerfile/.dockerignore/devcontainer/GitLab/Jenkins ports mirroring the single authority with honest UNVERIFIED markers; docs/LIMITATIONS.md traced to source records; docs/RELEASE-NOTES-v0.1.12-rc1.md); the dashboard gained the measured install surface + expanded reports index; the measured audit records PHASE-XXII-DX-AUDIT.md + PHASE-XXIII-PUBLICATION-GAP-AUDIT.md; worklog Tasks 2-b/2-c/4-b/4-c"
+    },
+    {
+      "id": "dt-28",
+      "phase": "26",
+      "era": "FINAL FOUR PHASES",
+      "status": "✅ complete",
+      "evidence": "Phase XXIV — the independent audit: CI measured on real GitHub infrastructure for the first time (run 33805316308 main @ 7a1e44f: all-gates job SUCCESS at step level, 58s; run 33805318732 tag @ 485016f: verify + signed-release SUCCESS); the CI-produced artifact set verified THREE ways (sha256 7/7 → engine dist-verify consumer path ALL CHECKS PASSED → independent openssl Ed25519 cross-check SUCCESS after root-causing my own base64-vs-raw test input by measurement — no engine defect); F-3 disclosed by the CI pack report itself (bootstrap key GENERATED this run); parity 0/0 across local/canonical/GitHub with tag object 888758a byte-identical; the campaign's own defects ledgered (AUR-1..AUR-4 incl. a MultiEdit partial-apply caught by measuring file state, never by trusting the tool); docs/ga/FINAL-FOUR-PHASES-AUDIT.md + REMAINING-REALITY-REPORT.md + FOUNDER-GO-NO-GO-PACKET.md (composite readiness 8.1/10, measured) — GA remains PENDING the Founder gates F-2..F-6"
     }
   ],
   "release": {
     "measured": true,
     "ready": false,
     "verdict": "BLOCKED",
-    "passed": 9,
+    "passed": 8,
     "total": 12,
     "blockers": [
-      "git-tree-clean: working tree dirty: 0 staged, 2 unstaged, 0 untracked",
-      "release-tag-binding: HEAD is not exactly at a v* release tag"
+      "git-tree-clean: working tree dirty: 0 staged, 5 unstaged, 3 untracked",
+      "release-tag-binding: HEAD is not exactly at a v* release tag",
+      "release-artifacts: artifact set incomplete: dist/MANIFEST.json, dist/MANIFEST.json.sig, dist/SHA256SUMS, dist/VERIFY.md missing"
     ]
   },
   "commandCenter": {
     "workspace": {
       "root": "/home/z/my-project/examples/vaerion-demo",
-      "runs": 7
+      "runs": 0
     },
     "operations": {
-      "runs": [
-        {
-          "run_id": "crn_run_01M1KZHY6PFMJZPGBNFY41TJCG",
-          "records": 5,
-          "events": 3,
-          "verified": true,
-          "receipt": true
-        },
-        {
-          "run_id": "crn_run_01M1M1M3D8QVPDVCZDPZHW97CQ",
-          "records": 5,
-          "events": 3,
-          "verified": true,
-          "receipt": true
-        },
-        {
-          "run_id": "crn_run_01M1M1Q09YKV7BHQPBBSA95YQG",
-          "records": 5,
-          "events": 3,
-          "verified": true,
-          "receipt": true
-        },
-        {
-          "run_id": "crn_run_01M1M1TG7DMKF6HQ1GNQYZ3HYJ",
-          "records": 5,
-          "events": 3,
-          "verified": true,
-          "receipt": true
-        },
-        {
-          "run_id": "crn_run_01M1M222039DYBWZQPJ281QFQD",
-          "records": 5,
-          "events": 3,
-          "verified": true,
-          "receipt": true
-        },
-        {
-          "run_id": "crn_run_01M1M2CZQ20ZC651K5JFD9SNF0",
-          "records": 5,
-          "events": 3,
-          "verified": true,
-          "receipt": true
-        },
-        {
-          "run_id": "crn_run_01M1M2EAJ0ZCMJ9G8VDSQHA77M",
-          "records": 5,
-          "events": 3,
-          "verified": true,
-          "receipt": true
-        }
-      ],
+      "runs": [],
       "journals_verified": true,
-      "receipts": 7,
+      "receipts": 0,
       "metering": {
         "invocations": 0,
         "failed": 0,
@@ -466,16 +445,20 @@
       "measured": true,
       "ready": false,
       "verdict": "BLOCKED",
-      "passed": 9,
+      "passed": 8,
       "total": 12,
       "blockers": [
         {
           "check": "git-tree-clean",
-          "detail": "working tree dirty: 0 staged, 2 unstaged, 0 untracked"
+          "detail": "working tree dirty: 0 staged, 5 unstaged, 3 untracked"
         },
         {
           "check": "release-tag-binding",
           "detail": "HEAD is not exactly at a v* release tag"
+        },
+        {
+          "check": "release-artifacts",
+          "detail": "artifact set incomplete: dist/MANIFEST.json, dist/MANIFEST.json.sig, dist/SHA256SUMS, dist/VERIFY.md missing"
         }
       ]
     },
@@ -493,7 +476,7 @@
     "Coverage floors are total-based; per-module ratchets are mechanical follow-up, and totals only move up."
   ],
   "nextWork": [
-    "No campaign is in flight: the D-T ledger records ASCENSION XX complete through Phase 22 (evidence of record in the constitution's §11 Amendment Log); the next program awaits Founder ratification (P4).",
+    "No campaign is in flight: the D-T ledger records FINAL FOUR PHASES complete through Phase 26 (evidence of record in the constitution's §11 Amendment Log); the next program awaits Founder ratification (P4).",
     "GA remains rehearsed and PENDING FOUNDER GO (P4); the Founder gates (F-2 legal name, F-3 key ceremony, F-4 substrate ratification, F-5 publish, F-6 real-provider cassettes) are the remaining path to full GA.",
     "MS-6 leftovers: native single-binary installers (host-gated: brew/winget/dmg/rpm authored in Phase 1, awaiting their platforms); the daemon packages route group (wire parity, spec/openapi regen).",
     "Release train steps (publish, announce, key ceremony) — Founder-gated; artifacts are reproducible via tools/dist-pack.ts at the release tag.",

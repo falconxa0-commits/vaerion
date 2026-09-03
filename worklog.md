@@ -924,3 +924,50 @@ Work Log:
 
 Stage Summary:
 - The §11 synchronization law is now VERIFIED on all three remotes with byte-identical tag objects; GitHub CI is measured GREEN end-to-end including the signed-release job; the trust chain survived an independent cryptographic cross-check. Remaining GitHub-surface blocker: branch protection (plan-gated) + the F-3 key ceremony (Founder-gated).
+
+---
+Task ID: 4-a
+Agent: Auren — Principal Vaerion Architect (Phase XXII — the DX surface closures)
+Task: Close the six measured DX gaps from PHASE-XXII-DX-AUDIT.md at root, each pinned.
+
+Work Log:
+- DX-1 CLOSED: `--version`/`-V` parsed before any side effect; plain prints `vae <VERSION>`, json emits stable NDJSON; byte-agreement with the `version` subcommand pinned.
+- DX-2 CLOSED: `vae help [COMMAND]` with registry-topic frames; unknown topics fall back to MAIN_HELP (help always teaches, never errors) — pinned.
+- DX-3 CLOSED: `vae completions <bash|zsh|fish|powershell>` from ONE model (src/cli/completions.ts) pinned BOTH ways against COMMAND_HELP (D-B: a registry topic without a model entry fails, and vice versa); bash script measured with `bash -n` on this host; zsh/fish/powershell scripts carry honest UNVERIFIED platform markers INSIDE the generated text.
+- DX-4 CLOSED: the unknown-command error routed through the ONE renderer — measured live: `vae frobnicate --json` emits exactly one NDJSON line (code/name/message/fix), exit 2; the Guarantee #2 hole is dead.
+- DX-5 CLOSED: `--quiet` suppresses decorative framing only (banner/footer); data and errors never suppressed — rich-mode pin.
+- DX-6 CLOSED: `VAE_DEBUG=1` prints engine-error stacks; pinned absent by default.
+- MAIN_HELP/COMMAND_HELP grew version/help/completions topics (D-M′ parity extended); COMMAND_HELP exported as the registry of record.
+- HONESTY: the typecheck gate caught my own strict-mode indexed-access defect (TS2769) before any claim; also this session's second MultiEdit partial-apply (tool reported atomic failure while edits 1-5 had landed and the file was briefly broken) — caught by MEASURING the file state, never by trusting the tool report; recorded as AUR-2 in the audit.
+- MEASURED: ALL GATES GREEN 523/0/41, exit 0; commit 3fe4495.
+
+Stage Summary:
+- The DX audit's five feasible gaps are all closed and pinned; the CLI surface answers the directive's questions (what happened/why/what next/can it fix it) on every path including errors.
+
+---
+Task ID: 4-b / 4-c
+Agent: Auren (coordinator), recording the two doc-authoring agents (Phase XXIII — the documentation universe)
+Task: Author the measured documentation universe — root trust set, GitHub templates, CLI manual, SDK docs, container/CI ports, limitations, release notes.
+
+Work Log:
+- 4-b (9 files): SECURITY.md (private-disclosure route per the repo's own R-7 record; the honest R-2/F-3 bootstrap-key state; no invented channel), SUPPORT.md (teaches doctor + journal verify AS THEY EXIST; states there is no top-level `vae verify` and no hosted channel), CODE_OF_CONDUCT.md, CHANGELOG.md (entries derived ONLY from measured tag dates v0.1.7-rc1..v0.1.12-rc1 + ga records; an honest Unreleased section), .github/PULL_REQUEST_TEMPLATE.md + ISSUE_TEMPLATE/{bug,feature,config}, examples/README.md.
+- 4-c (9 files): docs/CLI.md (478 lines from the 17 live COMMAND_HELP topics + measured exit codes 0-5 + 81 E-codes + the real .vaerion/ layout), docs/SDK.md (real exports, ADR-0010 pairing, the parity law; states the npm tarball ships the CLI, not the SDK), Dockerfile (multi-stage on the pinned bun 1.3.14; honest UNVERIFIED marker), .dockerignore, .devcontainer/devcontainer.json, .gitlab-ci.yml + Jenkinsfile (ports of the single-verification-authority contract), docs/LIMITATIONS.md (every item traced to its source record), docs/RELEASE-NOTES-v0.1.12-rc1.md (measured campaign history incl. the GitHub CI + triple artifact verification).
+- Every command/flag/path verified live by the agents before writing; both agents' findings folded back into the audit (the `version`-outside-registry fact, the `vae verify` absence).
+- MEASURED: ALL GATES GREEN after integration; commit 298cdfb.
+
+Stage Summary:
+- The Phase XXIII feasible gap list is closed except: four channel manifests (Flatpak/Snap/Chocolatey/Scoop), nushell/xonsh completions, and the genuinely blocked publication/platform items — all recorded in REMAINING-REALITY-REPORT.md.
+
+---
+Task ID: 5
+Agent: Auren — Principal Release Commander (Phase XXIV — the close)
+Task: The dashboard install surface, the D-T ledger rows 23-26, the three Phase XXIV deliverables, and the campaign close.
+
+Work Log:
+- DASHBOARD: the Install section added to src/app/page.tsx (source path measured by the Empty Machine Test; package channels with honest per-channel labels — measured vs UNVERIFIED—host; expanded reports index); dev.log clean (200s, only the benign pre-existing metadataBase warning).
+- LEDGER: D-T rows 23-26 appended to the constitution of record (FINAL FOUR PHASES complete, evidence-rich); the sanctioned generator regenerated ROADMAP_PROGRESS.md + site-data from the updated record; the ledger-tail pin (repo-intelligence.test.ts) MOVED WITH the appended rows exactly as the ASCENSION XX close did — the gates caught the stale tail first (RED), the amendment is recorded in the pin comment.
+- DELIVERABLES: docs/ga/FINAL-FOUR-PHASES-AUDIT.md (the independent audit: baseline, defect ledger GAP-1 + DX-1..6 + AUR-1..4, three-way artifact verification, what is NOT claimed), docs/ga/REMAINING-REALITY-REPORT.md (COMPLETE/VERIFIED/UNVERIFIED-with-reasons/REMAINING/BLOCKED-with-owners), docs/ga/FOUNDER-GO-NO-GO-PACKET.md (15-axis measured readiness, composite 8.1/10, the P4 decision block).
+- MEASURED: ALL GATES GREEN 523/0/41, exit 0 on the close tree.
+
+Stage Summary:
+- The campaign is closed under the law: every feasible surface implemented, measured, and pinned; every remaining item named with its owner; the Founder holds a measured decision packet.

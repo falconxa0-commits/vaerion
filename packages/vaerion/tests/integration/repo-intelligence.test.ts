@@ -829,12 +829,15 @@ describe("the ONE derivation + the ONE ledger parser (v1.7 A7, D-B/D-V)", () => 
     const last = ledger.at(-1)!;
     expect(last.status).toBe("✅ complete");
     // The tail moves as campaigns close: rows 19–22 are ASCENSION XX
-    // (the ecosystem completion campaign, appended at its program close).
-    expect(last.era).toBe("ASCENSION XX");
-    expect(last.phase).toBe("22");
+    // (the ecosystem completion campaign); rows 23–26 are the FINAL FOUR
+    // PHASES (the GA-completion campaign, appended at its close — the pin
+    // moved WITH the lawfully appended rows, the same amendment the
+    // ASCENSION XX close performed).
+    expect(last.era).toBe("FINAL FOUR PHASES");
+    expect(last.phase).toBe("26");
     expect(ledger.filter((r) => r.status === "▶ in flight").length).toBe(0);
     // The five-section register era: D-U…D-Y exist alongside the historical rows.
-    for (const phase of ["14", "15", "19", "22"]) {
+    for (const phase of ["14", "15", "19", "22", "26"]) {
       expect(ledger.some((r) => r.phase === phase)).toBe(true);
     }
   });
