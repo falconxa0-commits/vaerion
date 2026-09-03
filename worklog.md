@@ -906,3 +906,21 @@ Work Log:
 
 Stage Summary:
 - Publication authoring is the largest remaining feasible surface; registry publication/platform verification/hosted deploy are BLOCKED here (Founder P4 / external platforms) and will be labeled, never dressed.
+
+---
+Task ID: 3
+Agent: Auren — Principal Release Commander (FINAL FOUR PHASES, GitHub synchronization + first measured CI runs)
+Task: Lawful GitHub synchronization (fast-forward only, new refs only), then measure Actions runs on GitHub infrastructure and independently verify the CI-produced release artifacts.
+
+Work Log:
+- HONESTY FIRST: my first push failed — root cause was MY credential helper, not the token: the outer printf consumed the %s (no arg) so the helper emitted an EMPTY password. Fixed (%%s escape), dry-run verified, pushed. The earlier ls-remote success was genuine authentication (the repo measured "private": true — anonymous reads impossible).
+- LAWFUL SYNC: ff-check first (b6c5fac is ancestor of main); `git push github main` = b6c5fac..7a1e44f fast-forward; `git push github v0.1.12-rc1` = *[new tag]* — no force, no overwrite, no history rewrite, anywhere.
+- PARITY 0/0 MEASURED: github/main 7a1e44f == local main; github tag object 888758a -> commit 485016f BYTE-IDENTICAL to local (rev-parse both sides); all 7 tags present on both remotes. Local == canonical == GitHub.
+- ACTIONS RUNS ON GITHUB INFRASTRUCTURE — MEASURED, WITH STEP-LEVEL EVIDENCE: run 33805316308 (main @ 7a1e44f): job "verification (all gates)" SUCCESS, every step success, 58s wall (20:58:14Z -> 20:59:12Z), verification-record artifact uploaded (442 bytes). Run 33805318732 (tag @ 485016f): BOTH jobs success (all gates + signed release artifacts). 18 runs exist in history; a prior b6c5fac run completed success (the GO/NO-GO dossier's "NEVER EXECUTED on GitHub infrastructure" is now stale — superseded by measurement).
+- CI ARTIFACTS INDEPENDENTLY VERIFIED (downloaded from GitHub): sha256sum --check 7/7 OK; engine dist-verify via the CONSUMER path (shipped key beside artifacts, no repository/session state): ALL CHECKS PASSED exit 0; then CROSS-VERIFIED by an independent implementation — openssl Ed25519: "Signature Verified Successfully" exit 0. The first openssl attempt FAILED and was root-caused by measurement, not assumption: the .sig is base64 of the raw 64-byte signature and the shipped manifest is byte-identical to the engine's canonical form (sha256 df8f0aa797f4042f both sides); openssl raw-byte verify passes with the decoded signature. No engine defect — my test input was wrong, and the record says so.
+- HONEST F-3 EVIDENCE: the CI pack report discloses "bootstrap key GENERATED this run — session-bound, disclosed" — measured proof that secrets.RELEASE_SIGNING_KEY is NOT set on GitHub; the offline key ceremony remains Founder-gated.
+- BRANCH PROTECTION: BLOCKED by GitHub plan — API 403 "Upgrade to GitHub Pro or make this repository public to enable this feature." (Founder decision: public repo or Pro plan; nothing the engine can do.)
+- TOKEN HYGIENE: token used env-only throughout (VAE_GITHUB_TOKEN); helper script + token file live OUTSIDE the repository in /tmp (chmod 600/700); zero tokens in any tracked file, .git/config, or commit. RECOMMENDATION RECORDED: rotate the token after the campaign (it transited chat in plaintext).
+
+Stage Summary:
+- The §11 synchronization law is now VERIFIED on all three remotes with byte-identical tag objects; GitHub CI is measured GREEN end-to-end including the signed-release job; the trust chain survived an independent cryptographic cross-check. Remaining GitHub-surface blocker: branch protection (plan-gated) + the F-3 key ceremony (Founder-gated).
