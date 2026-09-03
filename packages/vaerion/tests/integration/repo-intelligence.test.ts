@@ -803,3 +803,36 @@ describe("constitution and version lockstep regression (Phase 8)", () => {
     expect(openapi.info.version).toBe(VERSION);
   });
 });
+
+/* ───────────────────  constitution-of-record derivation (MASTER DIRECTIVE Phase 16)  ─────────────────── */
+
+describe("the ONE derivation + the ONE ledger parser (v1.7 A7, D-B/D-V)", () => {
+  test("constitutionOfRecord names the highest ratified version and fails closed", async () => {
+    const root = join(import.meta.dir, "..", "..", "..", "..");
+    const { constitutionOfRecord } = await import("../../src/repo/constitution.ts");
+    const record = constitutionOfRecord(root);
+    expect(record.version).toBe("v1.7");
+    expect(record.file).toBe("VAERION_CONSTITUTION_v1.7.md");
+    expect(record.path).toBe("docs/constitution/VAERION_CONSTITUTION_v1.7.md");
+    // Fail-closed (P6): no ratified constitution ⇒ no guess, ever.
+    const { mkdtemp } = await import("node:fs/promises");
+    const { tmpdir } = await import("node:os");
+    const empty = await mkdtemp(join(tmpdir(), "vaerion-no-law-"));
+    expect(() => constitutionOfRecord(empty)).toThrow(/fail-closed/);
+  });
+
+  test("parsePhaseLedger reads the real D-T ledger; the in-flight state derives from the same rows", async () => {
+    const root = join(import.meta.dir, "..", "..", "..", "..");
+    const { constitutionOfRecord, parsePhaseLedger } = await import("../../src/repo/constitution.ts");
+    const ledger = parsePhaseLedger(await readFile(join(root, "docs", "constitution", constitutionOfRecord(root).file), "utf8"));
+    expect(ledger.length).toBeGreaterThanOrEqual(15);
+    const last = ledger.at(-1)!;
+    expect(last.status).toBe("✅ complete");
+    expect(last.era).toBe("MASTER DIRECTIVE");
+    expect(ledger.filter((r) => r.status === "▶ in flight").length).toBe(0);
+    // The five-section register era: D-U…D-Y exist alongside the historical rows.
+    for (const phase of ["14", "15"]) {
+      expect(ledger.some((r) => r.phase === phase)).toBe(true);
+    }
+  });
+});

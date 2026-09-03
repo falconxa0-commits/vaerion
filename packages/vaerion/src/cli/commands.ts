@@ -13,6 +13,7 @@
  */
 
 import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import { join, dirname, relative, resolve } from "node:path";
 import { ExitCode, type CliIo, type OutputMode } from "./io.ts";
 import { Renderer } from "./render.ts";
@@ -42,7 +43,7 @@ import { measureCenter } from "../center/center.ts";
 import { researchPrincipal } from "../research/principal.ts";
 import { declareResearchCapability, type ResearchCapabilityDeclaration } from "../research/capability.ts";
 import { assembleResearchContext, collectDocs, renderPackAsSystemPrompt } from "../research/pipeline.ts";
-import { measureRepository, validateWorkflows, simulateWorkflow, evaluateReleaseReadiness, discoverRepository, type SimEvent, type WorkflowDoc } from "../repo/index.ts";
+import { measureRepository, validateWorkflows, simulateWorkflow, evaluateReleaseReadiness, discoverRepository, constitutionOfRecord, parsePhaseLedger, CONSTITUTION_DIR, type SimEvent, type WorkflowDoc } from "../repo/index.ts";
 import { redactString } from "../kernel/redact.ts";
 import { GatewayService, GatewayGatePrompt, type BudgetGuard } from "../gateway/service.ts";
 import { fetchTransport } from "../gateway/transport.ts";
@@ -1286,6 +1287,31 @@ export async function cmdDev(ctx: CommandContext): Promise<number> {
   const ws = workspaceAt(ctx.cwd);
   const runs = await listJournals(ws.journalDir);
   const matrix = new GatewayService({ clock: new SystemClock(), rng: new SystemRng(), idGen: new SystemIdGen(), transport: fetchTransport, secrets: defaultSecretPort() }).matrix();
+  // The constitution of record is DERIVED from the repository this checkout
+  // is (MASTER DIRECTIVE Phase 16, D-B: one derivation, every consumer) —
+  // never a hand-copied literal (the v1.3-era literals taught a law two
+  // generations stale). Outside a repository checkout the honest absence is
+  // taught: the stable law directory, never a guessed version.
+  let constitution: string;
+  let programOfRecord: string;
+  try {
+    const repoRoot = (await discoverRepository(ctx.cwd)).root;
+    constitution = constitutionOfRecord(repoRoot).path;
+    const ledger = parsePhaseLedger(readFileSync(join(repoRoot, constitution), "utf8"));
+    const inFlight = ledger.filter((row) => row.status === "▶ in flight");
+    const last = ledger.at(-1);
+    // The program of record is DERIVED from the D-T ledger (the same rows the
+    // generated roadmap consumes) — the editorial-literal class that went
+    // stale at every campaign boundary is dead.
+    programOfRecord = inFlight.length > 0
+      ? `campaign in flight (D-T): ${inFlight.map((row) => `Phase ${row.phase} (${row.era})`).join(", ")} — the ratified program of record`
+      : last
+        ? `no campaign is in flight: the D-T ledger records ${last.era} complete through Phase ${last.phase}; the next program awaits Founder ratification (P4)`
+        : "the D-T ledger carries no rows — the program state is UNMEASURABLE (fail-closed)";
+  } catch {
+    constitution = `${CONSTITUTION_DIR}/ (the ratified law of record)`;
+    programOfRecord = "the program of record is measurable inside a repository checkout";
+  }
   r(ctx).result({
     command: "dev",
     engine_version: ENGINE_VERSION,
@@ -1305,8 +1331,8 @@ export async function cmdDev(ctx: CommandContext): Promise<number> {
     },
     workspace: { root: ws.root, runs: runs.length },
     spec: "spec/ (single source of truth)",
-    constitution: "docs/constitution/VAERION_CONSTITUTION_v1.6.md",
-    next_milestone: "ASCENSION XIX — THE PRODUCTION OPERATIONS CAMPAIGN (Phases 11–14) ratified under Constitution v1.6 (A6): the CI truth law (the workflow uploads its measured record, red gates NAME their failure, perf budgets hold on every sanctioned host, the roadmap report is generated from one measured source), the remote protection law (D-Q on GitHub: no force-push, no deletion, linear history), the CI execution law (a measured green remote run, then the elevated required check), and the program close (lockstep 0.1.11-rc1 + synchronization) · MS-6 complete · GA remains rehearsed and PENDING FOUNDER GO (P4) — the Founder gates F-2…F-6 remain",
+    constitution,
+    next_milestone: `${programOfRecord} · MS-6 complete · GA remains rehearsed and PENDING FOUNDER GO (P4) — the Founder gates F-2…F-6 remain`,
   });
   return ExitCode.ok;
 }
@@ -2237,7 +2263,7 @@ export async function buildWelcomePayload(ctx: CommandContext): Promise<Record<s
       "vae --help — the command surface of record (help always teaches)",
       "vae tour — a guided, read-only walk of the engine, measured against this machine",
       "docs/QUICKSTART.md — the first-run journey",
-      "docs/constitution/VAERION_CONSTITUTION_v1.3.md — the ratified law",
+      "docs/constitution/ — the ratified law of record (the Amendment Log §11 records every era)",
     ],
     read_only: "nothing was created or modified",
   };
@@ -2336,7 +2362,7 @@ export async function cmdTour(ctx: CommandContext): Promise<number> {
     {
       step: 9,
       title: "Where to go next",
-      measured: ["docs/QUICKSTART.md", "docs/constitution/VAERION_CONSTITUTION_v1.3.md", "spec/ (the contracts)"],
+      measured: ["docs/QUICKSTART.md", "docs/constitution/ — the ratified law of record", "spec/ (the contracts)"],
       try: "vae --help",
       note: "Help always teaches, --json is stable, --dry-run is pure, receipts close every run, and exit codes tell the truth. Build with discipline. Build with receipts. Build Vaerion.",
     },

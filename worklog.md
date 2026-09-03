@@ -746,3 +746,19 @@ Work Log:
 Stage Summary:
 - The law of record is v1.7 BEFORE implementation (§9.3). The ratified program of record: Phase 16 the live-reference law → Phase 17 the provisioning law → Phase 18 the program close.
 - Honest ledger: the canonical store remains absent until Phase 17 re-provisions it with adversarial probes; the statement of record remains D-X: "Vaerion is progressing toward readiness."
+
+---
+Task ID: ASC-MD-PHASE-16
+Agent: Auren — Principal Vaerion Architect (THE LIVE-REFERENCE LAW — the stale-literal class dies at root)
+Task: MASTER DIRECTIVE Phase 16 — ONE derivation of the constitution of record in the engine; every consumer converged; the program-of-record statement derived from the D-T ledger (defects D2/D3/D4 from the Phase 15 ledger).
+
+Work Log:
+- THE ONE DERIVATION: packages/vaerion/src/repo/constitution.ts (L2, pure, deterministic, C2) — constitutionOfRecord(root) names the HIGHEST ratified version present and FAILS CLOSED when none is derivable (P6); parsePhaseLedger(text) is the ONE D-T ledger parser. The barrel (repo/index.ts) exports both.
+- CONSUMERS CONVERGED (D-B: one authority per concept): tools/status.ts dropped its local walk + its private ledger regex and consumes the engine module (the sanctioned engine→tools direction); `vae dev` now DERIVES the constitution field via discoverRepository + constitutionOfRecord (honest stable-directory absence outside a checkout — the temp-workspace-installed-CLI case measured and pinned).
+- THE STALE-LITERAL CLASS DEAD BY CONSTRUCTION: MAIN_HELP, the welcome learn steps, and tour step 9 teach the STABLE law directory (docs/constitution/) — no version literal remains to go stale; `dev.next_milestone` no longer carries an editorial campaign paragraph — the program-of-record statement is DERIVED from the D-T ledger rows (campaign in flight ⇒ named; none ⇒ the measured completion state + P4); the generated roadmap's next-work item 1 is DERIVED the same way — the twice-completed-work defect class (killed once in Phase 11 for hand-maintained reports, reborn in the literal array) is now dead by construction, not vigilance.
+- PINS MOVED WITH THE SURFACES: first-run (help teaches the directory, NEVER a version file — a negative regex pin keeps the class dead), gateway-cli ×2 (the dev payload's constitution field + the position statement, temp-workspace fail-open form pinned), +2 contract tests in repo-intelligence (the real-ledger derivation: v1.7 named, fail-closed throw on a lawless root, the parsed rows' completion state, the in-flight count).
+- EIGHT GATES GREEN on the final tree (480/0/2888/37 — the two derivation tests included); ROADMAP_PROGRESS.md + site-data regenerated from the GREEN record in the lawful order (verify writes the record → status renders from it); the generated header's own attribution fixed to stop pairing the derived version with the historical amendment name.
+
+Stage Summary:
+- No surface in the repository hand-copies a law path or a campaign state anymore. The law references teach truth at every future amendment without anyone remembering to update them — the D-V root-cause standard applied to the reference class itself.
+- Next: Phase 17 — the provisioning law: the D-Q canonical hook versioned as engine law text, ONE sanctioned provisioner/prover, adversarial probes, executed for real.

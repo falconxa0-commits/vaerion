@@ -295,7 +295,11 @@ describe("D-M′ — help and dispatch never disagree (v1.6 surface)", () => {
       expect(MAIN_HELP).toContain(command);
     }
     expect(MAIN_HELP).toContain("welcome front door");
-    expect(MAIN_HELP).toContain("VAERION_CONSTITUTION_v1.6.md");
+    // MASTER DIRECTIVE Phase 16: the help teaches the STABLE law directory —
+    // never a hand-copied version literal (the class that taught v1.3 two
+    // generations stale is dead by construction).
+    expect(MAIN_HELP).toContain("docs/constitution/");
+    expect(MAIN_HELP).not.toMatch(/VAERION_CONSTITUTION_v\d+\.\d+\.md/);
   });
 
   test("the full first-run journey: bare vae → init → bare vae → tour, all exit 0", async () => {

@@ -10,7 +10,7 @@ import { readdirSync, readFileSync, statSync, existsSync, mkdirSync, writeFileSy
 import { join, relative, resolve } from "node:path";
 import { ENGINE_VERSION } from "../packages/vaerion/src/journal/writer.ts";
 import { measureCenter } from "../packages/vaerion/src/center/center.ts";
-import { evaluateReleaseReadiness } from "../packages/vaerion/src/repo/release.ts";
+import { evaluateReleaseReadiness, constitutionOfRecord, parsePhaseLedger } from "../packages/vaerion/src/repo/index.ts";
 
 const ROOT = resolve(import.meta.dir, "..");
 
@@ -47,20 +47,13 @@ const verification = existsSync(join(ROOT, ".vaerion-verification.json"))
     })
   : { ok: false, gates: [], generatedAt: null };
 
-// The constitution of record is DERIVED (highest ratified version present) —
-// never a hand-copied literal (v1.6 A6: generated surfaces derive from reality;
-// a literal here went stale at every amendment).
-const CONSTITUTION_FILE = walk(join(ROOT, "docs", "constitution"))
-  .map((p) => p.split("/").pop() ?? p)
-  .filter((f) => /^VAERION_CONSTITUTION_v\d+\.\d+\.md$/.test(f))
-  .sort((a, b) => {
-    const va = a.match(/v(\d+)\.(\d+)/)!; const vb = b.match(/v(\d+)\.(\d+)/)!;
-    return Number(va[1]) - Number(vb[1]) || Number(va[2]) - Number(vb[2]);
-  })
-  .at(-1);
-if (!CONSTITUTION_FILE) throw new Error("status: no ratified constitution found under docs/constitution");
-const CONSTITUTION_VERSION = `v${CONSTITUTION_FILE.match(/v(\d+\.\d+)/)![1]}`;
-const CONSTITUTION_PATH = join(ROOT, "docs", "constitution", CONSTITUTION_FILE);
+// The constitution of record is DERIVED in the ENGINE (MASTER DIRECTIVE Phase
+// 16, D-B: one derivation, every consumer; the local walk this file once
+// carried is dead — the engine module is the single authority).
+const CONSTITUTION = constitutionOfRecord(ROOT);
+const CONSTITUTION_FILE = CONSTITUTION.file;
+const CONSTITUTION_VERSION = CONSTITUTION.version;
+const CONSTITUTION_PATH = join(ROOT, CONSTITUTION.path);
 
 const engine = countLines(join(ROOT, "packages", "vaerion", "src"), (p) => p.endsWith(".ts"));
 const engineTests = countLines(join(ROOT, "packages", "vaerion", "tests"), (p) => p.endsWith(".ts"));
@@ -84,7 +77,8 @@ const milestones = [
 // ── Command center (constitution v1.3 A3, Phase 6): the SAME measured core
 // `vae center` uses — never a second implementation.
 
-// The phase ledger of record (D-T), parsed from the constitution artifact.
+// The phase ledger of record (D-T), parsed by the ONE engine parser
+// (repo/constitution.ts) — this file once carried its own copy.
 // `id` is the deterministic row identity (parse order) — the ledger's history
 // contains TWO legitimate "Phase 8" rows (the out-of-order git/CI phase of the
 // earlier program and the A4 accessibility law), so phase numbers alone are
@@ -93,10 +87,8 @@ const phaseLedger: Array<{ id: string; phase: string; era: string; status: strin
 try {
   const constitution = readFileSync(CONSTITUTION_PATH, "utf8");
   let row = 0;
-  // Tolerant of any era column value — the ledger gains rows at every phase
-  // boundary and the parser must never need an amendment to keep parsing.
-  for (const m of constitution.matchAll(/^\| ([^|]+) \| ([^|]+) \| (✅ complete|▶ in flight|❌ NOT complete) \| (.+?) \|$/gm)) {
-    phaseLedger.push({ id: `dt-${row++}`, phase: m[1]!.trim(), era: m[2]!.trim(), status: m[3]!.trim(), evidence: m[4]!.trim() });
+  for (const parsed of parsePhaseLedger(constitution)) {
+    phaseLedger.push({ id: `dt-${row++}`, ...parsed });
   }
 } catch {
   // Constitution unreadable: measured absence — the section renders empty.
@@ -166,7 +158,20 @@ const status = {
     "Coverage floors are total-based; per-module ratchets are mechanical follow-up, and totals only move up.",
   ],
   nextWork: [
-    "ASCENSION XIX — THE PRODUCTION OPERATIONS CAMPAIGN (Phases 11–14) is ratified under Constitution v1.6 (A6): the CI truth law (the workflow uploads its measured record, red gates NAME their failure, perf budgets hold on every sanctioned host, the roadmap report is GENERATED from this measured status source), the remote protection law (D-Q branch protection + adversarial probes on GitHub main), the CI execution law (a measured green remote run, then the elevated required check), and the program close (version lockstep 0.1.11-rc1 + synchronization).",
+    // DERIVED from the D-T ledger state (MASTER DIRECTIVE Phase 16) — this
+    // item can never again recommend completed work (the twice-completed-work
+    // defect class is dead by construction, not by vigilance).
+    (() => {
+      const inFlight = phaseLedger.filter((r) => r.status === "▶ in flight");
+      const last = phaseLedger.at(-1);
+      if (inFlight.length > 0) {
+        return `Campaign in flight (D-T): ${inFlight.map((r) => `Phase ${r.phase} (${r.era})`).join(", ")} — the ratified program of record.`;
+      }
+      if (last) {
+        return `No campaign is in flight: the D-T ledger records ${last.era} complete through Phase ${last.phase} (evidence of record in the constitution's §11 Amendment Log); the next program awaits Founder ratification (P4).`;
+      }
+      return "The D-T ledger carries no parseable rows — the program state is UNMEASURABLE (fail-closed).";
+    })(),
     "GA remains rehearsed and PENDING FOUNDER GO (P4); the Founder gates (F-2 legal name, F-3 key ceremony, F-4 substrate ratification, F-5 publish, F-6 real-provider cassettes) are the remaining path to full GA.",
     "MS-6 leftovers: native single-binary installers (host-gated: brew/winget/dmg/rpm authored in Phase 1, awaiting their platforms); the daemon packages route group (wire parity, spec/openapi regen).",
     "Release train steps (publish, announce, key ceremony) — Founder-gated; artifacts are reproducible via tools/dist-pack.ts at the release tag.",
@@ -193,8 +198,9 @@ function renderRoadmapProgress(s: typeof status): string {
     "# Vaerion — Roadmap Progress",
     "",
     "> **GENERATED** by `tools/status.ts` from the measured status of record — never hand-edited",
-    `> (constitution ${s.constitution.version} A6, Phase 11: the roadmap report of record is generated from the`,
-    "> ONE measured status source). Regenerate with `bun tools/status.ts`; hand edits are defects.",
+    `> (constitution ${s.constitution.version} — the generator itself was ratified by the generated-roadmap law,`,
+    "> v1.6 A6 Phase 11: the roadmap report of record comes from the ONE measured status source).",
+    "> Regenerate with `bun tools/status.ts`; hand edits are defects.",
     "",
     `- Engine version of record: \`${s.engineVersion}\``,
     `- Constitution of record: \`${s.constitution.version}\` (Amendment Log §11)`,

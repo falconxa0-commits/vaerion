@@ -133,7 +133,7 @@ Global flags:
 
 Exit codes: 0 ok · 1 internal · 2 usage · 3 broker-denied · 4 provider-down · 5 partial-with-repair-hint
 
-Learn more: docs/constitution/VAERION_CONSTITUTION_v1.6.md · spec/ (contracts)
+Learn more: docs/constitution/ — the ratified law of record · spec/ (contracts)
 `;
 
 const COMMAND_HELP: Record<string, string> = {

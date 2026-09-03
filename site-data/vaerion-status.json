@@ -1,25 +1,25 @@
 {
-  "generatedAt": "2026-09-02T23:06:15.632Z",
+  "generatedAt": "2026-09-03T05:31:36.704Z",
   "engineVersion": "0.1.11-rc1",
   "substrate": "TypeScript on Bun (ADR-0018 — provisional with recorded migration path; Founder ratification pending)",
   "verification": {
-    "generatedAt": "2026-09-02T23:06:15.373Z",
+    "generatedAt": "2026-09-03T05:30:38.082Z",
     "ok": true,
     "gates": [
       {
         "gate": "typecheck-engine",
         "ok": true,
-        "durationMs": 4206
+        "durationMs": 4312
       },
       {
         "gate": "typecheck-sdk",
         "ok": true,
-        "durationMs": 3825
+        "durationMs": 3407
       },
       {
         "gate": "tests",
         "ok": true,
-        "durationMs": 6795
+        "durationMs": 6612
       },
       {
         "gate": "layerlint",
@@ -29,39 +29,39 @@
       {
         "gate": "constitutional-check",
         "ok": true,
-        "durationMs": 214
+        "durationMs": 242
       },
       {
         "gate": "perf-budget",
         "ok": true,
-        "durationMs": 277
+        "durationMs": 317
       },
       {
         "gate": "a11y-structural",
         "ok": true,
-        "durationMs": 25
+        "durationMs": 26
       },
       {
         "gate": "repo-lint",
         "ok": true,
-        "durationMs": 10217
+        "durationMs": 10872
       }
     ],
     "measured": {
-      "testsPassed": 478,
+      "testsPassed": 480,
       "testsFailed": 0,
-      "expectations": 2853,
+      "expectations": 2888,
       "testFiles": 37
     }
   },
   "constitution": {
-    "file": "VAERION_CONSTITUTION_v1.6.md",
-    "version": "v1.6"
+    "file": "VAERION_CONSTITUTION_v1.7.md",
+    "version": "v1.7"
   },
   "tests": {
     "suites": 37,
-    "assertedExpectations": 2853,
-    "totalTests": 478,
+    "assertedExpectations": 2888,
+    "totalTests": 480,
     "testsFailed": 0,
     "coverage": {
       "lines": 86.52,
@@ -72,12 +72,12 @@
   },
   "code": {
     "engine": {
-      "files": 104,
-      "lines": 21084
+      "files": 105,
+      "lines": 21211
     },
     "engineTests": {
       "files": 37,
-      "lines": 10563
+      "lines": 10631
     },
     "sdk": {
       "files": 3,
@@ -85,49 +85,49 @@
     },
     "tools": {
       "files": 13,
-      "lines": 2433
+      "lines": 2439
     }
   },
   "contracts": {
     "specFiles": [
+      "spec/wit/vaerion-extension@0.1.0.wit",
+      "spec/openapi.json",
+      "spec/errors.yaml",
+      "spec/schemas/receipt.schema.json",
+      "spec/schemas/broker-decision.schema.json",
+      "spec/schemas/capability-declaration.schema.json",
+      "spec/schemas/envelope.schema.json",
+      "spec/schemas/journal-record.schema.json",
+      "spec/schemas/evidence-record.schema.json",
+      "spec/schemas/gate.schema.json",
+      "spec/schemas/vaerion-yaml.schema.json",
       "spec/README.md",
       "spec/CHANGELOG-SPEC.md",
-      "spec/openapi.json",
-      "spec/wit/vaerion-extension@0.1.0.wit",
-      "spec/events/registry.json",
-      "spec/errors.yaml",
-      "spec/schemas/gate.schema.json",
-      "spec/schemas/journal-record.schema.json",
-      "spec/schemas/broker-decision.schema.json",
-      "spec/schemas/receipt.schema.json",
-      "spec/schemas/vaerion-yaml.schema.json",
-      "spec/schemas/evidence-record.schema.json",
-      "spec/schemas/envelope.schema.json",
-      "spec/schemas/capability-declaration.schema.json"
+      "spec/events/registry.json"
     ],
     "adrCount": 21,
     "adrFiles": [
-      "docs/adr/0001-monorepo-single-version-policy.md",
-      "docs/adr/0009-wasi-p2-components-capability-broker.md",
-      "docs/adr/0012-cassette-mockbrain-hermetic-evals.md",
-      "docs/adr/README.md",
-      "docs/adr/0015-per-platform-exec-sandbox-matrix.md",
-      "docs/adr/0010-loopback-daemon-pairing-token.md",
-      "docs/adr/0013-os-keychain-first-secrets-env-fallback.md",
+      "docs/adr/0006-event-sourced-run-journals-checkpoint-chaining.md",
+      "docs/adr/0003-contract-first-specs-drive-sdk-generation.md",
       "docs/adr/0008-sqlite-wal-fts5-vec-local-store.md",
       "docs/adr/0020-daemon-http-stack-ts-substrate.md",
-      "docs/adr/0016-reproducible-vxn-bundles.md",
-      "docs/adr/0006-event-sourced-run-journals-checkpoint-chaining.md",
-      "docs/adr/0002-versioned-event-spine-envelope.md",
+      "docs/adr/0005-tiered-intelligence-progressive-enhancement.md",
       "docs/adr/0007-strict-subset-yaml-vaeryaml-manifests.md",
-      "docs/adr/0003-contract-first-specs-drive-sdk-generation.md",
+      "docs/adr/0012-cassette-mockbrain-hermetic-evals.md",
+      "docs/adr/0011-tokio-axum-tower-stack.md",
+      "docs/adr/0014-stable-diagnostics-catalog-ecodes.md",
+      "docs/adr/0019-single-sanctioned-gateway-egress.md",
+      "docs/adr/0010-loopback-daemon-pairing-token.md",
+      "docs/adr/0016-reproducible-vxn-bundles.md",
+      "docs/adr/0013-os-keychain-first-secrets-env-fallback.md",
+      "docs/adr/0002-versioned-event-spine-envelope.md",
+      "docs/adr/README.md",
+      "docs/adr/0015-per-platform-exec-sandbox-matrix.md",
+      "docs/adr/0009-wasi-p2-components-capability-broker.md",
       "docs/adr/0017-reserved-cloud-seams.md",
       "docs/adr/0004-centralized-permission-broker.md",
-      "docs/adr/0014-stable-diagnostics-catalog-ecodes.md",
-      "docs/adr/0018-engine-substrate-typescript-bun.md",
-      "docs/adr/0005-tiered-intelligence-progressive-enhancement.md",
-      "docs/adr/0011-tokio-axum-tower-stack.md",
-      "docs/adr/0019-single-sanctioned-gateway-egress.md"
+      "docs/adr/0001-monorepo-single-version-policy.md",
+      "docs/adr/0018-engine-substrate-typescript-bun.md"
     ]
   },
   "milestones": [
@@ -301,50 +301,43 @@
       "era": "ASCENSION XIX",
       "status": "✅ complete",
       "evidence": "the CI execution law: run #7 (`33692553230` @ `97e5778`) — the FIRST fully-green remote run, every step green including the record upload, artifact downloaded and verified (ok:true, 8/8 gates, measured 475/0/2848/37); the harness-test timeout surfaced BY NAME by the Phase 11 diagnostics and fixed (60s timeboxes); the staged check ELEVATED per the A6 clause, the elevation MEASURED (push declined at pre-receive — required checks are structurally incompatible with the direct-push sync path), the discovery recorded and the check restored STAGED with the elevation guard preserved (P4: a PR-based flow is a Founder decision); run #8 (`33693201464` @ `5676962`) — SUCCESS; report of record updated; worklog `ASC-XIX-PHASE-13`"
+    },
+    {
+      "id": "dt-16",
+      "phase": "14",
+      "era": "ASCENSION XIX",
+      "status": "✅ complete",
+      "evidence": "program close: version lockstep 0.1.11-rc1 across every measured surface (18 surfaces; goldens re-blessed — only the engine_version cascade moved); the eval-golden hermeticity defect fixed (found by the bless itself); EIGHT gates green (478/0/2853/37); release commit `fd0941c`; tag `v0.1.11-rc1` pushed ONCE to each remote; dist-pack deterministic tarball 1,334,410 bytes + Ed25519 trust chain ALL CHECKS PASSED; canonical + GitHub synchronization 0/0 (§11 ledger); the remote release job GREEN (bootstrap-key path disclosed); worklog `ASC-XIX-PROGRAM-CLOSE`"
+    },
+    {
+      "id": "dt-17",
+      "phase": "15",
+      "era": "MASTER DIRECTIVE",
+      "status": "✅ complete",
+      "evidence": "constitution v1.7 (A7) ratified FIRST (§9.3): D-U…D-Y register law added; v1.6 retained unmodified (diff-measured); pin tests moved + extended (v1.7, D-U…D-Y, A7 history, Phases 15–18, v1.6 retention); the FIRST D-V campaign records committed (docs/ga/MASTER-DIRECTIVE-REALITY-RECOVERY.md: the measured reality report + the defect ledger D1–D5 + the execution plan); worklog `ASC-MD-PHASE-15`"
     }
   ],
   "release": {
     "measured": true,
     "ready": false,
     "verdict": "BLOCKED",
-    "passed": 9,
+    "passed": 8,
     "total": 12,
     "blockers": [
-      "git-tree-clean: working tree dirty: 0 staged, 21 unstaged, 0 untracked",
-      "release-tag-binding: HEAD is not exactly at a v* release tag"
+      "git-tree-clean: working tree dirty: 0 staged, 10 unstaged, 1 untracked",
+      "release-tag-binding: HEAD is not exactly at a v* release tag",
+      "release-artifacts: artifact set incomplete: dist/MANIFEST.json, dist/MANIFEST.json.sig, dist/SHA256SUMS, dist/VERIFY.md missing"
     ]
   },
   "commandCenter": {
     "workspace": {
       "root": "/home/z/my-project/examples/vaerion-demo",
-      "runs": 3
+      "runs": 0
     },
     "operations": {
-      "runs": [
-        {
-          "run_id": "crn_run_01M1HYV91Q7YPZHMEPWZK0WFZM",
-          "records": 5,
-          "events": 3,
-          "verified": true,
-          "receipt": true
-        },
-        {
-          "run_id": "crn_run_01M1HZ1ABXJN0W8WSFJ1E35KNC",
-          "records": 5,
-          "events": 3,
-          "verified": true,
-          "receipt": true
-        },
-        {
-          "run_id": "crn_run_01M1HZGSD943QCCEXDPDYSVV3J",
-          "records": 5,
-          "events": 3,
-          "verified": true,
-          "receipt": true
-        }
-      ],
+      "runs": [],
       "journals_verified": true,
-      "receipts": 3,
+      "receipts": 0,
       "metering": {
         "invocations": 0,
         "failed": 0,
@@ -375,16 +368,20 @@
       "measured": true,
       "ready": false,
       "verdict": "BLOCKED",
-      "passed": 9,
+      "passed": 8,
       "total": 12,
       "blockers": [
         {
           "check": "git-tree-clean",
-          "detail": "working tree dirty: 0 staged, 21 unstaged, 0 untracked"
+          "detail": "working tree dirty: 0 staged, 10 unstaged, 1 untracked"
         },
         {
           "check": "release-tag-binding",
           "detail": "HEAD is not exactly at a v* release tag"
+        },
+        {
+          "check": "release-artifacts",
+          "detail": "artifact set incomplete: dist/MANIFEST.json, dist/MANIFEST.json.sig, dist/SHA256SUMS, dist/VERIFY.md missing"
         }
       ]
     },
@@ -402,7 +399,7 @@
     "Coverage floors are total-based; per-module ratchets are mechanical follow-up, and totals only move up."
   ],
   "nextWork": [
-    "ASCENSION XIX — THE PRODUCTION OPERATIONS CAMPAIGN (Phases 11–14) is ratified under Constitution v1.6 (A6): the CI truth law (the workflow uploads its measured record, red gates NAME their failure, perf budgets hold on every sanctioned host, the roadmap report is GENERATED from this measured status source), the remote protection law (D-Q branch protection + adversarial probes on GitHub main), the CI execution law (a measured green remote run, then the elevated required check), and the program close (version lockstep 0.1.11-rc1 + synchronization).",
+    "No campaign is in flight: the D-T ledger records MASTER DIRECTIVE complete through Phase 15 (evidence of record in the constitution's §11 Amendment Log); the next program awaits Founder ratification (P4).",
     "GA remains rehearsed and PENDING FOUNDER GO (P4); the Founder gates (F-2 legal name, F-3 key ceremony, F-4 substrate ratification, F-5 publish, F-6 real-provider cassettes) are the remaining path to full GA.",
     "MS-6 leftovers: native single-binary installers (host-gated: brew/winget/dmg/rpm authored in Phase 1, awaiting their platforms); the daemon packages route group (wire parity, spec/openapi regen).",
     "Release train steps (publish, announce, key ceremony) — Founder-gated; artifacts are reproducible via tools/dist-pack.ts at the release tag.",
