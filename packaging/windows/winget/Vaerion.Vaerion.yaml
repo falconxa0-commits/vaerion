@@ -5,7 +5,7 @@
 # VERIFICATION STATUS: authored on Linux; winget unavailable here.
 # Platform marker: UNVERIFIED — WINGET.
 PackageIdentifier: Vaerion.Vaerion
-PackageVersion: 0.1.11-rc1
+PackageVersion: 0.1.12-rc1
 DefaultLocale: en-US
 ManifestType: version
 ManifestVersion: 1.6.0

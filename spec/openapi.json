@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Vaerion local API",
-    "version": "0.1.11-rc1",
+    "version": "0.1.12-rc1",
     "summary": "The loopback daemon surface: the same contracts the CLI exercises, over HTTP/SSE.",
     "description": "Generated from the daemon route table (ADR-0010 decision 4, ADR-0020). Every described route is implemented; every implemented route is described. Authentication is the first-run pairing token (Authorization: Bearer); only /health, /version and /openapi.json are open. The daemon binds loopback only and never makes outbound calls.",
     "license": {
@@ -821,6 +821,6 @@
     "eventTypes": 41,
     "errorCodes": 81,
     "envelopeVersion": 1,
-    "engineVersion": "0.1.11-rc1"
+    "engineVersion": "0.1.12-rc1"
   }
 }
