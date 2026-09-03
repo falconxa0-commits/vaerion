@@ -51,6 +51,8 @@ cd examples/vaerion-demo
 
 ```sh
 vae run demo --sources ./sources --query "determinism"
+# (or bare — `vae run demo --query "determinism"` — the default derives from
+#  the declared capabilities in vaerion.yaml)
 ```
 
 What happened: local sources were indexed, the query executed through the
