@@ -1,0 +1,119 @@
+# Vaerion release publication — the production half of the release train.
+#
+# verify.yml (on a v* tag) re-runs the gates and PACKS the signed artifact set.
+# This workflow PUBLISHES it: dispatch it with a v* tag and it re-packs the
+# same deterministic artifact set ON the tag (the tarball is byte-reproducible
+# — proven in every dist-report), then creates the GitHub Release with the
+# artifacts, checksums, signature, and the release notes of record.
+#
+# Rollback law (docs/operations/DEPLOYMENT.md): tags are immutable; a bad
+# release is never rewritten — it is marked, and the previous tag is
+# re-dispatched here. This workflow is idempotent per tag (create-or-update).
+#
+# Least privilege: this is the ONLY workflow that needs contents:write —
+# creating releases and uploading assets. verify.yml stays read-only.
+
+name: release-publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'The v* tag of record to publish (e.g. v0.1.13-rc1)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: publish the signed release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TAG: ${{ inputs.tag }}
+    steps:
+      - name: Validate the tag input (no shell injection into the release path)
+        run: |
+          case "$TAG" in
+            v[0-9]*.[0-9]*.[0-9]*-rc[0-9]*) echo "tag ok: $TAG" ;;
+            *) echo "REFUSING: '$TAG' is not a vMAJOR.MINOR.PATCH-rcN tag" >&2; exit 2 ;;
+          esac
+
+      - name: Checkout the tag of record (full history — the repository is the evidence)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+
+      - name: Setup Bun (pinned — the verified substrate)
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.14"
+
+      - name: Install (frozen lockfile — supply-chain law)
+        run: bun install --frozen-lockfile
+
+      - name: Provision the release signing key (secret → untracked key file)
+        # The same fail-closed contract as verify.yml's release job: without
+        # the secret the packer generates a session-bound bootstrap key AND
+        # DISCLOSES it in dist-report.json — a pack report without the
+        # disclosure line is the proof the production key signed this release.
+        env:
+          RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
+        run: |
+          if [ -n "$RELEASE_SIGNING_KEY" ]; then
+            mkdir -p keys
+            printf '%s' "$RELEASE_SIGNING_KEY" > keys/release-signing.key
+            chmod 600 keys/release-signing.key
+          else
+            echo "RELEASE_SIGNING_KEY not set — the packager will fail closed to a bootstrap key (disclosed in the report)"
+          fi
+
+      - name: Package the release (fail-closed; re-runs all gates internally)
+        run: bun run tools/dist-pack.ts
+
+      - name: Assert the production key signed this pack (the tripwire, inverted)
+        # Shell-truth law (Phase 8, E2306): the bootstrap disclosure line must
+        # be ABSENT — its presence means the secret was unreadable and this
+        # release must not be published.
+        run: |
+          if grep -q "bootstrap key GENERATED this run" dist/dist-report.json; then
+            echo "REFUSING to publish: the pack report discloses a BOOTSTRAP key" >&2
+            exit 2
+          fi
+          echo "production key confirmed (no bootstrap disclosure in dist-report.json)"
+
+      - name: Publish the GitHub Release (idempotent per tag)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NOTES_FILE="docs/RELEASE-NOTES-${TAG}.md"
+          EXTRA_ARGS=()
+          if [ -f "$NOTES_FILE" ]; then
+            EXTRA_ARGS+=(--notes-file "$NOTES_FILE")
+          else
+            EXTRA_ARGS+=(--generate-notes)
+          fi
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "release $TAG exists — updating assets and body (idempotent re-publish)"
+            gh release upload "$TAG" dist/* --clobber
+            gh release edit "$TAG" "${EXTRA_ARGS[@]}"
+          else
+            gh release create "$TAG" dist/* --title "Vaerion ${TAG}" "${EXTRA_ARGS[@]}"
+          fi
+          gh release view "$TAG" --json name,tagName,url,assets
+
+      - name: Record the publication (the measured close)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo "## Publication record"
+            echo ""
+            echo "- tag: \`$TAG\`"
+            echo "- release URL: $(gh release view "$TAG" --json url -q .url)"
+            echo "- assets: $(gh release view "$TAG" --json assets -q 'length(.assets)')"
+            echo "- pack report: production key (no bootstrap disclosure)"
+          } >> "$GITHUB_STEP_SUMMARY"

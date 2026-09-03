@@ -1002,3 +1002,39 @@ Work Log:
 
 Stage Summary:
 - The campaign opens from a TRUE baseline: every directive claim confirmed by fresh measurement; two new realities exploited (branch protection now enableable) and repaired (canonical restored). No implementation performed beyond the audit doc + the lawful canonical re-provision. Token hygiene held (env-only, no repo artifact); rotation still recommended post-campaign.
+
+---
+Task ID: 2
+Agent: Auren — Principal Architect (ASCENSION XXV, Phase XXVI)
+Task: Legal Identity Foundation — audit the identity surface, create LEGAL.md, update metadata, verify no conflicting identity remains.
+
+Work Log:
+- MEASURED the identity surface: LICENSE = Apache-2.0 ("Copyright 2026 Auren"); npm author fields = Auren / auren@vaerion.dev; pyproject authors = Auren; deb/rpm Maintainer = Auren; dashboard footer = "Apache-2.0 · Founder: Auren"; zero per-file copyright headers in code (no conflicts possible from headers — a recorded decision, Apache-2.0 §4(d) is optional).
+- FOUND AND FIXED A REAL CONFLICT: the winget locale manifest claimed "Copyright (c) Vaerion contributors" against the LICENSE of record — aligned to "Copyright 2026 Auren" with the finding recorded in the file.
+- CREATED LEGAL.md: identity table, ownership statement (incl. the P1-P4 authority layers and the no-assignment contributor model), licensing documentation (incl. the artifacts-are-your-data ruling and the dependency-inventory pointer — no invented per-package claims), inbound=outbound contributor terms, unregistered-trademark policy, the F-2 pseudonym disclosure with the mechanical sweep its resolution will trigger.
+- UPDATED: root package.json author; engine + npm-publish manifests gained repository/bugs/homepage (the repo is public — measured in Task 1); pyproject [project.urls] filled with REAL URLs (stale Founder-gated comment removed); README governance section points at LEGAL.md; dashboard reports index carries LEGAL.md + the baseline audit.
+- VERIFIED: repo-wide sweep found zero conflicting copyright claims (the one "contributors" hit is a third-party MIT credit in a design-inspiration doc); ALL GATES GREEN 523/0/41.
+
+Stage Summary:
+- The identity layer of record exists and is consistent on every measured surface; one real conflict fixed; F-2 remains honestly Founder-gated with its future sweep documented.
+
+---
+Task ID: 3
+Agent: Auren — Principal Release Commander / Security Auditor (ASCENSION XXV, Phase XXVII)
+Task: Production Signing Key Ceremony — production key process, RELEASE_SIGNING_KEY provisioning, CI production-key verification, three-way artifact verification, ceremony documentation.
+
+Work Log:
+- READ THE LAW FIRST (dist-pack key loading + RISK-LEDGER R-2 + the workflow consumer): the secret provisions keys/release-signing.key fail-closed; the tracked pub is the key of record moved ONLY by this ceremony; bootstrap disclosure in a pack report = the tripwire.
+- KEY GENERATED (Ed25519, PKCS8 PEM, openssl; /tmp chmod 600 outside the repo; node createPrivateKey format-check passed) — fingerprint sha256(spki-der) f28f089b43c0f7e776803cb83a47fb91.
+- SECRET PROVISIONED: GitHub repo public key fetched -> PyNaCl SealedBox -> PUT RELEASE_SIGNING_KEY = HTTP 201; secrets list re-measured (total 1, name-only). First attempt failed on a wrong field name (public_key vs key) — caught by measurement, fixed.
+- KEY OF RECORD ROTATED: keys/release-signing.pub = production public half (tracked-file rotation, the lawful F-3 move). The local private copy SHRED-destroyed after provisioning — the key is intentionally unrecoverable; recovery IS rotation.
+- CEREMONY LAW RECORDED: docs/security/SIGNING-CEREMONY.md (process as executed with honest limitations — in-session under the Founder's written directive, NOT air-gapped; ownership; rotation policy; recovery procedure incl. the compromise path; the three verification legs + the bootstrap-disclosure tripwire). RISK-LEDGER R-2 CLOSED with the residual labeled. SECURITY.md trust-chain section rewritten to post-ceremony reality.
+- THE RELEASE TRAIN (v0.1.12-rc1 -> 0.1.13-rc1): version register bumped across all 18 surfaces + VERSION/ENGINE_VERSION literals; openapi regenerated via the sanctioned generator; RPM %changelog APPENDED — the bump script initially REWROTE the 0.1.12.rc1-1 entry (history loss), caught by reading the file back, repaired before commit (history preserved + new epoch on top); golden fixtures blessed via VAE_BLESS=1 after diff-exact review (engine_version enters the sealed chain content — exactly one non-hash line moved); CHANGELOG entry + docs/RELEASE-NOTES-v0.1.13-rc1.md (with the explicit not-claimed list).
+- BRANCH PROTECTION ENABLED ON main AND GET-VERIFIED: required check "verification (all gates)" (PR merges), required_linear_history, allow_force_pushes=false, allow_deletions=false, enforce_admins=false (the recorded solo-maintainer direct-push law; external contributors face the full gate). The previously BLOCKED item converted: the repo went public, which was the 403's own escape condition.
+- CI REALITY: pushed main + tag (the FIRST push failed — the prior session's credential helper was lost with the environment; re-provisioned env-only). The main run FAILED at Install — root-caused from the CI logs to a TRANSIENT npm-registry download failure (next@16.1.3 tarball), NOT a lockfile/code defect; re-run (HTTP 201) -> completed SUCCESS. The TAG RUN (33817894269) SUCCEEDED FIRST TRY.
+- THE THREE-WAY VERIFICATION ON THE CI ARTIFACTS (downloaded, consumer path): (1) sha256sum --check 7/7 OK; (2) engine dist-verify run from the SHIPPED TARBALL itself: ALL CHECKS PASSED exit 0; (3) independent openssl Ed25519 (raw decoded 64-byte signature): "Signature Verified Successfully" exit 0.
+- THE PRODUCTION-KEY PROOF: dist-report.json contains NO bootstrap disclosure; VERIFY.md fingerprint = f28f089b43c0f7e776803cb83a47fb91 (the ceremony key); shipped pub byte-identical to the tracked key of record; reproducible tarball proven in the CI report (built twice, byte-compared).
+- PARITY: main 6ebcc0d + tag v0.1.13-rc1 (object 3968424e) present and identical on local, canonical, github — 0/0.
+
+Stage Summary:
+- F-3 is closed to the mechanical extent possible from here: production key live in CI, key of record rotated, ceremony law recorded, and the FIRST PRODUCTION-SIGNED RELEASE (v0.1.13-rc1) verified three ways on real infrastructure. Honest residuals: in-session generation (not air-gapped); branch protection keeps the admin bypass; registry flakes remain an external reality (measured once, recovered by re-run).
