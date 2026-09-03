@@ -178,6 +178,10 @@ do_uninstall() {
     if [ -d "$HOME/.npm-global/lib/node_modules/vaerion" ]; then
       npm_config_prefix="$HOME/.npm-global" npm uninstall -g vaerion >/dev/null 2>&1 && say "vaerion-install: npm user-prefix package removed" || true
     fi
+    # Leave nothing behind: each rmdir removes ONLY an empty directory — a
+    # prefix the user had before (with other packages) is untouched by
+    # construction; npm's empty skeleton (bin/, lib/, lib/node_modules/) goes.
+    rmdir "$HOME/.npm-global/lib/node_modules" "$HOME/.npm-global/lib" "$HOME/.npm-global/bin" "$HOME/.npm-global" 2>/dev/null || true
   fi
   if [ -d "$PREFIX" ]; then
     rm -rf "$PREFIX"
@@ -230,7 +234,7 @@ do_install_npm() {
   else
     if [ -n "$VERSION" ]; then npm install -g "vaerion@$VERSION"; else npm install -g vaerion@latest; fi
   fi
-  say "vaerion-install: installed via npm. `vae` is in npm's global bin${npm_config_prefix:+ (user prefix: $npm_config_prefix)}."
+  say "vaerion-install: installed via npm. \`vae\` is in npm's global bin${npm_config_prefix:+ (user prefix: $npm_config_prefix)}."
   say "vaerion-install: verify with:  vae --version   &&   vae doctor"
 }
 

@@ -66,6 +66,17 @@ describe("ASCENSION XX — ecosystem defect closures pinned", () => {
     expect(block).toContain('cp -R "$SRC_ROOT/packages/vaerion/src" "$DEST/src"');
   });
 
+  test("XX-D9: installer output never executes backtick command substitution", async () => {
+    const sh = await readRepo("packaging/install.sh");
+    // The npm success line measured live as `vae` EXECUTING inside the message.
+    expect(sh).toContain('\\`vae\\` is in npm\'s global bin');
+  });
+
+  test("XX-D7: uninstall removes npm's empty user-prefix skeleton, never user data", async () => {
+    const sh = await readRepo("packaging/install.sh");
+    expect(sh).toContain('rmdir "$HOME/.npm-global/lib/node_modules" "$HOME/.npm-global/lib" "$HOME/.npm-global/bin" "$HOME/.npm-global"');
+  });
+
   test("XX-D4: dist-pack NEVER writes the tracked key of record", async () => {
     const pack = await readRepo("tools/dist-pack.ts");
     // The hygiene pin: no write to the tracked public key, anywhere.
