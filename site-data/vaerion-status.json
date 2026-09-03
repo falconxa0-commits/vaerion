@@ -1,57 +1,57 @@
 {
-  "generatedAt": "2026-09-03T15:51:11.741Z",
-  "engineVersion": "0.1.11-rc1",
+  "generatedAt": "2026-09-03T16:45:39.635Z",
+  "engineVersion": "0.1.12-rc1",
   "substrate": "TypeScript on Bun (ADR-0018 — provisional with recorded migration path; Founder ratification pending)",
   "verification": {
-    "generatedAt": "2026-09-03T15:49:16.291Z",
+    "generatedAt": "2026-09-03T16:45:33.532Z",
     "ok": true,
     "gates": [
       {
         "gate": "typecheck-engine",
         "ok": true,
-        "durationMs": 4605
+        "durationMs": 4214
       },
       {
         "gate": "typecheck-sdk",
         "ok": true,
-        "durationMs": 3242
+        "durationMs": 3385
       },
       {
         "gate": "tests",
         "ok": true,
-        "durationMs": 6160
+        "durationMs": 7039
       },
       {
         "gate": "layerlint",
         "ok": true,
-        "durationMs": 31
+        "durationMs": 39
       },
       {
         "gate": "constitutional-check",
         "ok": true,
-        "durationMs": 233
+        "durationMs": 248
       },
       {
         "gate": "perf-budget",
         "ok": true,
-        "durationMs": 261
+        "durationMs": 302
       },
       {
         "gate": "a11y-structural",
         "ok": true,
-        "durationMs": 37
+        "durationMs": 25
       },
       {
         "gate": "repo-lint",
         "ok": true,
-        "durationMs": 10649
+        "durationMs": 10957
       }
     ],
     "measured": {
-      "testsPassed": 486,
+      "testsPassed": 499,
       "testsFailed": 0,
-      "expectations": 2942,
-      "testFiles": 38
+      "expectations": 2979,
+      "testFiles": 39
     }
   },
   "constitution": {
@@ -59,9 +59,9 @@
     "version": "v1.7"
   },
   "tests": {
-    "suites": 38,
-    "assertedExpectations": 2942,
-    "totalTests": 486,
+    "suites": 39,
+    "assertedExpectations": 2979,
+    "totalTests": 499,
     "testsFailed": 0,
     "coverage": {
       "lines": 86.52,
@@ -73,11 +73,11 @@
   "code": {
     "engine": {
       "files": 106,
-      "lines": 21323
+      "lines": 21382
     },
     "engineTests": {
-      "files": 38,
-      "lines": 10772
+      "files": 39,
+      "lines": 10934
     },
     "sdk": {
       "files": 3,
@@ -85,7 +85,7 @@
     },
     "tools": {
       "files": 14,
-      "lines": 2656
+      "lines": 2694
     }
   },
   "contracts": {
@@ -336,6 +336,34 @@
       "era": "MASTER DIRECTIVE",
       "status": "✅ complete",
       "evidence": "the program close: §11 synchronization-ledger rows appended (canonical + GitHub, measured); GitHub main fast-forwarded `723b625..e0c43a4` and re-measured (`ls-remote` HEAD == local; D-Q descriptor re-measured field-by-field: no force-push, no deletion, linear history, admins included, required checks STAGED null); the canonical store VERIFIED under the law (provisioned + probed + 0/0); EIGHT gates green (486/0/2942/38); ROADMAP_PROGRESS.md + site-data regenerated from the GREEN record; the Remaining Reality Report (D-W) delivered to the Founder; worklog `ASC-MD-PROGRAM-CLOSE`"
+    },
+    {
+      "id": "dt-21",
+      "phase": "19",
+      "era": "ASCENSION XX",
+      "status": "✅ complete",
+      "evidence": "the D-Y Empty Machine Test EXECUTED for the first time as a connected journey (eleven legs under a fresh $HOME + offline tarball: discover/install/verify/init/use/recover/upgrade/remove + npm/wheel/dist consumer legs); defects XX-D4..D7 measured and root-caused (docs/ga/ASCENSION-XX-REALITY-RECOVERY.md + docs/ga/ASCENSION-XX-EMPTY-MACHINE-TEST.md committed BEFORE implementation, D-V); the canonical store's THIRD session-boundary loss restored deterministically under the Phase 17 law (provisioned, synchronized 0/0, probed: 4 refusals + unchanged, six tags byte-identical) — the D1 class closure PROVEN; GitHub live-state honestly UNVERIFIED (credentials absent at the session boundary, env-only discipline); worklog `ASC-XX-PHASE-19`"
+    },
+    {
+      "id": "dt-22",
+      "phase": "20",
+      "era": "ASCENSION XX",
+      "status": "✅ complete",
+      "evidence": "the ecosystem defect closures, each at root and pinned (tests/integration/ecosystem-journeys.test.ts): XX-D4 (the signing public key ships BESIDE the artifacts, manifest-bound, manifestVersion 3; dist-pack NEVER writes the tracked key of record; dist-verify resolves the key beside the manifest, fail-closed teaching) · XX-D5 (the installer CREATES missing rc files — a fresh $HOME persists PATH; uninstall removes the WHOLE marker block) · XX-D6 (TEMPLATE_SCAFFOLD_FILES: the demo template scaffolds exactly what its config declares; the bare 'run demo' default derives from the workspace config of record — the engine-docs literal pinned ABSENT; the first-run journey tested AS TAUGHT) · XX-D7 (npm user-prefix fallback with PATH teaching; uninstall removes npm's empty skeleton, user data untouched by construction) · XX-D8 (a same-version reinstall REFRESHES the version tree — the nesting defect measured live by re-executing the fixed journey) · XX-D9 (installer output never executes backtick substitution); broker-gates parity moved to declared capabilities; EIGHT gates green (499/0); worklog `ASC-XX-PHASE-20`"
+    },
+    {
+      "id": "dt-23",
+      "phase": "21",
+      "era": "ASCENSION XX",
+      "status": "✅ complete",
+      "evidence": "the audit-premium surface: the footer's mobile safe-area inset class was corrupted and silently unenforced — restored (measured 16px computed); browser-verified end-to-end: zero console/page errors, semantic a11y tree, the footer at the document's last pixel on mobile (6091/6091) and desktop (2687/2687), no horizontal overflow at 390px and 1440px; QUICKSTART teaches the derived demo default beside the explicit form; worklog `ASC-XX-PHASE-21`"
+    },
+    {
+      "id": "dt-24",
+      "phase": "22",
+      "era": "ASCENSION XX",
+      "status": "✅ complete",
+      "evidence": "the program close: version lockstep 0.1.12-rc1 across 17 measured surfaces (3×package.json + ENGINE_VERSION + CLI VERSION + packaging npm/python/macos×2/linux×2/homebrew/winget×3 + pyproject + packaging README); spec/openapi.json regenerated via the sanctioned generator; goldens re-blessed via the ONLY sanctioned path (VAE_BLESS=1 — the sole movement the engine_version cascade); release commit `485016f` → annotated tag `v0.1.12-rc1` (`888758a`) → dist-pack --ref the tag (reproducibility PROVEN, Ed25519 self-verified, public key shipped beside the artifacts) → the empty-machine spot check installed `engine_version: 0.1.12-rc1` and the demo journey exited 0; canonical synchronized (ff `b6c5fac..485016f`+docs, divergence 0/0, tag as a NEW ref, tag object identical `888758a`) and adversarially probed (4 refusals + state unchanged, exit 0); GitHub honestly UNVERIFIED this session (credentials absent — the env-only discipline; last-known main `b6c5fac` is recorded history, not a live claim); EIGHT gates green (499/0) on the close tree; ROADMAP_PROGRESS.md + site-data regenerated from the GREEN record; worklog `ASC-XX-PROGRAM-CLOSE`"
     }
   ],
   "release": {
@@ -345,20 +373,69 @@
     "passed": 9,
     "total": 12,
     "blockers": [
-      "git-tree-clean: working tree dirty: 0 staged, 1 unstaged, 0 untracked",
-      "release-tag-binding: HEAD is not exactly at a v* release tag",
-      "release-artifacts: artifact set incomplete: dist/MANIFEST.json, dist/MANIFEST.json.sig, dist/SHA256SUMS, dist/VERIFY.md missing"
+      "git-tree-clean: working tree dirty: 0 staged, 2 unstaged, 0 untracked",
+      "release-tag-binding: HEAD is not exactly at a v* release tag"
     ]
   },
   "commandCenter": {
     "workspace": {
       "root": "/home/z/my-project/examples/vaerion-demo",
-      "runs": 0
+      "runs": 7
     },
     "operations": {
-      "runs": [],
+      "runs": [
+        {
+          "run_id": "crn_run_01M1KZHY6PFMJZPGBNFY41TJCG",
+          "records": 5,
+          "events": 3,
+          "verified": true,
+          "receipt": true
+        },
+        {
+          "run_id": "crn_run_01M1M1M3D8QVPDVCZDPZHW97CQ",
+          "records": 5,
+          "events": 3,
+          "verified": true,
+          "receipt": true
+        },
+        {
+          "run_id": "crn_run_01M1M1Q09YKV7BHQPBBSA95YQG",
+          "records": 5,
+          "events": 3,
+          "verified": true,
+          "receipt": true
+        },
+        {
+          "run_id": "crn_run_01M1M1TG7DMKF6HQ1GNQYZ3HYJ",
+          "records": 5,
+          "events": 3,
+          "verified": true,
+          "receipt": true
+        },
+        {
+          "run_id": "crn_run_01M1M222039DYBWZQPJ281QFQD",
+          "records": 5,
+          "events": 3,
+          "verified": true,
+          "receipt": true
+        },
+        {
+          "run_id": "crn_run_01M1M2CZQ20ZC651K5JFD9SNF0",
+          "records": 5,
+          "events": 3,
+          "verified": true,
+          "receipt": true
+        },
+        {
+          "run_id": "crn_run_01M1M2EAJ0ZCMJ9G8VDSQHA77M",
+          "records": 5,
+          "events": 3,
+          "verified": true,
+          "receipt": true
+        }
+      ],
       "journals_verified": true,
-      "receipts": 0,
+      "receipts": 7,
       "metering": {
         "invocations": 0,
         "failed": 0,
@@ -394,15 +471,11 @@
       "blockers": [
         {
           "check": "git-tree-clean",
-          "detail": "working tree dirty: 0 staged, 1 unstaged, 0 untracked"
+          "detail": "working tree dirty: 0 staged, 2 unstaged, 0 untracked"
         },
         {
           "check": "release-tag-binding",
           "detail": "HEAD is not exactly at a v* release tag"
-        },
-        {
-          "check": "release-artifacts",
-          "detail": "artifact set incomplete: dist/MANIFEST.json, dist/MANIFEST.json.sig, dist/SHA256SUMS, dist/VERIFY.md missing"
         }
       ]
     },
@@ -420,7 +493,7 @@
     "Coverage floors are total-based; per-module ratchets are mechanical follow-up, and totals only move up."
   ],
   "nextWork": [
-    "No campaign is in flight: the D-T ledger records MASTER DIRECTIVE complete through Phase 18 (evidence of record in the constitution's §11 Amendment Log); the next program awaits Founder ratification (P4).",
+    "No campaign is in flight: the D-T ledger records ASCENSION XX complete through Phase 22 (evidence of record in the constitution's §11 Amendment Log); the next program awaits Founder ratification (P4).",
     "GA remains rehearsed and PENDING FOUNDER GO (P4); the Founder gates (F-2 legal name, F-3 key ceremony, F-4 substrate ratification, F-5 publish, F-6 real-provider cassettes) are the remaining path to full GA.",
     "MS-6 leftovers: native single-binary installers (host-gated: brew/winget/dmg/rpm authored in Phase 1, awaiting their platforms); the daemon packages route group (wire parity, spec/openapi regen).",
     "Release train steps (publish, announce, key ceremony) — Founder-gated; artifacts are reproducible via tools/dist-pack.ts at the release tag.",

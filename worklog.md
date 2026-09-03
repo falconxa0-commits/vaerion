@@ -812,3 +812,53 @@ Work Log:
 Stage Summary:
 - The engine's core journeys survive the empty machine; the ECOSYSTEM SURFACES fail in four precise, root-caused places (XX-D4 bootstrap-key/tracked-file coupling; XX-D5 empty-$HOME PATH persistence; XX-D6 demo-template first-run journey + default-grant literal; XX-D7 npm writable-prefix policy). Phase 20 closes each at root with pins.
 - Next: Phase 20 — ecosystem defect closure (installer, template, demo default grant, dist-pack key shipping), each pinned by tests; then Phase 21 audit-premium surface; Phase 22 program close.
+
+---
+Task ID: ASC-XX-PHASE-20
+Agent: Auren — Principal Vaerion Architect (THE ECOSYSTEM DEFECT CLOSURES — ASCENSION XX, phase 2)
+Task: ASCENSION XX Phase 20 — close every defect the Empty Machine Test measured, each at root, each pinned; re-execute the fixed journeys for real.
+
+Work Log:
+- XX-D4 CLOSED: dist-pack ships the signing public key BESIDE the artifacts (dist/release-signing.pub, manifest-bound, manifestVersion 3; SHA256SUMS covers it) and NEVER writes the tracked key of record; dist-verify resolves explicit flag → key-beside-manifest → fail-closed teaching; VERIFY.md teaches the shipped key + the honest provenance story; the consumer leg re-executed with NO repository and NO session state (sha256sum --check OK; ALL CHECKS PASSED, exit 0).
+- XX-D5 CLOSED: the installer CREATES missing rc files (a fresh $HOME now persists PATH — measured live: ".bashrc (file created — a fresh home had no rc file)"); uninstall removes the WHOLE marker block (awk, never a line-pattern guess) and deletes an rc file that only ever held the block.
+- XX-D6 CLOSED at root: TEMPLATE_SCAFFOLD_FILES — the template registry is the ONE authority for what a template creates (scaffold and declared capabilities can never disagree); the demo template scaffolds sources/demo.md; bare `run demo` derives its default from the workspace config of record (demoSourcesFromConfig); the engine-docs literal is pinned ABSENT (the negative pin caught my own history comment quoting it — the pin is real); the journey tested AS TAUGHT (dry-run derives ["./sources"]; the real run: documents 1, hits 1, journal_verified true) and executed live on the empty machine.
+- XX-D7 CLOSED: the npm method detects a non-writable system prefix and falls back to ~/.npm-global with PATH markers and honest output (measured live: EACCES → fallback → vae runs); uninstall removes npm's empty user-prefix skeleton via bottom-up rmdir (user data untouched by construction — measured zero-residue).
+- XX-D8 DISCOVERED AND CLOSED BY RE-VERIFICATION: the reinstall nested src into src/src (cp -R into an existing DEST) so the OLD engine kept running — invisible to Phase 19's same-version upgrade leg, fatal to a fixed one; the version tree is now refreshed (rm -rf $DEST before the copy); pinned.
+- XX-D9 CLOSED: the npm success line executed `vae` as command substitution (measured live: "installed via npm.  is in"); escaped + pinned.
+- MY OWN DEFECTS CAUGHT BY THE HARNESS LAW: two leg measurements initially captured pipe-masked exit codes — re-measured with honest capture BEFORE any claim was recorded; the first MultiEdit to commands.ts partially applied despite a failure report — the file's real state was measured line-by-line and the duplicate declaration removed.
+- PINS: tests/integration/ecosystem-journeys.test.ts (11 structural pins across install.sh/dist-pack/dist-verify/commands.ts/templates); the demo journey moved init-templates tests to prove the REAL journey (the old test manually mkdir'd sources/ — teaching the workaround, deleted); broker-gates parity moved to declared capabilities (3 tests updated — they leaned on the dead literal).
+- EIGHT GATES GREEN (499/0); npm tgz + python wheel rebuilt from the fixed tree; committed `446b69f`/`b0c0ce2`/`b8c5906`.
+
+Stage Summary:
+- Every measured ecosystem defect is closed at root with a pin; the fixed journeys were RE-EXECUTED live, not claimed. The tarball-binds-commits lesson surfaced honestly twice (the pack of record correctly refused to carry uncommitted fixes) and produced the lawful order: commit → tag → pack at the tag.
+- Next: Phase 21 — the audit-premium surface.
+
+---
+Task ID: ASC-XX-PHASE-21
+Agent: Auren — Principal Release Commander (THE AUDIT-PREMIUM SURFACE — ASCENSION XX, phase 3)
+Task: ASCENSION XX Phase 21 — the human surfaces survive an audit and feel premium: the web dashboard browser-verified end-to-end; docs teach truth.
+
+Work Log:
+- THE FOOTER SAFE-AREA DEFECT (XX-D10) measured and fixed: the footer's mobile inset class was corrupted (pb-ax(…) — no bracket, no max()) and silently unenforced; restored the Tailwind arbitrary value (measured 16px computed padding after the fix). The commit message itself had to be amended twice — the shell ate the bracket characters, and an inaccurate record naming the broken class as "restored" was itself a defect (LAW 6).
+- BROWSER-VERIFIED (agent-browser, both widths): zero console/page errors; semantic a11y tree (main/sections/headings/labelled progressbars); the footer at the document's last pixel on mobile (6091/6091) and desktop (2687/2687) — pushed naturally by content, mt-auto holds; no horizontal overflow at 390px and 1440px; desktop + mobile screenshots captured and inspected.
+- DEV LOG CLEAN: zero errors in the recent log (only the benign pre-existing metadataBase warning).
+- DOCS TRUTH: QUICKSTART now teaches the derived demo default beside the explicit form; INSTALL.md documents the npm user-prefix fallback; the constitution history files untouched (retained unmodified, LAW 7).
+
+Stage Summary:
+- The dashboard renders measured truth premium at both widths; the docs teach the fixed journeys. Next: Phase 22 — the program close.
+
+---
+Task ID: ASC-XX-PROGRAM-CLOSE
+Agent: Auren — Principal Release Commander (THE ECOSYSTEM COMPLETION CAMPAIGN — Phases 19–22 program close)
+Task: ASCENSION XX program close — version lockstep 0.1.12-rc1, release tag, artifact trust chain with the shipped key, canonical synchronization with measured evidence, the D-T + §11 ledger rows, and the D-W Remaining Reality Report.
+
+Work Log:
+- VERSION LOCKSTEP 0.1.12-rc1: 17 measured surfaces aligned (3×package.json + ENGINE_VERSION + CLI VERSION + packaging npm/python/macos×2/linux×2/homebrew/winget×3 + pyproject + packaging README); spec/openapi.json regenerated via the sanctioned generator; goldens re-blessed via the ONLY sanctioned path (VAE_BLESS=1) — the sole movement is the engine_version hash-chain cascade; hermetic re-verify WITHOUT ambient bless: GREEN.
+- THE RELEASE TRAIN, MEASURED END-TO-END: release commit `485016f` → annotated tag `v0.1.12-rc1` (`888758a`, Auren) → `dist-pack --ref v0.1.12-rc1` (fail-closed full gates; reproducibility PROVEN 1,385,858 bytes; Ed25519 self-verified; the public key SHIPS BESIDE the artifacts — the tracked key of record untouched, measured `git status keys/` clean) → the empty-machine spot check installed from the tagged tarball and reported `engine_version: 0.1.12-rc1` with the demo journey exit 0.
+- CANONICAL SYNCHRONIZED AND PROBED: main fast-forward accepted (divergence 0/0 measured); `v0.1.12-rc1` pushed ONCE as a NEW ref (tag object `888758a` identical local↔canonical by rev-parse both sides); the adversarial probe: non-ff REFUSED, main deletion REFUSED, tag overwrite REFUSED, tag deletion REFUSED, post-probe state UNCHANGED — PROTECTION LAW VERIFIED, exit 0.
+- GITHUB HONESTLY UNVERIFIED: `VAE_GITHUB_TOKEN` (env-only discipline) absent at the session boundary; `git ls-remote github` fails closed on authentication; recorded as UNVERIFIED in the §11 sync ledger — never dressed as verified; parity is one push away once the Founder re-provisions the token.
+- D-T LEDGER rows 19–22 + §11 SYNCHRONIZATION rows appended (measured, D-S labeled); docs/ga/ASCENSION-XX-REALITY-RECOVERY.md closed with the D-W Remaining Reality Report (defect ledger final statuses + honest carry-forwards + the D-X declaration); EIGHT gates green on the close tree (499/0/2976/39); ROADMAP_PROGRESS.md + site-data regenerated from the GREEN record.
+
+Stage Summary:
+- THE FOUNDER'S ASCENSION XX CAMPAIGN IS COMPLETE: the verified engine is now a MEASURED developer ecosystem — it installs everywhere it can be measured (Linux POSIX + npm + wheel + offline tarball), works instantly (the first-run journey works AS TAUGHT), feels premium (the browser-verified surface), and survives audit (every artifact manifest-bound with its key beside it; every claim D-S labeled).
+- The declaration of record (D-X): Vaerion's ecosystem installs, verifies, initializes, creates value, recovers from mistakes, upgrades, and removes cleanly on an empty machine — measured, not narrated. Vaerion is progressing toward readiness; full GA remains pending the Founder's gates (F-2..F-6).

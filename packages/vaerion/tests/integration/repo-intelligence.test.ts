@@ -828,10 +828,13 @@ describe("the ONE derivation + the ONE ledger parser (v1.7 A7, D-B/D-V)", () => 
     expect(ledger.length).toBeGreaterThanOrEqual(15);
     const last = ledger.at(-1)!;
     expect(last.status).toBe("✅ complete");
-    expect(last.era).toBe("MASTER DIRECTIVE");
+    // The tail moves as campaigns close: rows 19–22 are ASCENSION XX
+    // (the ecosystem completion campaign, appended at its program close).
+    expect(last.era).toBe("ASCENSION XX");
+    expect(last.phase).toBe("22");
     expect(ledger.filter((r) => r.status === "▶ in flight").length).toBe(0);
     // The five-section register era: D-U…D-Y exist alongside the historical rows.
-    for (const phase of ["14", "15"]) {
+    for (const phase of ["14", "15", "19", "22"]) {
       expect(ledger.some((r) => r.phase === phase)).toBe(true);
     }
   });
