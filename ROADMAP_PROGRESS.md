@@ -48,10 +48,11 @@
 | 15 | MASTER DIRECTIVE | ✅ complete |
 | 16 | MASTER DIRECTIVE | ✅ complete |
 | 17 | MASTER DIRECTIVE | ✅ complete |
+| 18 | MASTER DIRECTIVE | ✅ complete |
 
 ## Recommended next work (priority order)
 
-1. No campaign is in flight: the D-T ledger records MASTER DIRECTIVE complete through Phase 17 (evidence of record in the constitution's §11 Amendment Log); the next program awaits Founder ratification (P4).
+1. No campaign is in flight: the D-T ledger records MASTER DIRECTIVE complete through Phase 18 (evidence of record in the constitution's §11 Amendment Log); the next program awaits Founder ratification (P4).
 2. GA remains rehearsed and PENDING FOUNDER GO (P4); the Founder gates (F-2 legal name, F-3 key ceremony, F-4 substrate ratification, F-5 publish, F-6 real-provider cassettes) are the remaining path to full GA.
 3. MS-6 leftovers: native single-binary installers (host-gated: brew/winget/dmg/rpm authored in Phase 1, awaiting their platforms); the daemon packages route group (wire parity, spec/openapi regen).
 4. Release train steps (publish, announce, key ceremony) — Founder-gated; artifacts are reproducible via tools/dist-pack.ts at the release tag.

@@ -779,3 +779,19 @@ Work Log:
 Stage Summary:
 - The session-boundary loss class (D1) is closed at root: the protection law lives in the engine, re-provisioning is ONE deterministic command, and every provisioning proves itself with adversarial push probes. The canonical store is re-provisioned, synchronized (0/0), and VERIFIED under the law.
 - Next: Phase 18 — the program close: §11 synchronization-ledger rows (canonical + GitHub), the verification record, GitHub push, the Remaining Reality Report (D-W).
+
+---
+Task ID: ASC-MD-PROGRAM-CLOSE
+Agent: Auren — Principal Release Commander (THE MASTER CONSTITUTIONAL DIRECTIVE — Phases 15–18 program close)
+Task: MASTER DIRECTIVE program close — synchronization ledger rows (canonical + GitHub, measured), the GitHub synchronization, final gates, and the D-W Remaining Reality Report.
+
+Work Log:
+- GITHUB SYNCHRONIZED AND RE-MEASURED: main fast-forwarded `723b625..e0c43a4` (one transient push refusal on the first attempt — retried, accepted; the fast-forward is the only history event; branch protection holds); `ls-remote` re-measured: HEAD == `main` == `e0c43a4`; the D-Q descriptor re-measured field-by-field through the sanctioned API (allow_force_pushes=false, allow_deletions=false, required_linear_history=true, enforce_admins=true, required checks STAGED null — the measured elevation incompatibility stands as the P4 Founder decision); token identity VERIFIED (`GET /user` → `falconxa0-commits`); six release tags identical (no new tags — this campaign ratified no release-surface change); `archive/parallel-generation` untouched as found.
+- CANONICAL VERIFIED UNDER THE LAW: provisioned by the versioned law text (third provisioning — the first deterministic one), synchronized 0/0 (main + six tags as NEW refs), adversarially probed (four refusals + state unchanged, exit 0) — Phase 17's evidence stands at close.
+- §11 SYNCHRONIZATION LEDGER: two dated rows appended (canonical + github) with the full D-S-labeled evidence of record.
+- EIGHT GATES GREEN on the final tree (486/0/2942/38); ROADMAP_PROGRESS.md + site-data regenerated from the GREEN record — the derived next-work item now reads the measured truth: no campaign in flight; the next program awaits Founder ratification.
+- THE DECLARATION OF RECORD (D-X): Vaerion is progressing toward readiness.
+
+Stage Summary:
+- THE FOUNDER'S MASTER CONSTITUTIONAL DIRECTIVE CAMPAIGN IS COMPLETE AND SYNCHRONIZED: local main == canonical main == GitHub main (`e0c43a4`); the directive's process law (D-U…D-Y) is register law; the stale-literal and unversioned-provisioning defect classes are dead by construction; both remotes hold the protection law by measurement.
+- Honest ledger (carried forward, never converted into completion): GA remains rehearsed and PENDING FOUNDER GO (P4); the required-check elevation stays STAGED (PR-flow conversion is P4); the bootstrap release key remains session-bound until F-3; the chat-exposed PAT should be rotated (it was stored 0600 outside the repo and identity-verified this session); brew/winget/dmg/rpm remain authored-UNVERIFIED (host-gated); the dist/ artifacts of record were verified at the v0.1.11-rc1 close and are regenerable deterministically at the tag.

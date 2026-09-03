@@ -1,50 +1,50 @@
 {
-  "generatedAt": "2026-09-03T05:42:26.928Z",
+  "generatedAt": "2026-09-03T05:46:15.205Z",
   "engineVersion": "0.1.11-rc1",
   "substrate": "TypeScript on Bun (ADR-0018 — provisional with recorded migration path; Founder ratification pending)",
   "verification": {
-    "generatedAt": "2026-09-03T05:42:21.265Z",
+    "generatedAt": "2026-09-03T05:46:14.951Z",
     "ok": true,
     "gates": [
       {
         "gate": "typecheck-engine",
         "ok": true,
-        "durationMs": 4275
+        "durationMs": 4325
       },
       {
         "gate": "typecheck-sdk",
         "ok": true,
-        "durationMs": 3262
+        "durationMs": 3333
       },
       {
         "gate": "tests",
         "ok": true,
-        "durationMs": 6745
+        "durationMs": 6400
       },
       {
         "gate": "layerlint",
         "ok": true,
-        "durationMs": 29
+        "durationMs": 32
       },
       {
         "gate": "constitutional-check",
         "ok": true,
-        "durationMs": 232
+        "durationMs": 233
       },
       {
         "gate": "perf-budget",
         "ok": true,
-        "durationMs": 349
+        "durationMs": 283
       },
       {
         "gate": "a11y-structural",
         "ok": true,
-        "durationMs": 33
+        "durationMs": 34
       },
       {
         "gate": "repo-lint",
         "ok": true,
-        "durationMs": 11084
+        "durationMs": 10970
       }
     ],
     "measured": {
@@ -329,16 +329,23 @@
       "era": "MASTER DIRECTIVE",
       "status": "✅ complete",
       "evidence": "the provisioning law: the D-Q pre-receive hook VERSIONED as engine law text (src/repo/canonical.ts — byte-stable, pin-tested) + the ONE sanctioned provisioner/prover (tools/canonical-provision.ts); probe-laws found and fixed at root BEFORE the real run (forced probes prove the HOOK, never the client; empty/hookless/depth-1 stores refuse to be probed — an unprobeable store is an error, never a mutated one); +6 contract tests (hook bytes, idempotent provisioning with refs untouched, four real refusals + the positive control + state unchanged, fail-closed preconditions); EXECUTED FOR REAL: the canonical store re-provisioned at `/home/z/vaerion-canonical.git`, synchronized (main + six tags as NEW refs, divergence 0/0), adversarially probed — non-ff REFUSED, main deletion REFUSED, tag overwrite REFUSED, tag deletion REFUSED, post-probe state UNCHANGED (PROTECTION LAW VERIFIED, exit 0); the session-boundary loss class D1 closed at root; EIGHT gates green (486/0/2942/38); worklog `ASC-MD-PHASE-17`"
+    },
+    {
+      "id": "dt-20",
+      "phase": "18",
+      "era": "MASTER DIRECTIVE",
+      "status": "✅ complete",
+      "evidence": "the program close: §11 synchronization-ledger rows appended (canonical + GitHub, measured); GitHub main fast-forwarded `723b625..e0c43a4` and re-measured (`ls-remote` HEAD == local; D-Q descriptor re-measured field-by-field: no force-push, no deletion, linear history, admins included, required checks STAGED null); the canonical store VERIFIED under the law (provisioned + probed + 0/0); EIGHT gates green (486/0/2942/38); ROADMAP_PROGRESS.md + site-data regenerated from the GREEN record; the Remaining Reality Report (D-W) delivered to the Founder; worklog `ASC-MD-PROGRAM-CLOSE`"
     }
   ],
   "release": {
     "measured": true,
     "ready": false,
     "verdict": "BLOCKED",
-    "passed": 9,
+    "passed": 8,
     "total": 12,
     "blockers": [
-      "git-tree-clean: working tree dirty: 0 staged, 4 unstaged, 3 untracked",
+      "git-tree-clean: working tree dirty: 0 staged, 3 unstaged, 0 untracked",
       "release-tag-binding: HEAD is not exactly at a v* release tag",
       "release-artifacts: artifact set incomplete: dist/MANIFEST.json, dist/MANIFEST.json.sig, dist/SHA256SUMS, dist/VERIFY.md missing"
     ]
@@ -382,12 +389,12 @@
       "measured": true,
       "ready": false,
       "verdict": "BLOCKED",
-      "passed": 9,
+      "passed": 8,
       "total": 12,
       "blockers": [
         {
           "check": "git-tree-clean",
-          "detail": "working tree dirty: 0 staged, 4 unstaged, 3 untracked"
+          "detail": "working tree dirty: 0 staged, 3 unstaged, 0 untracked"
         },
         {
           "check": "release-tag-binding",
@@ -413,7 +420,7 @@
     "Coverage floors are total-based; per-module ratchets are mechanical follow-up, and totals only move up."
   ],
   "nextWork": [
-    "No campaign is in flight: the D-T ledger records MASTER DIRECTIVE complete through Phase 17 (evidence of record in the constitution's §11 Amendment Log); the next program awaits Founder ratification (P4).",
+    "No campaign is in flight: the D-T ledger records MASTER DIRECTIVE complete through Phase 18 (evidence of record in the constitution's §11 Amendment Log); the next program awaits Founder ratification (P4).",
     "GA remains rehearsed and PENDING FOUNDER GO (P4); the Founder gates (F-2 legal name, F-3 key ceremony, F-4 substrate ratification, F-5 publish, F-6 real-provider cassettes) are the remaining path to full GA.",
     "MS-6 leftovers: native single-binary installers (host-gated: brew/winget/dmg/rpm authored in Phase 1, awaiting their platforms); the daemon packages route group (wire parity, spec/openapi regen).",
     "Release train steps (publish, announce, key ceremony) — Founder-gated; artifacts are reproducible via tools/dist-pack.ts at the release tag.",
