@@ -57,6 +57,15 @@ describe("ASCENSION XX — ecosystem defect closures pinned", () => {
     expect(sh).toContain('npm_config_prefix="$HOME/.npm-global" npm uninstall -g vaerion');
   });
 
+  test("XX-D8: a same-version reinstall REFRESHES the version tree (never nests src)", async () => {
+    const sh = await readRepo("packaging/install.sh");
+    // The version dir is replaced before the copy — the fixed engine cannot
+    // hide behind a stale nested copy (measured live in the Phase 20 rerun).
+    const block = sh.slice(sh.indexOf('rm -rf "$DEST"'), sh.indexOf('bun install --production'));
+    expect(block).toContain('rm -rf "$DEST"');
+    expect(block).toContain('cp -R "$SRC_ROOT/packages/vaerion/src" "$DEST/src"');
+  });
+
   test("XX-D4: dist-pack NEVER writes the tracked key of record", async () => {
     const pack = await readRepo("tools/dist-pack.ts");
     // The hygiene pin: no write to the tracked public key, anywhere.

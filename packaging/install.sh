@@ -253,6 +253,11 @@ do_install_source() {
   SRC_ROOT="$(cd "$STAGE"/*/ && pwd)"
   [ -f "$SRC_ROOT/packages/vaerion/src/cli/vae.ts" ] || die "tarball does not contain the engine (unexpected layout)"
 
+  # XX-D8 (measured by re-executing the D-Y journey after a fix): a same-version
+  # reinstall must REFRESH the version tree — `cp -R src` into an existing
+  # $DEST nested the new source under src/src and the old engine kept running,
+  # invisible to a same-version upgrade leg and fatal to a fixed one.
+  rm -rf "$DEST"
   mkdir -p "$DEST" "$PREFIX/bin"
   cp -R "$SRC_ROOT/packages/vaerion/src" "$DEST/src"
   cp "$SRC_ROOT/packages/vaerion/package.json" "$DEST/package.json"
