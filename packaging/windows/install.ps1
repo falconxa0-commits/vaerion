@@ -11,7 +11,7 @@
 [CmdletBinding()]
 param(
   [string]$Zip,
-  [string]$Version = "0.1.9-rc1",
+  [string]$Version = "0.1.12-rc1",
   [switch]$Update,
   [switch]$Uninstall,
   [switch]$NoPath

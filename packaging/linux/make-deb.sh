@@ -10,7 +10,7 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../.." && pwd)
 VERSION="${1:-0.1.12-rc1}"
 OUT="${2:-$ROOT/dist/linux}"
-# Debian versions use ~ for pre-release ordering: 0.1.12-rc1 -> 0.1.7~rc2
+# Debian versions use ~ for pre-release ordering: 0.1.12-rc1 -> 0.1.12~rc1
 DEB_VERSION=$(printf '%s' "$VERSION" | sed 's/-/~/')
 
 STAGE=$(mktemp -d)
