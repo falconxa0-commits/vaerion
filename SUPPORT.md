@@ -40,10 +40,22 @@ under `journal`, `package`, and `repo` (e.g. `vae journal verify RUN_ID`).
 
 Open an issue on the repository of record:
 `https://github.com/falconxa0-commits/vaerion/issues` (the repository is
-currently private — access required). Use the issue templates (bug report /
-feature request / config report) and include the measured evidence they ask
-for: the verification record (`.vaerion-verification.json`), exit codes, and
-the engine version from `vae dev`.
+public). Use the issue templates (bug report / feature request / config
+report) and include the measured evidence they ask for: the verification
+record (`.vaerion-verification.json`), exit codes, and the engine version
+from `vae --version`.
+
+For questions, usage help, and ideas, use the Discussions structure on the
+same repository (enablement measured during the ASCENSION XXV campaign):
+
+| Surface | Use it for |
+|---|---|
+| [Q&A](https://github.com/falconxa0-commits/vaerion/discussions/categories/q-a) | "How do I…" — usage help from the community |
+| [Ideas](https://github.com/falconxa0-commits/vaerion/discussions/categories/ideas) | feature proposals before an issue exists |
+| [Announcements](https://github.com/falconxa0-commits/vaerion/discussions/categories/announcements) | release notes and campaign closures from the maintainer |
+| [Show and tell](https://github.com/falconxa0-commits/vaerion/discussions/categories/show-and-tell) | what you built with Vaerion |
+
+The announcement flow itself is `docs/operations/ANNOUNCEMENTS.md`.
 
 Security findings are the exception: report them privately — see `SECURITY.md`.
 Never open a public issue for a security finding.
@@ -57,4 +69,6 @@ Never open a public issue for a security finding.
   (`docs/ga/ASCENSION-XX-EMPTY-MACHINE-TEST.md`); same-version upgrade and
   clean removal are measured.
 - No hosted support channel (chat, forum, hosted email desk) is provided by
-  this repository today. If one is provisioned, it will be listed here.
+  this repository today. GitHub Discussions Q&A is the community help
+  surface; a hosted desk remains unprovisioned and will be listed here if
+  it ever lands.

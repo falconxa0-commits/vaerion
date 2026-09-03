@@ -1038,3 +1038,20 @@ Work Log:
 
 Stage Summary:
 - F-3 is closed to the mechanical extent possible from here: production key live in CI, key of record rotated, ceremony law recorded, and the FIRST PRODUCTION-SIGNED RELEASE (v0.1.13-rc1) verified three ways on real infrastructure. Honest residuals: in-session generation (not air-gapped); branch protection keeps the admin bypass; registry flakes remain an external reality (measured once, recovered by re-run).
+
+---
+Task ID: 4
+Agent: Auren — Principal Release Engineer (ASCENSION XXV, Phase XXVIII)
+Task: Production Infrastructure — the release-publish pipeline (deployment), rollback strategy, migration process, and the operations runbooks.
+
+Work Log:
+- MEASURED the substrate truth: Vaerion is local-first — "production" = CI substrate + release pipeline + artifact distribution + human/trust surfaces; there is no server-side Vaerion to operate (no staging theater).
+- BUILT THE PUBLISH PIPELINE: .github/workflows/release-publish.yml (workflow_dispatch per v* tag): tag-input validation (refuses non-rcN forms — no shell injection into the release path); checkout of the TAG; frozen-lockfile install; the same fail-closed RELEASE_SIGNING_KEY contract; deterministic RE-PACK ON the tag (reproducibility holds on the publishing path itself, not just in CI artifacts); the tripwire INVERTED — the job REFUSES to publish if dist-report.json discloses a bootstrap key; idempotent gh release create-or-update with dist/* assets + the notes-of-record file; least privilege: contents:write granted to THIS workflow only (verify.yml stays read-only — ci-truth pins intact).
+- MEASURED END-TO-END: pushed (6ebcc0d..141a32d ff), dispatched for v0.1.13-rc1 (HTTP 204) -> run 33818575076 completed SUCCESS -> THE GITHUB RELEASE IS LIVE: v0.1.13-rc1 with all 8 assets + the release notes body, at a public URL.
+- HONESTY FIX: rc tags now get GitHub's prerelease flag (consumers see true maturity on the discovery surface); the live release was marked retroactively via the API (first PATCH 404'd — wrong endpoint form; fixed via the release ID; HTTP 200, prerelease True, assets intact).
+- THE FULL ANONYMOUS CONSUMER LOOP MEASURED (no token, no repo access — a stranger's path): DISCOVER (public releases page) -> DOWNLOAD all 8 assets -> VERIFY (sha256 7/7 -> engine dist-verify from the shipped tarball: ALL CHECKS PASSED -> openssl: Signature Verified Successfully) -> USE (vae 0.1.13-rc1 runs from the downloaded tree; help teaches). First consumer-run attempt failed on an incomplete download (5 of 8 assets) — re-run with the full set; recorded because even the consumer test is measured, not narrated.
+- OPERATIONS LAW WRITTEN (docs/operations/): ENVIRONMENTS.md (dev = the sandbox; staging = every push on GitHub infrastructure; production = signed artifacts on GitHub Releases; registries/site = F-5 Founder-gated; WHY there is no staging server for a local-first engine), DEPLOYMENT.md (the pipeline graph; the operator runbook; the immutable-law-compatible rollback table — mark-and-fix-forward, never rewrite; the migration/upgrade law; the deliberately-NOT-in-pipeline list), OPERATIONS.md (monitoring/logging/backups/incident-response runbooks incl. the registry-flake precedent, the signing-key incident path, the no-on-call reality stated).
+- ALL GATES GREEN on the close tree.
+
+Stage Summary:
+- The deployment pipeline is REAL and MEASURED: a tag dispatches -> the production-signed artifact set publishes to a public Release with verification taught inside it; an anonymous stranger discovered, downloaded, verified three ways, and RAN the engine. Rollback, migration, and operations law recorded with the honest limits (hosted site + registries remain F-5).

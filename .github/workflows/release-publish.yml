@@ -96,6 +96,12 @@ jobs:
           else
             EXTRA_ARGS+=(--generate-notes)
           fi
+          # Honesty on the discovery surface: an -rcN tag is a pre-GA release
+          # and is MARKED as one (GitHub's prerelease flag) — a consumer
+          # browsing the releases page sees the true maturity at a glance.
+          case "$TAG" in
+            *-rc[0-9]*) EXTRA_ARGS+=(--prerelease) ;;
+          esac
           if gh release view "$TAG" > /dev/null 2>&1; then
             echo "release $TAG exists — updating assets and body (idempotent re-publish)"
             gh release upload "$TAG" dist/* --clobber
@@ -103,7 +109,7 @@ jobs:
           else
             gh release create "$TAG" dist/* --title "Vaerion ${TAG}" "${EXTRA_ARGS[@]}"
           fi
-          gh release view "$TAG" --json name,tagName,url,assets
+          gh release view "$TAG" --json name,tagName,url,isPrerelease,assets
 
       - name: Record the publication (the measured close)
         env:

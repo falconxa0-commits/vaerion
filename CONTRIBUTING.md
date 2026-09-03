@@ -76,6 +76,15 @@ behavior, the expected behavior, and the journal or receipt output that
 demonstrates it. Security issues are reported privately to the project
 owner — see `docs/security/RISK-LEDGER.md` for the disclosure posture.
 
+Feature proposals start in the
+[Ideas](https://github.com/falconxa0-commits/vaerion/discussions/categories/ideas)
+discussion category — an issue is opened once a proposal has a concrete,
+testable shape. Usage questions belong in
+[Q&A](https://github.com/falconxa0-commits/vaerion/discussions/categories/q-a);
+release news lands in
+[Announcements](https://github.com/falconxa0-commits/vaerion/discussions/categories/announcements)
+(`docs/operations/ANNOUNCEMENTS.md` is the flow of record).
+
 ## License
 
 By contributing, you agree that your contributions are licensed under the

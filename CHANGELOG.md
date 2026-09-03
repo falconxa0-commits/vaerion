@@ -6,6 +6,26 @@ reports in `docs/ga/`, and `worklog.md` — not from memory; dates are the
 measured tag dates. Keep a Changelog format; within v0.1 surfaces evolve
 additively — nothing removed or renamed (`BETA-ONBOARDING.md`).
 
+## [Unreleased]
+
+- Fixed (fix-forward, no released tag touched): three release surfaces sat
+  outside the register at `0.1.9-rc1` (`packaging/python/vaerion/__init__.py`,
+  `packaging/linux/vaerion.spec`, `packaging/windows/install.ps1`) plus one
+  teaching line in `make-deb.sh`; all aligned to `0.1.12-rc1`, pinned by
+  `packages/vaerion/tests/integration/version-register.test.ts` (18-surface
+  register + negative sweep). Gates green 504/0/40 (worklog Task 2-a, commit
+  `3f3722b`).
+- Added: root trust documents — `SECURITY.md`, `SUPPORT.md`,
+  `CODE_OF_CONDUCT.md`, this changelog, `.github/PULL_REQUEST_TEMPLATE.md`,
+  `.github/ISSUE_TEMPLATE/` (bug / feature / config), `examples/README.md` —
+  closing the measured Group A publication gap
+  (`docs/ga/PHASE-XXIII-PUBLICATION-GAP-AUDIT.md`). (Task 4-b)
+- Records of record (audits, not product changes): Phase XXII DX audit
+  (17/24 EXIST; five feasible gaps named, OPEN); Phase XXIII publication gap
+  audit (27 EXISTS / 1 PARTIAL / 21 MISSING of 49); GitHub sync measured
+  (fast-forward `b6c5fac..7a1e44f`, tag pushed once, byte-identical; Actions
+  runs SUCCESS incl. signed-release; CI artifacts independently verified).
+
 ## [0.1.13-rc1] — 2026-09-03 — the ASCENSION XXV production-trust release (the first release signed by the production key)
 
 - Security: **the production signing key ceremony (F-3/R-2 closed)** — the
@@ -37,26 +57,6 @@ additively — nothing removed or renamed (`BETA-ONBOARDING.md`).
   re-measured; two reality changes found and handled (public repository;
   the canonical bare mirror lost to an environment reset, lawfully
   re-provisioned, parity 0/0 re-measured).
-
-## [Unreleased]
-
-- Fixed (fix-forward, no released tag touched): three release surfaces sat
-  outside the register at `0.1.9-rc1` (`packaging/python/vaerion/__init__.py`,
-  `packaging/linux/vaerion.spec`, `packaging/windows/install.ps1`) plus one
-  teaching line in `make-deb.sh`; all aligned to `0.1.12-rc1`, pinned by
-  `packages/vaerion/tests/integration/version-register.test.ts` (18-surface
-  register + negative sweep). Gates green 504/0/40 (worklog Task 2-a, commit
-  `3f3722b`).
-- Added: root trust documents — `SECURITY.md`, `SUPPORT.md`,
-  `CODE_OF_CONDUCT.md`, this changelog, `.github/PULL_REQUEST_TEMPLATE.md`,
-  `.github/ISSUE_TEMPLATE/` (bug / feature / config), `examples/README.md` —
-  closing the measured Group A publication gap
-  (`docs/ga/PHASE-XXIII-PUBLICATION-GAP-AUDIT.md`). (Task 4-b)
-- Records of record (audits, not product changes): Phase XXII DX audit
-  (17/24 EXIST; five feasible gaps named, OPEN); Phase XXIII publication gap
-  audit (27 EXISTS / 1 PARTIAL / 21 MISSING of 49); GitHub sync measured
-  (fast-forward `b6c5fac..7a1e44f`, tag pushed once, byte-identical; Actions
-  runs SUCCESS incl. signed-release; CI artifacts independently verified).
 
 ## [0.1.12-rc1] — 2026-09-03 — the ASCENSION XX release (tag `888758a` → `485016f`): the verified engine became a measured developer ecosystem
 

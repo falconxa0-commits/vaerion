@@ -43,7 +43,8 @@ architectural, not procedural:
 ## Quickstart (15 minutes)
 
 Install (every channel delivers the same engine — full map in
-`docs/INSTALL.md`, packaging in `packaging/`):
+`docs/INSTALL.md`, packaging in `packaging/`; signed release tarballs:
+[Releases](https://github.com/falconxa0-commits/vaerion/releases)):
 
 ```sh
 npm install -g vaerion        # or: pip install vaerion
@@ -53,7 +54,7 @@ npm install -g vaerion        # or: pip install vaerion
 Or from source:
 
 ```sh
-git clone <repository-url> vaerion && cd vaerion
+git clone https://github.com/falconxa0-commits/vaerion.git vaerion && cd vaerion
 bun install
 bun run tools/verify.ts              # all gates must be green
 alias vae="bun run packages/vaerion/src/cli/vae.ts"

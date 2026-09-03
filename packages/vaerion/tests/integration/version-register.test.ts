@@ -130,4 +130,19 @@ describe("version register — engine-version lockstep is complete and closed", 
     expect(changelog).toContain(`- ${RPM_VERSION}-1`);
     expect(changelog.indexOf(`${RPM_VERSION}-1`)).toBeLessThan(changelog.indexOf("0.1.7.rc2-1"));
   });
+
+  test("the CHANGELOG of record documents the version of record (no silent release trains)", async () => {
+    // Changelog automation, ASCENSION XXV Phase XXIX: a release train that
+    // bumps the register without documenting the version fails here — the
+    // CHANGELOG cannot drift behind the engine (and the release-publish
+    // pipeline reads the matching RELEASE-NOTES file, so the two surfaces
+    // agree by construction).
+    const changelog = await readRepo("CHANGELOG.md");
+    expect(changelog).toContain(`## [${VERSION}]`);
+    // The notes-of-record file for the version of record must exist too —
+    // release-publish.yml prefers it as the GitHub Release body. (The notes
+    // files carry the tag's `v` prefix; the VERSION literal does not.)
+    const notes = await readRepo(`docs/RELEASE-NOTES-v${VERSION}.md`);
+    expect(notes).toContain(`# Release Notes — v${VERSION}`);
+  });
 });

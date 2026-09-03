@@ -77,20 +77,45 @@ alias vae="bun run packages/vaerion/src/cli/vae.ts"
 result to `.vaerion-verification.json`. If any gate fails, the engine is
 not verified on your machine — see `docs/TROUBLESHOOTING.md`.
 
-## Option F — release tarball (signed, offline)
+## Option F — GitHub Releases download (signed, offline, no account needed)
 
-Each release publishes a deterministic, signed artifact set:
+Every release publishes its full signed artifact set on the public releases
+page (live since `v0.1.13-rc1`, measured end-to-end including an anonymous
+download-and-verify pass during the ASCENSION XXV campaign):
+
+> https://github.com/falconxa0-commits/vaerion/releases
+
+Each release carries: `vaerion-<version>-source.tar.gz`, the `vaerion-demo.vxn`
+bundle, `SHA256SUMS`, `MANIFEST.json` + `MANIFEST.json.sig`, the public key
+(`release-signing.pub`), `VERIFY.md` (the consumer verification instructions),
+and `dist-report.json` (the pack audit — including the production-key proof).
+
+The anonymous three-leg verification, exactly as a fresh consumer runs it:
 
 ```sh
-sha256sum --check SHA256SUMS                       # integrity of every artifact
-bun run tools/dist-verify.ts --manifest MANIFEST.json \
-  --sig MANIFEST.json.sig --pub keys/release-signing.pub
-tar -xzf vaerion-<version>-source.tar.gz && cd vaerion-<version>
+sha256sum --check SHA256SUMS                       # leg 1: artifact integrity
+
+# leg 2: the engine's own verifier — needs only bun, no repository:
+tar -xzf vaerion-<version>-source.tar.gz
+bun run vaerion-<version>/tools/dist-verify.ts \
+  --manifest MANIFEST.json --sig MANIFEST.json.sig --pub release-signing.pub
+
+# leg 3: an independent implementation (openssl, raw decoded signature):
+base64 -d MANIFEST.json.sig > sig.raw
+openssl pkeyutl -verify -pubin -inkey release-signing.pub \
+  -rawin -sigfile sig.raw -in MANIFEST.json
 ```
 
-`packaging/install.sh --tarball <file>` turns that tarball into a full
-user-local install. Step-by-step release verification:
-`docs/ga/RELEASE-VERIFICATION.md`.
+`packaging/install.sh --tarball <file>` turns the tarball into a full
+user-local install; running the CLI from the unpacked tree works directly
+(`bun run packages/vaerion/src/cli/vae.ts --version`). Step-by-step release
+verification: `docs/ga/RELEASE-VERIFICATION.md`. The release trust chain
+(who signs, rotation, recovery): `docs/security/SIGNING-CEREMONY.md`.
+
+> Registry channels (npm/PyPI/Homebrew/winget/Chocolatey/Scoop/APT/RPM)
+> remain authored + version-locked but are not published yet — that is the
+> Founder-gated F-5 publication step. Until they land, GitHub Releases and
+> the source paths above are the real download surface.
 
 ## What installation does NOT do
 
