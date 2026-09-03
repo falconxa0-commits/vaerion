@@ -862,3 +862,47 @@ Work Log:
 Stage Summary:
 - THE FOUNDER'S ASCENSION XX CAMPAIGN IS COMPLETE: the verified engine is now a MEASURED developer ecosystem — it installs everywhere it can be measured (Linux POSIX + npm + wheel + offline tarball), works instantly (the first-run journey works AS TAUGHT), feels premium (the browser-verified surface), and survives audit (every artifact manifest-bound with its key beside it; every claim D-S labeled).
 - The declaration of record (D-X): Vaerion's ecosystem installs, verifies, initializes, creates value, recovers from mistakes, upgrades, and removes cleanly on an empty machine — measured, not narrated. Vaerion is progressing toward readiness; full GA remains pending the Founder's gates (F-2..F-6).
+
+---
+Task ID: 2-a
+Agent: Auren — Principal Vaerion Architect (FINAL FOUR PHASES campaign, coordinator)
+Task: LAW 1 reality measurement of the whole repository + close the version-register divergence found by that measurement (Phase XXI/XXIII release integrity).
+
+Work Log:
+- LAW 1 EXECUTED FRESH: repo located (/home/z/my-project, main @ 265279e, clean tree); tags v0.1.7-rc1..v0.1.12-rc1 measured; tag of record v0.1.12-rc1 = annotated tag object 888758a -> 485016f (matches the worklog's claim exactly); constitution v1.7 present; worklog 864 lines read; roadmap read (generated, MS-0..MS-6 complete, GA 95%); EIGHT gates re-run GREEN (499/0/39, exit 0) BEFORE any change.
+- GITHUB MEASURED FOR THE FIRST TIME (Founder provisioned the token): credential helper via VAE_GITHUB_TOKEN env-only (no token in any repo file, no .git/config entry, chmod 600 temp file OUTSIDE the repo at /tmp/.vae_github_tok); ls-remote exit 0; github/main = b6c5fac (8 commits behind local); github tags END at v0.1.11-rc1 — the release tag v0.1.12-rc1 is ABSENT on GitHub; archive/parallel-generation branch exists on both sides. The §11 ledger's honest UNVERIFIED was accurate; now it is a measured, closable gap.
+- VERSION-REGISTER DIVERGENCE FOUND BY MEASUREMENT: the ASCENSION XX close claimed lockstep across 17 surfaces; the named surfaces align (20 files measured at 0.1.12-rc1) BUT three version-bearing release surfaces sat outside the register at 0.1.9-rc1: packaging/python/vaerion/__init__.py (__version__), packaging/linux/vaerion.spec (internally inconsistent THREE ways: version_string 0.1.9-rc1 vs rpm_version 0.1.7.rc2 vs changelog 0.1.7.rc2-1), packaging/windows/install.ps1 ($Version default); plus one half-updated teaching line in make-deb.sh (0.1.12-rc1 -> 0.1.7~rc2).
+- ALL FOUR FIXED BY FIX-FORWARD (tag of record untouched — immutable law): RPM spec aligned (version_string/rpm_version/changelog epoch appended, history preserved), __init__.py aligned, install.ps1 aligned, teaching line aligned.
+- ROOT FIX PINNED: packages/vaerion/tests/integration/version-register.test.ts — 18-surface positive register + ENGINE_VERSION===CLI VERSION parity + RPM-changelog epoch-order pin + a NEGATIVE SWEEP over packaging/ and sdks/ (no stale 0.x.y-rcN literal may exist outside the register; RPM %changelog history exempted by design); register scope recorded as a DECISION in the test header (root package.json = private dashboard host, out of register).
+- HONESTY: the typecheck gate RED-flagged my own new test (TS18048 split()-possibly-undefined) before any claim was recorded; fixed; re-run.
+- MEASURED: ALL GATES GREEN 504/0/40 (3007+ expectations), exit 0; commit 3f3722b.
+
+Stage Summary:
+- The lockstep claim is now TRUE and MECHANICALLY ENFORCED — a future stale surface fails CI, not a Founder audit. GitHub state measured (8 behind, tag missing); sync is the next task.
+
+---
+Task ID: 2-b
+Agent: Auren (coordinator), recording the Phase XXII DX audit agent (read-only measurement)
+Task: Phase XXII "World-Class Developer Experience" — measured audit of the CLI surface against the directive's DX register.
+
+Work Log:
+- Measured LIVE (CLI help executed read-only, exit codes re-measured without pipe masking, every claim grep-verified to file:line): 24 requirements — 17 EXISTS, 6 MISSING, 1 PARTIAL.
+- Strong (measured): 17/17 command help topics (COMMAND_HELP registry, help parsed before side effects); 81 E-codes mirrored by ERROR_CATALOG with Fix + Docs anchors on every error; honest 0-5 exit codes verified live; NO_COLOR/TERM=dumb/CI/isTTY/VAE_UI implemented AND pinned by tests; zero-dep truecolor Ansi; TTY-only braille Spinner; piped output measured byte-free of ANSI.
+- Measured defects: `vae --version` prints the welcome payload, not a version line; `vae <unknown> --json` emits plain text instead of NDJSON (bypasses json mode); no quiet/verbose/debug/trace modes; no Unicode->ASCII transliteration; shell completions ABSENT (zero implementation).
+- Report of record: docs/ga/PHASE-XXII-DX-AUDIT.md (125 lines, D-S style: Requirement | Status | Evidence | Gap).
+
+Stage Summary:
+- The DX skeleton is audit-grade; five feasible gaps identified for closure: completions command, --version + help alias, --json unknown-command path, --quiet + VAE_DEBUG, ASCII twin map.
+
+---
+Task ID: 2-c
+Agent: Auren (coordinator), recording the Phase XXIII publication gap audit agent (read-only measurement)
+Task: Phase XXIII "Complete Documentation & Ecosystem Publication" — measured artifact inventory (49 artifacts across 5 groups).
+
+Work Log:
+- Measured: 27 EXISTS, 1 PARTIAL, 21 MISSING. A: 3/10 (missing root trust set: CHANGELOG, SECURITY, SUPPORT, CODE_OF_CONDUCT, GitHub templates). B: 13/23 (missing CLI manual, handbook, SDK docs, tutorials, migration, performance, extension, editor, enterprise, release notes, limitations). C: 7/11 +1 PARTIAL (missing SBOM, Dockerfile/containers, other-CI templates). D: 3/4 (dashboard lacks a download/install section). E: examples exist without an index README.
+- .github/ contains exactly one file (workflows/verify.yml — on-topic, least-privilege, hidden-file upload flag pinned by ci-truth tests).
+- Report of record: docs/ga/PHASE-XXIII-PUBLICATION-GAP-AUDIT.md (113 lines, five tables + feasible-vs-blocked split).
+
+Stage Summary:
+- Publication authoring is the largest remaining feasible surface; registry publication/platform verification/hosted deploy are BLOCKED here (Founder P4 / external platforms) and will be labeled, never dressed.
