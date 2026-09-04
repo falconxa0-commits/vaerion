@@ -15,7 +15,7 @@
 | Frozen install | **PASS** — CI installs `--frozen-lockfile` (supply-chain law, workflow-pinned); a lock drift fails the install step, as measured live (Task 3: the transient registry failure surfaced there, not as silent drift) | `.github/workflows/verify.yml` + run logs |
 | Published-package dependency surface | **PASS** — the npm artifact depends on exactly three permissively-licensed packages (ajv, hash-wasm, yaml); the engine bundles no runtime dependency tree | `packaging/npm/package.json` |
 | CI substrate pinning | **PASS** — Bun pinned to 1.3.14 in every workflow (the verified substrate, ADR-0018) | workflow files |
-| Automated vulnerability monitoring | **RESIDUAL (low)** — Dependabot is not enabled; the lockfile is frozen and human-audited, but no automated advisory watch exists. Owner: Founder/maintainer; enablement is a one-file change (`dependabot.yml`) to be added at GA close | this audit |
+| Automated vulnerability monitoring | **CLOSED (ASCENSION XXVI+, `61a6dd0`)** — `.github/dependabot.yml` live across bun / github-actions / pip (weekly, minor+patch grouped, majors excluded from bot rides); proven in production by its first sweep (6 PRs, one group PR with 51 updates) | this audit + ci-truth tests |
 
 ## 2. Repository audit
 
@@ -27,7 +27,7 @@
 | Private key hygiene | **PASS** — `/keys/*.key` gitignored; only the public half is tracked; the production signing key exists ONLY as a GitHub secret (write-only); the ceremony's local copy was destroyed (verified absent) | `.gitignore:69`, `SIGNING-CEREMONY.md` §2 |
 | Branch protection | **PASS (live)** — `main` protected: required status check `verification (all gates)` (PR merges), required linear history, force-pushes disabled, deletions disabled; **recorded residual**: administrators retain bypass (solo-maintainer direct-push law — stated in the baseline audit §6) | GitHub API `GET …/protection` → 200, Task 3 |
 | Workflow least privilege | **PASS** — `verify.yml` runs with `contents: read` (uploads via the runtime token); `release-publish.yml` is the ONLY `contents: write` workflow, justified by its publish function, hardened with tag-input validation and the bootstrap-key publish refusal | workflow files, Tasks 3–4 |
-| Action pinning | **RESIDUAL (low)** — the three first-party actions are pinned by major tag (`checkout@v4`, `setup-bun@v2`, `upload-artifact@v4`) rather than commit SHA. Official-actions risk accepted; SHA-pinning is the GA-close hardening step | workflow files |
+| Action pinning | **CLOSED (ASCENSION XXVI+, `61a6dd0`)** — all 6 `uses:` across both workflows pinned to full commit SHAs with tag annotations (each SHA re-verified via the commits API); the floating-tag class now FAILS the suite by contract test | workflow files + ci-truth tests |
 | Secrets inventory | **PASS** — exactly one Actions secret (`RELEASE_SIGNING_KEY`); no repository/user secrets exist | GitHub API secrets list (names only) |
 
 ## 3. Release audit
@@ -54,7 +54,7 @@
 | R-6 `vaerion.lock` upgrade path | Open — engineering (documented re-seal flow) |
 | R-7 public security-reporting channel | Open — Founder-gated (private email route is live and taught in SECURITY.md) |
 | **Branch protection (was plan-blocked)** | **CLOSED this campaign** — the repo went public, protection enabled and GET-verified |
-| Dependabot / SHA-pinned actions | NEW residuals (low) — named in §1–2 with owners |
+| Dependabot / SHA-pinned actions | CLOSED (ASCENSION XXVI+) — see §1–2 |
 
 ## 5. Verdict
 
@@ -62,7 +62,7 @@ The supply chain is pinned and frozen; the repository carries no secret
 material; the release trust chain is production-keyed, reproducible,
 provenance-complete, and verified three ways — including by an anonymous
 consumer. The remaining security work is named and owned: two low residuals
-(Dependabot, SHA-pinned actions), the engineering-open risk rows (R-1, R-3,
+(both CLOSED by ASCENSION XXVI+), the engineering-open risk rows (R-1, R-3,
 R-5, R-6), and the Founder-gated items (R-4/F-6 recordings, R-7 channel,
 F-5 publication). Nothing hidden, nothing dressed.
 

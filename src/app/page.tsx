@@ -356,7 +356,7 @@ export default function Home() {
             <BookOpen className="w-4 h-4" aria-hidden /> Reports &amp; documentation of record
           </div>
           <div className="flex flex-wrap gap-2">
-            {["BUILD_REPORT.md", "VERIFICATION_REPORT.md", "ARCHITECTURE_REPORT.md", "ROADMAP_PROGRESS.md", "CHANGELOG.md", "SECURITY.md", "LEGAL.md", "docs/CLI.md", "docs/SDK.md", "docs/LIMITATIONS.md", "docs/RELEASE-NOTES-v0.1.12-rc1.md", "docs/ga/GO-NO-GO.md", "docs/ga/ASCENSION-XXV-BASELINE-AUDIT.md"].map((f) => (
+            {["BUILD_REPORT.md", "VERIFICATION_REPORT.md", "ARCHITECTURE_REPORT.md", "ROADMAP_PROGRESS.md", "CHANGELOG.md", "SECURITY.md", "LEGAL.md", "docs/CLI.md", "docs/SDK.md", "docs/LIMITATIONS.md", "docs/RELEASE-NOTES-v0.1.13-rc1.md", "docs/ga/GO-NO-GO.md", "docs/ga/ASCENSION-XXV-BASELINE-AUDIT.md", "docs/ga/ASCENSION-XXVI-COMPLETION-REPORT.md", "docs/ga/REMAINING-REALITY-REPORT.md", "docs/founder/FOUNDER-PACKETS.md"].map((f) => (
               <Badge key={f} variant="outline" className="font-mono text-xs border-zinc-300 dark:border-zinc-700">
                 {f}
               </Badge>

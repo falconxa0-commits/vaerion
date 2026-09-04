@@ -1,62 +1,54 @@
-# The Final Remaining Reality Report (ASCENSION XXV close)
+# The Final Remaining Reality Report (ASCENSION XXVI+ close)
 
 | | |
 |---|---|
-| **Document** | Everything between "Public Beta Ready" and "General Availability Ready", sorted by measured status |
-| **Engine of record** | `0.1.13-rc1` — ALL GATES GREEN **530/0/42** on the close tree; CI GREEN on GitHub |
+| **Document** | Everything between "GA-ready engineering" and "GA", sorted by measured status |
+| **Engine of record** | `0.1.13-rc1` — ALL GATES GREEN **544/0/43, 9 gates, exit 0** on the close tree `21234b6`; CI GREEN on GitHub; three-remote parity 0/0 |
 | **Law** | Only measured truth. UNVERIFIED means *authored but impossible to verify in this environment*, with the reason. BLOCKED means *a human or external platform owns it*. Nothing omitted. |
 
-## 1. COMPLETE — implemented and verified (new in this campaign)
+## 1. COMPLETE — the five named engineering items (this campaign, all measured)
 
-- The **production release trust chain**: the production Ed25519 key lives as
-  the write-only GitHub secret `RELEASE_SIGNING_KEY`; the key of record is
-  rotated; the ceremony law (process, ownership, rotation, recovery) is
-  recorded; R-2 CLOSED. The first production-signed release (`v0.1.13-rc1`)
-  is published and verified three ways — including by an anonymous consumer.
-- The **live publication pipeline**: `release-publish.yml` validates the tag,
-  re-packs deterministically ON the tag, refuses a bootstrap-keyed pack, and
-  publishes the idempotent GitHub Release with the notes of record; the
-  rc-prerelease honesty flag; the announcement flow proven live
-  (discussion #1).
-- The **legal identity layer**: `LEGAL.md` (ownership, licensing, contributor
-  terms, trademark policy, the F-2 pseudonym disclosure); the winget
-  copyright conflict found and fixed; package metadata identity fields; real
-  project URLs.
-- **Branch protection on `main`**: required check + linear history + no
-  force-push/deletions (the plan-blocked item converted when the repo went
-  public).
-- The **provider failure-compatibility legs**: five failure cassettes
-  (429/401/529/mid-stream/404) + six tests through the real service; the
-  mid-stream swallow defect FIXED at root; `PROVIDER-COMPATIBILITY.md`.
-- The **four missing distribution channels**: Flatpak, Snap, Chocolatey,
-  Scoop — authored, syntax-validated, version-locked (register → 22 surfaces).
-- The **community/publication surfaces**: GitHub Discussions (6 categories),
-  the routing law in SUPPORT/CONTRIBUTING, the changelog automation pin, the
-  stale-identity fixes, the INSTALL.md live-download path.
-- The **operations law**: `docs/operations/` (ENVIRONMENTS, DEPLOYMENT,
-  OPERATIONS, ANNOUNCEMENTS) — the honest topology, the operator runbook,
-  the immutable-law-compatible rollback table.
+1. **Dependabot** — `.github/dependabot.yml` (bun / github-actions / pip;
+   weekly; minor+patch grouped; majors excluded from bot rides). LIVE: the
+   first sweep opened 6 PRs — one group PR with 51 updates (grouping
+   proven), majors solo. Contract-pinned by ci-truth tests.
+2. **SHA-pinned actions** — 6/6 `uses:` across both workflows full-SHA
+   pinned + annotated; SHAs independently re-verified via the commits API;
+   the floating-tag regex test makes the defect class a suite failure.
+3. **The daemon `packages` route group** — pack/verify/import over the wire
+   with PROVEN parity (the wire pack journals the IDENTICAL event-type
+   sequence as the CLI); `package.imported` additive to the event registry;
+   spec regenerated (17 paths); SDK client complete; verify-first import;
+   workspace path law. Five socket tests.
+4. **Coverage ratchets** — the 116-module baseline of record + the
+   `coverage-ratchet` gate (the 9th gate): a silent per-module decrease
+   fails CI by name; only a deliberate bless lowers a floor; the 1.0pp
+   jitter allowance is measured, not guessed.
+5. **The cross-version upgrade leg** — the REAL installer executed
+   end-to-end: tagged v0.1.12-rc1 installed → a vN workspace journals → the
+   same prefix upgraded to vN+1 → the shim serves vN+1, the vN tree is
+   retained, and the vN journal verifies under vN+1. A permanent regression
+   test, not a one-off.
+6. **Shell completions ×6** — bash/zsh/fish/powershell verified; nushell +
+   xonsh implemented from the ONE model with honest UNVERIFIED markers; a
+   new test pins that the generators can never lag the model.
 
 ## 2. VERIFIED — measured during THIS campaign (where)
 
-- Gates: 523→530 tests, 41→42 files, 0 failures, exit 0 — fresh at every
-  phase boundary (Tasks 1–10) and at close.
-- CI on GitHub infrastructure: every pushed commit GREEN (one transient
-  registry failure root-caused and re-run); the tag run GREEN; the
-  release-publish run GREEN.
-- The three cryptography legs on the published release, fresh at close:
-  sha256 7/7 → engine `dist-verify` ALL CHECKS PASSED → openssl
-  "Signature Verified Successfully".
-- The anonymous consumer loop: discover → download 8 assets → verify → run.
-- The dashboard: browser-verified at 1280/390 — zero page errors, zero
-  horizontal overflow, footer law holds, the new identity/audit surfaces
-  render.
-- Three-remote parity 0/0 at every close (local = canonical = github,
-  tag objects byte-identical).
-- The deb leg re-measured at the current version (build + metadata +
-  extraction).
+- Gates fresh at every phase boundary and at close (530→544 tests, 9 gates,
+  exit 0 each time); CI SUCCESS on main at both push boundaries
+  (`c7393fd`, `21234b6`); three-remote parity 0/0 at each.
+- Entry-state claims re-measured before work (suite, release, protection,
+  secrets, signing) — zero divergences from the XXV records.
+- The registry/website reality (R-1, `REGISTRY-STATE-MEASUREMENT`):
+  npm/PyPI/Homebrew/winget/Flathub/Snap/Chocolatey/Scoop all NOT PUBLISHED;
+  vaerion.dev not even registered — the F-5 slate is clean.
+- Dependabot end-to-end in production: PRs opened, grouped and solo,
+  CI-measured.
+- The vN→vN+1 workspace upgrade contract (journal of vN verifies under
+  vN+1), executed for real on this host.
 
-## 3. UNVERIFIED — authored here, impossible to verify here (exact reasons)
+## 3. UNVERIFIED — authored, impossible to verify here (exact reasons)
 
 | Surface | Why UNVERIFIED here |
 |---|---|
@@ -64,41 +56,35 @@
 | macOS execution (dmg/pkg build, codesign/notarize, Gatekeeper, brew) | no macOS host; Apple Developer ID required |
 | Flatpak/Snap/RPM/AppImage builds | no flatpak-builder/snapcraft/rpmbuild/appimagetool here (manifests syntax-validated only) |
 | Live distro testing (apt install on real Debian/Ubuntu; Fedora/Arch/…) | no distro hosts or container runtime |
-| zsh/fish/PowerShell completion EXECUTION | no zsh/fish/pwsh binary on this host (`bash -n` remains the measured exception) |
+| zsh/fish/powershell/nushell/xonsh completion EXECUTION | no such shells on this host (`bash -n` remains the measured exception) |
 | Docker/Podman/devcontainer image builds | no container runtime |
-| Cross-version upgrade leg (vN → vN+1 on one host) | single release lineage per host session (the register/notes teach the path) |
 | SBOM generation (CycloneDX/spdx tooling) | tooling absent; policy documented |
 | Live provider recordings | no provider network (F-6) |
+| The upgrade leg over RELEASED artifacts of a future train | the train must exist first (rehearsal step) |
 
-## 4. REMAINING — engineering work still owed before GA (small, named)
+## 4. REMAINING — engineering work still owed before GA
 
-1. Dependabot enablement (`.github/dependabot.yml`) + SHA-pinning the three
-   first-party workflow actions (the two low residuals from the security audit).
-2. The cross-version upgrade leg for the next release train (vN → vN+1 on a
-   fresh host, measured).
-3. Per-module coverage ratchets on top of the total-based floors (mechanical,
-   carried from the prior campaign).
-4. The daemon `packages` route group (wire parity + spec regen — MS-6 leftover,
-   carried).
-5. `nushell`/`xonsh` completion generators (carried; the four major shells ship).
+**None.** The five named items are closed with measured, pinned evidence
+(`docs/ga/ASCENSION-XXVI-COMPLETION-REPORT.md` §1). The next release train
+(`v0.1.14-rc1`) ships the new daemon surface and is a Founder-paced
+publication act (packet §A.3), not an engineering gap.
 
-## 5. BLOCKED — owned by the Founder or an external platform
+## 5. BLOCKED — owned by the Founder or an external platform (packet-ready)
 
 | Blocker | Owner | Exact state |
 |---|---|---|
-| F-2 full legal name in the identity layer | Founder | `Auren` pseudonym consistent everywhere; LEGAL.md §6 records the mechanical sweep the name change will trigger |
-| F-4 substrate ratification (TypeScript-on-Bun, ADR-0018) | Founder | PROVISIONAL with a recorded migration path |
-| F-5 publication: npm/PyPI/Homebrew/winget/Chocolatey/Scoop/APT/RPM + `vaerion.dev` + hosted site | Founder + registries | every channel authored + version-locked; the GitHub Releases surface is LIVE meanwhile; registry submissions need accounts + approval |
-| F-6 / R-4 live provider recording sessions | Founder (+ provider accounts) | no provider network here; the record script + failure cassettes are ready |
-| R-7 public security-reporting channel (security.txt) | Founder | the private email route is live and taught; automated channel awaits the release infrastructure |
+| F-2 full legal name in the identity layer | Founder | `Auren` pseudonym consistent everywhere; LEGAL.md §6 records the sweep |
+| F-4 substrate ratification (ADR-0018) | Founder | PROVISIONAL with a recorded migration path |
+| F-5 publication: npm/PyPI/Homebrew/winget/Chocolatey/Scoop/APT/RPM + `vaerion.dev` | Founder + registries | every channel authored + version-locked; GitHub Releases LIVE; **the packets are signature-ready: `docs/founder/FOUNDER-PACKETS.md`** |
+| F-6 live provider recordings | Founder (+ provider accounts) | recorder + failure cassettes ready; packet §D |
+| R-7 public security-reporting channel | Founder | private route live; security.txt awaits the domain (packet §C/§E) |
 | Registry/store review timelines | external platforms | cannot be executed or measured from here |
 
 ## 6. The one-line reality
 
-Every engineering surface the campaign named has been built, measured, and
-pinned — the release trust chain is production and the product is downloadable,
-verifiable, and runnable by a stranger today — and what remains before GA is
-exactly: five small engineering items, the Founder/external gates listed in §5,
-and nothing else.
+The engineering gap to GA is **zero**: the product is consumable,
+verifiable, upgradeable, and dependency-watchable today — what remains is
+exactly the Founder's signature set and the external platforms' timelines,
+both packet-ready and honestly labeled, and nothing else.
 
 *Repository reality wins. Constitution wins. Evidence wins.*

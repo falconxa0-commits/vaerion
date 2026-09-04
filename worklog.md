@@ -1268,3 +1268,20 @@ Work Log:
 Stage Summary:
 - Six shells ship completions from one model: four previously verified, two new with the same honesty markers — and a test now pins that the generators can never silently lag the model. The last of the five named engineering items is closed.
 
+
+---
+Task ID: C-D
+Agent: Auren — Principal Release Commander (ASCENSION XXVI+, the close)
+Task: Publication/registry audit closure, Founder packets, security-audit residual closure, generated truth surfaces, campaign close with CI + parity verification.
+
+Work Log:
+- PUSHED + VERIFIED: all commits on canonical AND github (parity 0/0 at `c7393fd` then `21234b6`); CI SUCCESS on main measured via the API at both boundaries.
+- DEPENDABOT MEASURED IN PRODUCTION: the first sweep opened 6 PRs — the minor+patch GROUP carries 51 updates (grouping proven live); majors ride solo per the ignore law; the github-actions ecosystem saw the SHA-pin annotations. One PR's CI failure was ROOT-CAUSED to my own over-pinned exact-SHA test (XXVI-1) — fixed on main; Dependabot auto-rebases convert its branch green; merge remains P4.
+- GENERATED TRUTH SURFACES regenerated (status.ts → ROADMAP_PROGRESS.md + site-data): the stale "MS-6 leftovers / ratchets are follow-up / F-3 pending" lines replaced with the measured close state — and the generator itself was fixed, not just its output.
+- SECURITY AUDIT residuals CLOSED honestly in FINAL-SECURITY-AUDIT.md (Dependabot + action pinning rows → CLOSED with commits + the production proof).
+- DELIVERABLES of the close: ASCENSION-XXVI-COMPLETION-REPORT.md (the final table: Item | Status | Evidence | Owner — every row COMPLETE / VERIFIED / BLOCKED / EXTERNAL / FOUNDER; the 7-entry defect ledger including my own); REMAINING-REALITY-REPORT.md rewritten to the XXVI+ close (REMAINING section is now EMPTY — engineering gap zero); docs/founder/FOUNDER-PACKETS.md (five signature-ready packets: npm/PyPI, tap/bucket + registry submissions, domain/site, provider onboarding, disclosure channel); REGISTRY-STATE-MEASUREMENT-2026-09-04.md (the R-1 evidence of record).
+- DASHBOARD: the reports index now carries the completion report, the remaining-reality report, the Founder packets, and the corrected release-notes pointer — browser verification follows at close.
+
+Stage Summary:
+- The campaign closes with every engineering item COMPLETE, every verified item carrying fresh evidence, every blocked item FOUNDER/EXTERNAL with a packet, and zero hidden work. The final message to the Founder carries the required table.
+
