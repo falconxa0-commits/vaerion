@@ -80,16 +80,18 @@ describe("workflow action pins + dependabot coverage — the immutable-reference
     }
   });
 
-  test("the pinned SHAs are the measured tags of record", () => {
+  test("every pinned reference carries its human-readable tag annotation", () => {
+    // DEFECT LEDGER (ASCENSION XXVI+): this test originally pinned the EXACT
+    // SHA strings — Dependabot's first lawful action-bump (upload-artifact
+    // 4→7, SHA + annotation updated correctly) failed it, proving the
+    // exact-string pin adds friction against legitimate bumps and no
+    // security (a swapped SHA rewrites both lines anyway). The laws that
+    // matter and DO fail CI: full-SHA pinning (the test above) and the
+    // annotation of record (below). Bump review is the human gate (P4).
     for (const wf of workflows) {
-      if (wf.includes("actions/checkout@")) {
-        expect(wf).toContain("actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0");
-      }
-      if (wf.includes("oven-sh/setup-bun@")) {
-        expect(wf).toContain("oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0");
-      }
-      if (wf.includes("actions/upload-artifact@")) {
-        expect(wf).toContain("actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2");
+      const uses = [...wf.matchAll(/^\s*uses:\s*(.+)$/gm)].map((m) => m[1]!.trim());
+      for (const ref of uses) {
+        expect(ref).toMatch(/^[\w.-]+\/[\w.-]+@[0-9a-f]{40} # [\w./+-]+/);
       }
     }
   });
