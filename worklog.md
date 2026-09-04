@@ -1089,3 +1089,19 @@ Work Log:
 
 Stage Summary:
 - Every shipping provider now has BOTH legs of its wire compatibility pinned: success AND failure. The campaign's mid-stream swallow defect is fixed at root and permanently pinned. Provider "supported" claims now have a mechanical meaning: both cassette rows green.
+
+---
+Task ID: 7
+Agent: Auren — Principal Release Engineer (ASCENSION XXV, Phase XXXI)
+Task: Distribution Expansion — author, validate, and register the four missing channel manifests (Flatpak, Snap, Chocolatey, Scoop).
+
+Work Log:
+- READ THE EXISTING PATTERNS FIRST: the AppImage + install.ps1 layouts define the shipping shape (engine src tree + a launcher through the bundled/checked Bun substrate; user-scope install; clean uninstall).
+- AUTHORED THE FOUR CHANNELS: Flatpak (dev.vaerion.Vaerion, finish-args = home + network only, Bun as extra-data with checksum pinned at the release train), Snap (core24 strict, home + network plugs, bundled Bun part), Chocolatey (nuspec + install/uninstall; the SAME release zip as winget; choco revision version form 0.1.13.1 recorded as the channel's derived convention; uninstall mirrors the measured --Uninstall law), Scoop (JSON manifest with checkver/autoupdate on the Releases API).
+- SYNTAX-VALIDATED ALL FOUR LOCALLY (YAML x2, XML, JSON parsed + structure asserted) — the validation honestly possible here; all four carry UNVERIFIED - <HOST> markers, never dressed.
+- REGISTER GREW TO 22 SURFACES: the four channels joined the version register (positive anchors incl. the new CHOCO_VERSION derived form) — lockstep is now CI-enforced on every authored channel; the negative sweep covers them automatically.
+- DOCS: packaging/README.md layout + verification matrix, docs/INSTALL.md channel map — every new channel carries its honest status.
+- ALL GATES GREEN 529/0/41.
+
+Stage Summary:
+- Every channel the directives ever named now has an authored, version-locked artifact. What remains for the channels is exactly what was always honest: host execution (flatpak-builder/snapcraft/choco/scoop hosts) + the Founder publication step (F-5) — labeled, never faked.
