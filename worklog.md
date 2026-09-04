@@ -1135,3 +1135,20 @@ Work Log:
 
 Stage Summary:
 - The security posture at GA candidacy is measured end-to-end: pinned supply chain, clean repository, production-keyed reproducible releases verified three ways — with every residual named, owned, and risk-ranked. Nothing hidden.
+
+---
+Task ID: 10
+Agent: Auren — Principal Release Commander (ASCENSION XXV, Phase XXXIV — the close)
+Task: Final GA Verification (local, GitHub, consumer, cryptography) + the seven final deliverables + the campaign close.
+
+Work Log:
+- LOCAL VERIFIED: fresh gate run 530/0/42, exit 0 (the suite grew exactly by the 6 provider-compat tests + the changelog pin).
+- GITHUB VERIFIED: CI GREEN on the close commit (run 33821230614, eadf1ec) — the whole campaign's pushes landed GREEN (one root-caused registry flake, GA-2).
+- CONSUMER VERIFIED: the anonymous loop (discover -> download 8 assets -> verify -> run) was measured in Task 4; the three cryptography legs RE-RUN fresh at close: sha256 7/7, engine dist-verify ALL CHECKS PASSED from the shipped tarball, openssl "Signature Verified Successfully".
+- DASHBOARD VERIFIED (agent-browser): 1280 + 390 viewports — zero page errors, scrollWidth == innerWidth (no horizontal overflow), footer bottom == document last pixel (the sticky-footer law), the Install region, LEGAL.md and the ASCENSION-XXV-BASELINE-AUDIT.md badges render.
+- THE SEVEN DELIVERABLES of record: FINAL-GA-AUDIT.md (baseline, per-phase record, the 10-entry defect ledger GA-1..10 incl. the auditor's own errors — nothing hidden), REMAINING-REALITY-REPORT.md (the XXV close rewrite: COMPLETE/VERIFIED/UNVERIFIED-with-reasons/REMAINING-five-named/BLOCKED-with-owners), RELEASE-CERTIFICATION.md (v0.1.13-rc1 certified), SECURITY-AUDIT.md (certification summary -> FINAL-SECURITY-AUDIT.md), INFRASTRUCTURE-REPORT.md, DISTRIBUTION-REPORT.md, FOUNDER-GO-NO-GO.md (15 axes re-scored 8.8/10 composite, was 8.1; the P4 decision block with residual-acceptance checkboxes).
+- PARITY: main eadf1ec identical on local, canonical, github.
+- THE CAMPAIGN IS CLOSED AND MEASURED.
+
+Stage Summary:
+- Public Beta Ready -> GA Ready: the engineering gap is five named small items; the remaining gates are the Founder's (F-2 legal name, F-4 substrate, F-5 publication, F-6 recordings, R-7 channel) and the platforms' (reviews, host executions). The first production-signed release is live, certified, and anonymously verifiable. The Founder holds the decision packet.
