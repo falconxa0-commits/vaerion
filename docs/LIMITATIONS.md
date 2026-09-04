@@ -36,8 +36,12 @@ measured status of record; item numbering below matches that list):
 7. **Breaker state is per-process by design.** Failures are journaled;
    breaker state is not. Multi-process sharing is a daemon concern
    needing an ADR (`ROADMAP_PROGRESS.md`).
-8. **Coverage floors are total-based.** Per-module ratchets are a
-   mechanical follow-up; totals only move up (`ROADMAP_PROGRESS.md`).
+8. **Coverage floors: totals by bunfig, per-modules by the ratchet.**
+   `bunfig.toml` floors the totals; the `coverage-ratchet` gate (ASCENSION
+   XXVI+) floors every module from the checked-in baseline of record
+   (`packages/vaerion/coverage-baseline.json`, blessed deliberately). A
+   module more than 1pp below its floor fails the gate BY NAME — coverage
+   can never decrease silently.
 9. **MS-6 leftovers** (`ROADMAP_PROGRESS.md` — "Recommended next work"):
    native single-binary installers (host-gated; see §2) are not done. The
    daemon packages route group (pack/verify/import) **is done** — ASCENSION

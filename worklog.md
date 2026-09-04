@@ -1215,3 +1215,22 @@ Work Log:
 Stage Summary:
 - MS-6's last engineering leftover is closed: the daemon now carries the full package lifecycle over the wire with PROVEN parity (identical journal contracts) and the SDK client reaches all of it. The blueprint's §7.3 packages row is implemented, described, and tested — nothing aspirational remains in the route table.
 
+
+---
+Task ID: B-3
+Agent: Auren — Principal Verification Authority (ASCENSION XXVI+, engineering)
+Task: Per-module coverage ratchets — coverage must never decrease silently (the carried OBJ-Q6 mechanical follow-up).
+
+Work Log:
+- MEASURED first: bun's per-file table (funcs/lines per module, 115 modules); bunfig floors only the totals; a real measurement hazard found — per-module coverage JITTERS between green runs (tools/rehearsal.ts measured 25.00 then 24.51 across two green runs, timer-race branches), so a naive floor would flake CI.
+- BUILT tools/coverage-ratchet.ts: parser over bun's table; checkRatchet (floor breach / BASELINE DRIFT for a module that vanishes from the table / new modules reported, not failed); the bless path (--bless writes the measured state as the floor of record — deliberate and reviewed, like VAE_BLESS; the gate itself never blesses); modes: live run, --check FILE (forensics on captured logs), --bless.
+- THE JITTER LAW, measured and documented: breach needs measured < floor − 1.0pp (JITTER_EPS). Jitter is absorbed; a real regression (or a downward trend past 1pp) fails BY NAME; only a deliberate bless lowers a floor.
+- WIRED as the coverage-ratchet gate in verify.ts, fed from the tests gate's OWN captured table (the suite runs ONCE — no double test run); the record now carries 9 gates.
+- BASELINE OF RECORD: packages/vaerion/coverage-baseline.json — 116 modules blessed from the green suite.
+- SEVEN permanent tests in ci-truth.test.ts: parser shape (header/total rows skipped), named breach + jitter band, absent-module drift, the gate wrapper naming breaches, the baseline schema/module-count sanity.
+- DEFECTS CAUGHT (the gates policing their own author again): (1) my corrupted-baseline drill (deliberately setting a floor to 100.01) was left dirty by a buggy restore one-liner — the new baseline-sanity test CAUGHT it as a red suite on the next run; repaired and re-blessed clean; (2) tsc/lint clean throughout.
+- ALL GATES GREEN 542/0/43 files… precisely: 9 gates, tests 542/0, coverage-ratchet "116 measured, 116 ratcheted, OK", exit 0.
+
+Stage Summary:
+- The ratchet is law, not narration: any future PR that silently drops a module's coverage now fails CI with the module's name on it. The gate proved it can fail (twice — on the synthetic breach test AND on the real corrupted-baseline drill) before it was trusted to pass.
+

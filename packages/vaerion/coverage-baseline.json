@@ -1,0 +1,469 @@
+{
+  "version": 1,
+  "modules": {
+    "src/agents/executor.ts": {
+      "funcs": 92.86,
+      "lines": 99.23
+    },
+    "src/agents/grants.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "src/agents/index.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "src/agents/metrics.ts": {
+      "funcs": 100,
+      "lines": 87.84
+    },
+    "src/agents/planner.ts": {
+      "funcs": 91.67,
+      "lines": 100
+    },
+    "src/agents/reasoning.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "src/agents/research-port.ts": {
+      "funcs": 60,
+      "lines": 99.1
+    },
+    "src/agents/runtime.ts": {
+      "funcs": 95.24,
+      "lines": 90.06
+    },
+    "src/agents/tools.ts": {
+      "funcs": 83.33,
+      "lines": 99
+    },
+    "src/api/index.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "src/api/openapi.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "src/api/routes.ts": {
+      "funcs": 100,
+      "lines": 99.66
+    },
+    "src/api/run-registry.ts": {
+      "funcs": 73.39,
+      "lines": 94.57
+    },
+    "src/api/server.ts": {
+      "funcs": 97.3,
+      "lines": 90.03
+    },
+    "src/broker/contracts/audit.ts": {
+      "funcs": 84.62,
+      "lines": 97.47
+    },
+    "src/broker/contracts/capability.ts": {
+      "funcs": 33.33,
+      "lines": 44.83
+    },
+    "src/broker/contracts/decision.ts": {
+      "funcs": 66.67,
+      "lines": 97.22
+    },
+    "src/broker/contracts/events.ts": {
+      "funcs": 80,
+      "lines": 97.22
+    },
+    "src/broker/contracts/gate.ts": {
+      "funcs": 33.33,
+      "lines": 85
+    },
+    "src/broker/contracts/permission-graph.ts": {
+      "funcs": 100,
+      "lines": 94.44
+    },
+    "src/broker/contracts/principal.ts": {
+      "funcs": 50,
+      "lines": 81.82
+    },
+    "src/broker/contracts/review-diff.ts": {
+      "funcs": 75,
+      "lines": 50
+    },
+    "src/broker/engine.ts": {
+      "funcs": 78.57,
+      "lines": 91.91
+    },
+    "src/broker/refusal-log.ts": {
+      "funcs": 91.3,
+      "lines": 98.37
+    },
+    "src/center/center.ts": {
+      "funcs": 66.67,
+      "lines": 75.95
+    },
+    "src/cli/commands.ts": {
+      "funcs": 64.84,
+      "lines": 78.18
+    },
+    "src/cli/completions.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "src/cli/io.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "src/cli/render.ts": {
+      "funcs": 69.23,
+      "lines": 48.65
+    },
+    "src/cli/ui.ts": {
+      "funcs": 81.44,
+      "lines": 87.05
+    },
+    "src/cli/vae.ts": {
+      "funcs": 80,
+      "lines": 92.57
+    },
+    "src/cli/workspace.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "src/config/config.ts": {
+      "funcs": 78.57,
+      "lines": 87.47
+    },
+    "src/config/templates.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "src/evals/harness.ts": {
+      "funcs": 85.71,
+      "lines": 100
+    },
+    "src/evals/index.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "src/extensions/factory.ts": {
+      "funcs": 75,
+      "lines": 76.19
+    },
+    "src/extensions/host.ts": {
+      "funcs": 88.89,
+      "lines": 99.26
+    },
+    "src/extensions/index.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "src/gateway/adapters/anthropic.ts": {
+      "funcs": 91.67,
+      "lines": 91.43
+    },
+    "src/gateway/adapters/ollama.ts": {
+      "funcs": 100,
+      "lines": 98.46
+    },
+    "src/gateway/adapters/openai.ts": {
+      "funcs": 100,
+      "lines": 96.92
+    },
+    "src/gateway/adapters/sse.ts": {
+      "funcs": 83.33,
+      "lines": 100
+    },
+    "src/gateway/breaker.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "src/gateway/cassette.ts": {
+      "funcs": 100,
+      "lines": 97.92
+    },
+    "src/gateway/metering.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "src/gateway/mockbrain.ts": {
+      "funcs": 100,
+      "lines": 95.8
+    },
+    "src/gateway/pricing.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "src/gateway/secrets.ts": {
+      "funcs": 60,
+      "lines": 53.19
+    },
+    "src/gateway/service.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "src/gateway/transport.ts": {
+      "funcs": 0,
+      "lines": 21.74
+    },
+    "src/gateway/types.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "src/identity/identity.ts": {
+      "funcs": 64.29,
+      "lines": 95
+    },
+    "src/index.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "src/journal/export.ts": {
+      "funcs": 100,
+      "lines": 92.31
+    },
+    "src/journal/hashchain.ts": {
+      "funcs": 85.71,
+      "lines": 91.43
+    },
+    "src/journal/lock.ts": {
+      "funcs": 100,
+      "lines": 97.37
+    },
+    "src/journal/ls.ts": {
+      "funcs": 60,
+      "lines": 100
+    },
+    "src/journal/reader.ts": {
+      "funcs": 75,
+      "lines": 71.43
+    },
+    "src/journal/records.ts": {
+      "funcs": 66.67,
+      "lines": 97.56
+    },
+    "src/journal/recovery.ts": {
+      "funcs": 100,
+      "lines": 98.25
+    },
+    "src/journal/replay.ts": {
+      "funcs": 75,
+      "lines": 83.05
+    },
+    "src/journal/verify.ts": {
+      "funcs": 100,
+      "lines": 88.24
+    },
+    "src/journal/writer.ts": {
+      "funcs": 92.86,
+      "lines": 96.9
+    },
+    "src/kernel/canonical.ts": {
+      "funcs": 75,
+      "lines": 91.89
+    },
+    "src/kernel/clock.ts": {
+      "funcs": 83.33,
+      "lines": 91.67
+    },
+    "src/kernel/errors.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "src/kernel/hash.ts": {
+      "funcs": 66.67,
+      "lines": 80
+    },
+    "src/kernel/ids.ts": {
+      "funcs": 90.91,
+      "lines": 100
+    },
+    "src/kernel/redact.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "src/package/build.ts": {
+      "funcs": 80,
+      "lines": 93.1
+    },
+    "src/package/format.ts": {
+      "funcs": 100,
+      "lines": 97.04
+    },
+    "src/package/index.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "src/package/lock.ts": {
+      "funcs": 83.33,
+      "lines": 93.44
+    },
+    "src/package/verify.ts": {
+      "funcs": 84.62,
+      "lines": 80.52
+    },
+    "src/perf/perf.ts": {
+      "funcs": 100,
+      "lines": 99.47
+    },
+    "src/receipts/receipt.ts": {
+      "funcs": 80,
+      "lines": 87.36
+    },
+    "src/repo/canonical.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "src/repo/ci.ts": {
+      "funcs": 90.91,
+      "lines": 90.61
+    },
+    "src/repo/constitution.ts": {
+      "funcs": 100,
+      "lines": 97.5
+    },
+    "src/repo/git.ts": {
+      "funcs": 92.86,
+      "lines": 93.97
+    },
+    "src/repo/index.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "src/repo/release.ts": {
+      "funcs": 90.91,
+      "lines": 85.77
+    },
+    "src/research/capability.ts": {
+      "funcs": 100,
+      "lines": 89.61
+    },
+    "src/research/citation.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "src/research/context.ts": {
+      "funcs": 80,
+      "lines": 92.52
+    },
+    "src/research/evidence.ts": {
+      "funcs": 100,
+      "lines": 92.65
+    },
+    "src/research/fencing.ts": {
+      "funcs": 100,
+      "lines": 91.3
+    },
+    "src/research/fingerprint.ts": {
+      "funcs": 100,
+      "lines": 83.33
+    },
+    "src/research/index.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "src/research/local-index.ts": {
+      "funcs": 78.95,
+      "lines": 95.89
+    },
+    "src/research/pipeline.ts": {
+      "funcs": 90,
+      "lines": 97
+    },
+    "src/research/principal.ts": {
+      "funcs": 100,
+      "lines": 87.1
+    },
+    "src/research/provenance.ts": {
+      "funcs": 75,
+      "lines": 93.62
+    },
+    "src/research/replay.ts": {
+      "funcs": 100,
+      "lines": 94.34
+    },
+    "src/research/scoring.ts": {
+      "funcs": 100,
+      "lines": 88.46
+    },
+    "src/research/verification.ts": {
+      "funcs": 100,
+      "lines": 95.83
+    },
+    "src/runtime/run.ts": {
+      "funcs": 91.67,
+      "lines": 99.71
+    },
+    "src/spine/bus.ts": {
+      "funcs": 62.5,
+      "lines": 96.77
+    },
+    "src/spine/envelope.ts": {
+      "funcs": 100,
+      "lines": 97.96
+    },
+    "src/spine/event-types.ts": {
+      "funcs": 50,
+      "lines": 92.16
+    },
+    "src/spine/persistence.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "src/spine/serialization.ts": {
+      "funcs": 100,
+      "lines": 91.67
+    },
+    "src/store/blob-cas.ts": {
+      "funcs": 75,
+      "lines": 67.8
+    },
+    "src/workflow/dag.ts": {
+      "funcs": 100,
+      "lines": 98.48
+    },
+    "src/workflow/engine.ts": {
+      "funcs": 80,
+      "lines": 85.39
+    },
+    "src/workflow/index.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "../../sdks/typescript/src/daemon-transport.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "../../sdks/typescript/src/daemon.ts": {
+      "funcs": 72.97,
+      "lines": 71.43
+    },
+    "../../sdks/typescript/src/index.ts": {
+      "funcs": 72.5,
+      "lines": 72.73
+    },
+    "../../tools/a11y-check.ts": {
+      "funcs": 95,
+      "lines": 86.86
+    },
+    "../../tools/canonical-provision.ts": {
+      "funcs": 90.91,
+      "lines": 77.69
+    },
+    "../../tools/coverage-ratchet.ts": {
+      "funcs": 77.78,
+      "lines": 57.29
+    },
+    "../../tools/gate-output.ts": {
+      "funcs": 100,
+      "lines": 100
+    },
+    "../../tools/rehearsal.ts": {
+      "funcs": 53.85,
+      "lines": 25
+    },
+    "../../tools/remote-protect.ts": {
+      "funcs": 66.67,
+      "lines": 50.88
+    }
+  }
+}

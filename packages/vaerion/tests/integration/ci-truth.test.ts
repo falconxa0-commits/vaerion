@@ -17,6 +17,7 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { failureExcerpt, GATE_LOG_DIR, gateLogName } from "../../../../tools/gate-output.ts";
+import { parseCoverageTable, checkRatchet, checkCoverageRatchetGate, JITTER_EPS } from "../../../../tools/coverage-ratchet.ts";
 
 const ROOT = join(import.meta.dir, "..", "..", "..", "..");
 
@@ -106,6 +107,73 @@ describe("workflow action pins + dependabot coverage — the immutable-reference
     expect(cfg).toContain("update-types:"); // grouping is configured
     expect(cfg).toContain("version-update:semver-major"); // majors are deliberately excluded from bot rides (P11)
     expect(cfg).toContain("/packaging/python"); // the pip directory of record
+  });
+});
+
+/* ───────────  6. the per-module coverage ratchet (ASCENSION XXVI+)  ─────────── */
+
+describe("the coverage ratchet — coverage never decreases silently", () => {
+  const baselinePath = join(ROOT, "packages", "vaerion", "coverage-baseline.json");
+  const baseline = JSON.parse(readFileSync(baselinePath, "utf8")) as { version: number; modules: Record<string, { funcs: number; lines: number }> };
+
+  const SAMPLE = [
+    "File                       | % Funcs | % Lines | Uncovered Line #s",
+    "---------------------------|---------|---------|-------------------",
+    "All files                  |   86.83 |   90.51 |",
+    " src/kept.ts               |  100.00 |  100.00 |",
+    " src/dropped.ts            |   80.00 |   90.00 | 12-14",
+    " src/new.ts                |   50.00 |   60.00 | 1-9",
+    "",
+  ].join("\n");
+
+  test("the parser reads bun's per-file table and skips the header/total rows", () => {
+    const rows = parseCoverageTable(SAMPLE);
+    expect(rows).toEqual([
+      { file: "src/kept.ts", funcs: 100, lines: 100 },
+      { file: "src/dropped.ts", funcs: 80, lines: 90 },
+      { file: "src/new.ts", funcs: 50, lines: 60 },
+    ]);
+  });
+
+  test("a module below its floor is a NAMED breach; within jitter it passes", () => {
+    const baseline2 = { version: 1 as const, modules: { "src/dropped.ts": { funcs: 80, lines: 90.5 } } };
+    const rows = parseCoverageTable(SAMPLE);
+    // 90.00 < 90.5 - 1.0 → NO breach (within the measured jitter band)…
+    expect(checkRatchet(rows, baseline2).violations).toEqual([]);
+    // …but 2pp down IS a breach, named.
+    const baseline3 = { version: 1 as const, modules: { "src/dropped.ts": { funcs: 80, lines: 92 } } };
+    const r = checkRatchet(rows, baseline3);
+    expect(r.violations).toEqual([{ file: "src/dropped.ts", metric: "lines", floor: 92, measured: 90 }]);
+    expect(JITTER_EPS).toBe(1.0);
+  });
+
+  test("a baselined module that disappears is BASELINE DRIFT (never silent)", () => {
+    const r = checkRatchet(parseCoverageTable(SAMPLE), { version: 1, modules: { "src/gone.ts": { funcs: 90, lines: 90 } } });
+    expect(r.violations).toEqual([]);
+    expect(r.findings).toHaveLength(1);
+    expect(r.findings[0]!.file).toBe("src/gone.ts");
+    expect(r.findings[0]!.problem).toContain("ABSENT");
+  });
+
+  test("the gate wrapper reports OK on the blessed state and NAMES breaches when red", () => {
+    // The real baseline vs a synthetic table that breaches it.
+    const rows = Object.keys(baseline.modules).map((file) => ` ${file} | 0.00 | 0.00 |`).join("\n");
+    const gate = checkCoverageRatchetGate(`File | % Funcs | % Lines |\n${rows}`);
+    expect(gate.ok).toBe(false);
+    expect(gate.gate).toBe("coverage-ratchet");
+    expect(gate.full).toContain("RATCHET BREACH: src/"); // named, not counted
+  });
+
+  test("the baseline of record exists, is current-schema, and ratchets the suite's modules", () => {
+    expect(baseline.version).toBe(1);
+    const moduleCount = Object.keys(baseline.modules).length;
+    expect(moduleCount).toBeGreaterThan(100); // the measured floor set of record
+    for (const [file, floor] of Object.entries(baseline.modules)) {
+      expect(file).toMatch(/^(\.\.\/)+|^src\//); // engine-relative paths as the table prints them
+      expect(floor.funcs).toBeGreaterThanOrEqual(0);
+      expect(floor.lines).toBeGreaterThanOrEqual(0);
+      expect(floor.lines).toBeLessThanOrEqual(100);
+    }
   });
 });
 

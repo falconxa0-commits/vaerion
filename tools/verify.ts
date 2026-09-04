@@ -6,6 +6,8 @@
  *   2. sdk typecheck (tsc strict)
  *   3. full test suite with coverage floors (OBJ-Q6: bun --coverage +
  *      bunfig coverageThreshold; a floor breach fails the gate)
+ *   3b. coverage-ratchet (OBJ-Q6; ASCENSION XXVI+ — per-module floors from
+ *      the checked-in baseline; no module decreases silently)
  *   4. layerlint (architecture boundaries)
  *   5. constitutional-check (invariants + contract sync + secrets)
  *   6. perf-budget (Phase 7 — the performance budget law, v1.4 A4)
@@ -30,6 +32,7 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { failureExcerpt, GATE_LOG_DIR, gateLogName } from "./gate-output.ts";
+import { checkCoverageRatchetGate } from "./coverage-ratchet.ts";
 
 const ROOT = resolve(import.meta.dir, "..");
 const ENGINE = join2(ROOT, "packages", "vaerion");
@@ -82,6 +85,10 @@ gates.push(run("tests", ["bun", "test", "tests/", "--coverage"], {
   // tools/rehearsal.ts at train time.
   env: { VAE_VERIFY_RUNNING: "1" },
 }));
+// The per-module coverage ratchet (OBJ-Q6; ASCENSION XXVI+ B-3) — fed from
+// the tests gate's OWN captured coverage table: the suite runs once, and no
+// module can decrease silently below its baselined floor.
+gates.push(checkCoverageRatchetGate(gates[gates.length - 1]!.full));
 gates.push(run("layerlint", ["bun", "run", join2(ROOT, "tools", "layerlint.ts")]));
 gates.push(run("constitutional-check", ["bun", "run", join2(ROOT, "tools", "constitutional-check.ts")]));
 gates.push(run("perf-budget", ["bun", "run", join2(ROOT, "tools", "perf-gate.ts")]));
