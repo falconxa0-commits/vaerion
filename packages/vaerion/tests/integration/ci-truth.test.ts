@@ -61,6 +61,54 @@ describe("the verification workflow — the CI truth law", () => {
   });
 });
 
+/* ─────────────  5. the supply-chain pins (ASCENSION XXVI+)  ───────────── */
+
+describe("workflow action pins + dependabot coverage — the immutable-reference law", () => {
+  const readRepo = (p: string) => readFileSync(join(ROOT, p), "utf8");
+  const workflows = [".github/workflows/verify.yml", ".github/workflows/release-publish.yml"].map(readRepo);
+
+  test("every external action is pinned to a full commit SHA (immutable reference)", () => {
+    for (const wf of workflows) {
+      const uses = [...wf.matchAll(/^\s*uses:\s*(.+)$/gm)].map((m) => m[1]!.trim());
+      expect(uses.length).toBeGreaterThan(0);
+      for (const ref of uses) {
+        // `owner/repo@<40-hex>` with an optional ` # tag` annotation —
+        // floating major tags (@v4) are the defect class this pins shut.
+        expect(ref).toMatch(/^[\w.-]+\/[\w.-]+@[0-9a-f]{40}( # .+)?$/);
+      }
+    }
+  });
+
+  test("the pinned SHAs are the measured tags of record", () => {
+    for (const wf of workflows) {
+      if (wf.includes("actions/checkout@")) {
+        expect(wf).toContain("actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0");
+      }
+      if (wf.includes("oven-sh/setup-bun@")) {
+        expect(wf).toContain("oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0");
+      }
+      if (wf.includes("actions/upload-artifact@")) {
+        expect(wf).toContain("actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2");
+      }
+    }
+  });
+
+  test("dependabot covers every declared ecosystem with a weekly schedule and grouping", () => {
+    const cfg = readRepo(".github/dependabot.yml");
+    const body = cfg.replace(/^#.*$/gm, "").trim(); // comment-stripped body
+    expect(body.startsWith("version: 2")).toBe(true);
+    for (const eco of ['package-ecosystem: "bun"', 'package-ecosystem: "github-actions"', 'package-ecosystem: "pip"']) {
+      expect(cfg).toContain(eco);
+    }
+    const ecosystems = cfg.split("- package-ecosystem:").length - 1;
+    const schedules = [...cfg.matchAll(/interval: "weekly"/g)].length;
+    expect(schedules).toBe(ecosystems); // every declared ecosystem has a schedule
+    expect(cfg).toContain("update-types:"); // grouping is configured
+    expect(cfg).toContain("version-update:semver-major"); // majors are deliberately excluded from bot rides (P11)
+    expect(cfg).toContain("/packaging/python"); // the pip directory of record
+  });
+});
+
 /* ─────────────────────  2. a red gate names its failure  ───────────────────── */
 
 describe("failureExcerpt — the diagnostics law (P7 honest surfaces)", () => {

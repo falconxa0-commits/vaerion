@@ -1,0 +1,70 @@
+# Vaerion — Dependabot version updates (ASCENSION XXV security-audit residual,
+# closed by ASCENSION XXVI+).
+#
+# Law of this config (why it looks like this):
+#   - Ecosystem "bun": the workspace's ONE lockfile is the root bun.lock
+#     (Dependabot Bun support GA — github.blog changelog 2025-02-13;
+#     ecosystem id "bun", docs "Dependabot options reference"). ONE root
+#     entry covers the whole workspace (packages/*, sdks/*, tools) because
+#     they share that lockfile; re-declaring subdirectories would be a lie.
+#   - Ecosystem "github-actions": the workflow actions are SHA-pinned
+#     (immutable references); this ecosystem watches the pinned references
+#     and proposes the bump commits, which are then re-pinned by SHA.
+#   - Ecosystem "pip": packaging/python (the PyPI wheel SDK, pyproject.toml).
+#   - Grouping: minor+patch ride together (low-risk churn, fewer PRs);
+#     majors always arrive as SINGLE PRs — a major is a reviewed, ADR'd
+#     migration (P11: evolution without betrayal), never a silent bot ride.
+#   - Ignore rules: majors for the framework-carrying packages are excluded
+#     from automated PRs for that same reason. Everything else is fair game.
+#   - Schedule: one weekly sweep, Monday 06:00 UTC — a bounded review load,
+#     not a firehose.
+version: 2
+updates:
+  - package-ecosystem: "bun"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # Breaking framework migrations are deliberate, ADR'd work (P11).
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "prisma"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@prisma/client"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 5
+    groups:
+      actions:
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "pip"
+    directory: "/packaging/python"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 5

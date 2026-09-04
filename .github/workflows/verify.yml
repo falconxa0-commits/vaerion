@@ -34,12 +34,14 @@ jobs:
       contents: read
     steps:
       - name: Checkout (full history — the repository is the evidence)
-        uses: actions/checkout@v4
+        # SHA-pinned (immutable reference — the supply-chain law; the
+        # comment carries the human-readable tag of record).
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
 
       - name: Setup Bun (pinned — the verified substrate)
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: "1.3.14"
 
@@ -50,7 +52,7 @@ jobs:
         run: bun run tools/verify.ts
 
       - name: Upload the measured verification record
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: vaerion-verification-${{ github.run_id }}
           path: |
@@ -72,12 +74,12 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: "1.3.14"
 
@@ -104,7 +106,7 @@ jobs:
         run: bun run tools/dist-pack.ts
 
       - name: Upload release artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: vaerion-release-${{ github.ref_name }}
           path: dist/
