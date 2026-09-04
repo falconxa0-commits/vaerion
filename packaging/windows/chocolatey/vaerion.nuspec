@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Chocolatey package metadata — the Vaerion CLI (ASCENSION XXV Phase XXXI).
+     VERIFICATION STATUS: authored on Linux; chocolatey unavailable in this
+     environment (XML-validated, never executed). Platform marker:
+     UNVERIFIED — CHOCOLATEY. The package ships through the community
+     repository only after the Founder's publication step (F-5) and the
+     moderation review. -->
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>vaerion</id>
+    <version>0.1.13.1</version>
+    <title>Vaerion (CLI)</title>
+    <authors>Auren</authors>
+    <owners>Auren</owners>
+    <projectUrl>https://github.com/falconxa0-commits/vaerion</projectUrl>
+    <projectSourceUrl>https://github.com/falconxa0-commits/vaerion</projectSourceUrl>
+    <bugTrackerUrl>https://github.com/falconxa0-commits/vaerion/issues</bugTrackerUrl>
+    <iconUrl>https://raw.githubusercontent.com/falconxa0-commits/vaerion/main/public/icon-192.png</iconUrl>
+    <licenseUrl>https://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <releaseNotes>https://github.com/falconxa0-commits/vaerion/blob/main/docs/RELEASE-NOTES-v0.1.13-rc1.md</releaseNotes>
+    <packageSourceUrl>https://github.com/falconxa0-commits/vaerion/tree/main/packaging/windows/chocolatey</packageSourceUrl>
+    <docsUrl>https://github.com/falconxa0-commits/vaerion#readme</docsUrl>
+    <mailingListUrl>https://github.com/falconxa0-commits/vaerion/discussions</mailingListUrl>
+    <summary>AI-native development engine — deterministic, auditable, local-first.</summary>
+    <description>
+Vaerion is an AI-native development engine: a deterministic runtime with
+broker-governed autonomy, hash-chained journals, receipts, and permanent
+provenance for everything it creates. Every step lands on one versioned
+event spine; journals are append-only and blake3-chained; runs replay
+deterministically; deliverables build into reproducible `.vxn` bundles.
+
+This package installs the `vae` CLI (and the Bun substrate it runs on)
+into the user's LocalAppData — no daemons, no background services, no
+telemetry.
+    </description>
+    <tags>ai agents cli deterministic audit provenance local-first reproducible-builds</tags>
+    <copyright>Copyright 2026 Auren</copyright>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <dependencies />
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

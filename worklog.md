@@ -1072,3 +1072,20 @@ Work Log:
 
 Stage Summary:
 - The publication system is real end-to-end: a stranger can discover (public repo + release page), download (8 signed assets), verify (three legs), use (CLI runs), get help (Q&A + SUPPORT.md), propose (Ideas), and read the law (docs/). The remaining publication gap is exactly F-5: registries + hosted domain — Founder-owned.
+
+---
+Task ID: 6
+Agent: Auren — Principal Architect (ASCENSION XXV, Phase XXX)
+Task: Provider Cassettes — reproducible provider compatibility for every shipping provider: measure, create failure-leg cassettes, verify deterministic tests, record the matrix.
+
+Work Log:
+- MEASURED the cassette framework (ADR-0012): fingerprint = blake3 over the canonicalized request built by the REAL adapter; replay fails closed (E1702) on any unknown request; the sanctioned recorder (record-cassettes.ts) existed with 4 happy-path cassettes.
+- EXTENDED THE RECORDER with five failure transcripts (openai 429 rate_limit_error, openai 401 invalid_api_key, anthropic 529 overloaded_error, anthropic mid-stream `event: error` inside an HTTP 200 stream, ollama 404 model-not-pulled). The adapters refuse non-200 BY DESIGN, so error fingerprints come from a 200-probe that captures the real request bytes; the error status attaches to the cassette afterward (documented in the recorder).
+- NEW SUITE provider-compat.test.ts (6 tests) pins the failure legs through the REAL service: E1601 mappings, retry exhaustion (attempts 2), the metering counters MEASURED (invocations vs failed are separate counters; my initial assumption invocations=1 was wrong and corrected by probing), gateway.invoke.failed journaling, chain integrity across failures, the secret never journals, and the breaker refusing with E1705 after threshold (my E1302 guess corrected by the thrown error).
+- REAL DEFECT FOUND AND FIXED: the anthropic mid-stream error event was SILENTLY SWALLOWED — the invocation recorded as SUCCESS (gateway.invoke.recorded, failed:0). Root cause: collectFrames never checked frame.type === "error". Fix at root: collectFrames throws E1601 "provider stream error (...)" into the existing failure path (breaker failure, failed metering, loud journal). The cassette row is the permanent regression pin.
+- The constitutional gate caught "XXX" in my own fix comment (C3 placeholder debt) — reworded.
+- COMPATIBILITY RECORDED: docs/ga/PROVIDER-COMPATIBILITY.md — the matrix of record (provider x op x scenario x cassette x status x pinned behavior) + the measured fallback/protective behavior (retry, breaker E1705, fail-closed replay, secret hygiene) + honest limits (synthetic transcripts from documented formats; F-6 live recordings remain Founder-gated; wire drift = a new cassette via the bless path).
+- ALL GATES GREEN 529/0/41 (523 + 6 new).
+
+Stage Summary:
+- Every shipping provider now has BOTH legs of its wire compatibility pinned: success AND failure. The campaign's mid-stream swallow defect is fixed at root and permanently pinned. Provider "supported" claims now have a mechanical meaning: both cassette rows green.

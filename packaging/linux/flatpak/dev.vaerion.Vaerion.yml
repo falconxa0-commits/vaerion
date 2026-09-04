@@ -1,0 +1,69 @@
+# Flatpak manifest — dev.vaerion.Vaerion (ASCENSION XXV Phase XXXI).
+#
+# VERIFICATION STATUS: authored on Linux; flatpak-builder unavailable in this
+# environment (syntax-validated, never executed). Platform marker:
+# UNVERIFIED — FLATPAK.
+#
+# Design notes (mirroring the measured packaging patterns):
+#   - the app content is the same tree every channel ships: the engine source
+#     (packages/vaerion/src) + the package.json of record;
+#   - the runtime substrate is Bun (ADR-0018), fetched as extra-data from the
+#     pinned upstream release and checksummed at the release train (the
+#     checksum placeholder below is pinned when the artifact exists — never
+#     guessed);
+#   - finish-args grant exactly what the engine needs and nothing more:
+#     $HOME (the workspace lives in the user's tree) and network (the
+#     provider gateway egress site, ADR-0019 — the user's own provider keys).
+id: dev.vaerion.Vaerion
+runtime: org.freedesktop.Platform
+runtime-version: "24.08"
+sdk: org.freedesktop.Sdk
+command: vae
+separate-locales: false
+finish-args:
+  - --filesystem=home
+  - --share=network
+  - --share=ipc
+modules:
+  - name: bun
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 bun /app/bin/bun
+    sources:
+      - type: extra-data
+        filename: bun
+        only-arches: [x86_64]
+        url: https://github.com/oven-sh/bun/releases/download/bun-v1.3.14/bun-linux-x64.zip
+        sha256: CHECKSUM_PINNED_AT_RELEASE_TRAIN
+        size: 0
+        x-checker-data:
+          type: anitya
+          project-id: PLACEHOLDER
+  - name: vaerion
+    buildsystem: simple
+    build-commands:
+      - install -Dm644 -t /app/lib/vaerion/0.1.13-rc1/ -- source/package.json
+      - cp -R -- source/src /app/lib/vaerion/0.1.13-rc1/src
+      - |
+        printf '#!/bin/sh\nexec /app/bin/bun run /app/lib/vaerion/0.1.13-rc1/src/cli/vae.ts "$@"\n' > /app/bin/vae
+        chmod +x /app/bin/vae
+      - install -Dm644 source/LICENSE /app/share/licenses/vaerion/LICENSE
+      - |
+        install -Dm644 /dev/stdin /app/share/metainfo/dev.vaerion.Vaerion.metainfo.xml <<'XML'
+        <?xml version="1.0" encoding="UTF-8"?>
+        <component type="console-application">
+          <id>dev.vaerion.Vaerion</id>
+          <name>Vaerion</name>
+          <summary>AI-native development engine — deterministic, auditable, local-first</summary>
+          <metadata_license>FSFAP</metadata_license>
+          <project_license>Apache-2.0</project_license>
+          <provides><binary>vae</binary></provides>
+        </component>
+        XML
+    sources:
+      - type: archive
+        path: ../../dist/vaerion-0.1.13-rc1-source.tar.gz
+        # For the Flathub submission the archive is fetched from the release
+        # URL instead; the local path builds from the release train output.
+        # url: https://github.com/falconxa0-commits/vaerion/releases/download/v0.1.13-rc1/vaerion-0.1.13-rc1-source.tar.gz
+        # sha256: CHECKSUM_PINNED_AT_RELEASE_TRAIN

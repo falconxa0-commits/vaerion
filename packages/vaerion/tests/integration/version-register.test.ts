@@ -44,6 +44,9 @@ const cliSource = await readRepo("packages/vaerion/src/cli/vae.ts");
 const VERSION = cliSource.match(/export const VERSION = "([^"]+)"/)?.[1] ?? "";
 const RPM_VERSION = VERSION.replace("-", ".");
 const DEB_VERSION = VERSION.replace("-", "~");
+// Chocolatey forbids pre-release segments: the rc tag maps onto the 4th
+// revision digit (0.1.13-rc1 -> 0.1.13.1) — the channel's derived form.
+const CHOCO_VERSION = VERSION.replace("-rc", ".");
 
 /** The register: [repo-relative path, anchors that must each appear in the file]. */
 const REGISTER: Array<[string, string[]]> = [
@@ -71,6 +74,11 @@ const REGISTER: Array<[string, string[]]> = [
   ["packaging/homebrew/vaerion.rb", [`vaerion-${VERSION}-source.tar.gz`]],
   ["spec/openapi.json", [`"version": "${VERSION}"`]],
   ["packaging/README.md", [VERSION]],
+  // ASCENSION XXV Phase XXXI channels — the four authored-manifest gaps closed
+  ["packaging/linux/flatpak/dev.vaerion.Vaerion.yml", [`lib/vaerion/${VERSION}/`, `vaerion-${VERSION}-source.tar.gz`]],
+  ["packaging/linux/snap/snapcraft.yaml", [`version: "${VERSION}"`, `lib/vaerion/${VERSION}/`]],
+  ["packaging/windows/chocolatey/vaerion.nuspec", [`<version>${CHOCO_VERSION}</version>`]],
+  ["packaging/windows/scoop/vaerion.json", [`"version": "${VERSION}"`, `vaerion-${VERSION}-windows-x64.zip`]],
 ];
 
 const TEXT_EXTS = new Set([".sh", ".ps1", ".py", ".toml", ".yaml", ".yml", ".json", ".md", ".rb", ".spec", ".cmd", ".txt"]);

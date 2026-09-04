@@ -1,0 +1,56 @@
+# Snapcraft manifest — the Vaerion CLI (ASCENSION XXV Phase XXXI).
+#
+# VERIFICATION STATUS: authored on Linux; snapcraft unavailable in this
+# environment (syntax-validated, never executed). Platform marker:
+# UNVERIFIED — SNAP.
+#
+# Design notes (mirroring the measured packaging patterns):
+#   - core24 base; the engine source ships into $SNAP/lib, launched by a
+#     wrapper through the bundled Bun runtime (ADR-0018);
+#   - confinement: strict, with exactly the plugs the engine needs — home
+#     (the workspace is the user's tree) and network (the provider gateway
+#     egress site, ADR-0019).
+name: vaerion
+base: core24
+version: "0.1.13-rc1"
+summary: AI-native development engine — deterministic, auditable, local-first
+description: |
+  Vaerion runs AI-assisted development work the way a database engine runs
+  transactions: every step lands on one versioned event spine, journals are
+  append-only and hash-chained, permissions pass through a fail-closed
+  broker, runs replay deterministically, and deliverables build into
+  reproducible bundles. Evidence, not branding.
+grade: stable
+confinement: strict
+license: Apache-2.0
+
+apps:
+  vae:
+    command: bin/vae
+    plugs:
+      - home
+      - network
+
+parts:
+  bun:
+    plugin: dump
+    source: https://github.com/oven-sh/bun/releases/download/bun-v1.3.14/bun-linux-x64.zip
+    # The pinned Bun substrate — the release train may re-pin the URL; the
+    # version of record lives in the version register, not here.
+    override-build: |
+      mkdir -p "$CRAFT_PART_INSTALL/bin"
+      install -m755 bun "$CRAFT_PART_INSTALL/bin/bun"
+  vaerion:
+    plugin: dump
+    source: .
+    override-pull: |
+      craftctl default
+      # Stage the engine tree exactly as every other channel does.
+      mkdir -p "$CRAFT_PART_INSTALL/lib/vaerion/0.1.13-rc1"
+      cp -R packages/vaerion/src "$CRAFT_PART_INSTALL/lib/vaerion/0.1.13-rc1/src"
+      cp packages/vaerion/package.json "$CRAFT_PART_INSTALL/lib/vaerion/0.1.13-rc1/package.json"
+    override-build: |
+      BIN="$CRAFT_PART_INSTALL/bin"
+      mkdir -p "$BIN"
+      printf '#!/bin/sh\nexec "$SNAP/bin/bun" run "$SNAP/lib/vaerion/0.1.13-rc1/src/cli/vae.ts" "$@"\n' > "$BIN/vae"
+      chmod +x "$BIN/vae"

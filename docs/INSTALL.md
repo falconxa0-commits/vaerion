@@ -17,6 +17,10 @@ exit-code contract. The engine executes on the [Bun](https://bun.sh) runtime
 | RPM | `packaging/linux/vaerion.spec` | authored; **UNVERIFIED — RPM** (no rpmbuild here) |
 | AppImage | `packaging/linux/make-appimage.sh` | AppDir assembly verified; final step **UNVERIFIED — APPIMAGE** (needs `appimagetool`) |
 | Windows | `packaging/windows/` (winget manifests + `install.ps1`) | authored; **UNVERIFIED — WINDOWS** |
+| Chocolatey | `packaging/windows/chocolatey/` | authored + syntax-validated; **UNVERIFIED — CHOCOLATEY** (no choco host here) |
+| Scoop | `packaging/windows/scoop/vaerion.json` | authored + JSON-validated; **UNVERIFIED — SCOOP** (no scoop host here) |
+| Flatpak | `packaging/linux/flatpak/dev.vaerion.Vaerion.yml` | authored + YAML-validated; **UNVERIFIED — FLATPAK** (no flatpak-builder here) |
+| Snap | `packaging/linux/snap/snapcraft.yaml` | authored + YAML-validated; **UNVERIFIED — SNAP** (no snapcraft here) |
 | macOS | `packaging/macos/` (`.dmg`, `.pkg`) | authored; **UNVERIFIED — MACOS**; signing prep in `SIGNING-PREP.md` |
 | From source | below | **verified** (this is how the repository verifies itself) |
 
