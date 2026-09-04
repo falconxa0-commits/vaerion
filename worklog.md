@@ -1105,3 +1105,17 @@ Work Log:
 
 Stage Summary:
 - Every channel the directives ever named now has an authored, version-locked artifact. What remains for the channels is exactly what was always honest: host execution (flatpak-builder/snapcraft/choco/scoop hosts) + the Founder publication step (F-5) — labeled, never faked.
+
+---
+Task ID: 8
+Agent: Auren — Principal Verification Authority (ASCENSION XXV, Phase XXXII)
+Task: Platform Hardening — verify Linux/Windows/macOS support surfaces and record SUPPORTED/UNVERIFIED/UNSUPPORTED with evidence.
+
+Work Log:
+- FRESH LINUX MEASUREMENT AT 0.1.13-rc1: make-deb.sh built the package (dpkg-deb present; deb-check: /usr/bin/vae executable + engine present); dpkg-deb --info (Version 0.1.13~rc1, Depends curl|wget, Recommends bun, Maintainer Auren <auren@vaerion.dev>); dpkg-deb -x extraction verified (vae + src/cli/vae.ts land at the right paths).
+- THE MATRIX OF RECORD: docs/ga/PLATFORM-MATRIX.md — Linux measured rows cite their evidence (source/npm/installer/releases tarball journeys, deb build/extraction); Windows/macOS/Flatpak/Snap/AppImage/RPM rows are UNVERIFIED behind NAMED hosts (pwsh, hdiutil, pkgbuild, rpmbuild, appimagetool, flatpak-builder, snapcraft); MSI/EXE = deliberately UNSUPPORTED (design decision); the distro spread is UNVERIFIED as execution environments — no distro claimed as tested.
+- CROSS-CUTTING MEASURED FACTS recorded with citations (substrate pin ADR-0018 PROVISIONAL/F-4, E1600 wrong-runtime refusal, zero telemetry C1/C6, keychain secrets ADR-0013, NO_COLOR/TTY invariants pinned).
+- ALL GATES GREEN (repo unchanged by the doc; the deb build artifacts stayed in dist/ — untracked).
+
+Stage Summary:
+- The platform story is honest and complete: measured where measurable, labeled where host-gated, deliberately-unsupported where designed — nothing faked, nothing hidden.
