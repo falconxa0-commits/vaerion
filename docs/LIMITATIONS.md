@@ -61,10 +61,16 @@ verification matrix of record is `packaging/README.md` (measured
   Windows (`packaging/windows/`) and macOS (`packaging/macos/`,
   incl. `SIGNING-PREP.md`) are authored; Developer ID signing and
   notarization are additionally gated on the key ceremony (F-3).
-- **Cross-version upgrade: UNVERIFIED** — a single release lineage per
-  host session was measured; same-version upgrade was measured clean
-  (`docs/ga/ASCENSION-XX-REALITY-RECOVERY.md` §6; the Empty Machine Test
-  leg of record is `docs/ga/ASCENSION-XX-EMPTY-MACHINE-TEST.md`).
+- **Cross-version upgrade: the vN → vN+1 leg is MEASURED** on the
+  source-install path — the real installer installed the tagged
+  `v0.1.12-rc1` source, a vN workspace journaled, then the real installer
+  upgraded the same prefix to vN+1: the shim serves vN+1, the vN tree is
+  retained, and the vN-written journal verifies under vN+1
+  (`cross-version-upgrade.test.ts`, ASCENSION XXVI+ B-4 — a permanent
+  regression test, not a one-off). A leg over the RELEASED artifacts of a
+  future train remains a release-train rehearsal step (the train must exist
+  first); the single-version anonymous download path was measured at
+  ASCENSION XXV Task 4.
 - **twine check: UNVERIFIED** — the host lacks twine; the Python wheel
   itself was built and its install verified offline
   (`docs/ga/ASCENSION-XX-REALITY-RECOVERY.md` §6).

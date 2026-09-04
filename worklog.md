@@ -1234,3 +1234,19 @@ Work Log:
 Stage Summary:
 - The ratchet is law, not narration: any future PR that silently drops a module's coverage now fails CI with the module's name on it. The gate proved it can fail (twice — on the synthetic breach test AND on the real corrupted-baseline drill) before it was trusted to pass.
 
+
+---
+Task ID: B-4
+Agent: Auren — Principal Release Engineer (ASCENSION XXVI+, engineering)
+Task: The cross-version upgrade leg (vN → vN+1) — verified for real, with a permanent regression test.
+
+Work Log:
+- MEASURED first: the only vN→vN+1 pair that exists is in git history (tag v0.1.12-rc1 → this tree, 0.1.13-rc1); the installer's source method installs per-version trees + a `current` symlink; the XX-D8 fix (rm -rf $DEST before copy) is structurally pinned but was never EXECUTED across versions.
+- BUILT the real leg as a permanent integration test (cross-version-upgrade.test.ts), everything executed for real on this host: git archive of the TAGGED v0.1.12-rc1 source AND of this tree (release-tarball layout with a top-level vaerion-<version>/ dir — the installer's layout contract) → the REAL install.sh installs v0.1.12-rc1 into a sandboxed prefix (--no-path, never touches user rc) → the shim serves 0.1.12-rc1 → `vae init --template demo` + `vae run demo` create a REAL workspace with a REAL journal under the OLD engine → the REAL installer upgrades the SAME prefix to 0.1.13-rc1 → the shim serves 0.1.13-rc1 (and NOT the old version) → the vN version tree is RETAINED (the immutable law, asserted) → `vae journal verify` under vN+1: ok:true, not torn, events > 0 — THE WORKSPACE UPGRADE CONTRACT (the journal is the truth across the version boundary).
+- DEFECTS CAUGHT, ALL MY OWN: (1) the first archive lacked the top-level layout dir the installer requires (measured: "tarball does not contain the engine") — fixed with --prefix; (2) my vae() test helper passed the cwd string into the options slot so every call defaulted to the repo root (E1600 already-exists) — fixed; (3) journal verify --json nests the report under .report — measured the real shape, fixed the parse. Each caught by the test itself, each fixed at the test.
+- SCOPE HONESTY (recorded in the test header and LIMITATIONS): this is the source-install upgrade path from the tagged source of record; a leg over the RELEASED artifacts of a FUTURE train stays a release-train rehearsal step (the train must exist first); the single-version anonymous download path was measured at XXV Task 4.
+- ALL GATES GREEN, exit 0 (543 tests, coverage ratchet OK).
+
+Stage Summary:
+- The upgrade path is no longer a narration: two real engine versions, one real installer, one real prefix, and a vN journal that verifies under vN+1 — pinned forever as a regression test. LIMITATIONS §2 updated honestly.
+
