@@ -43,7 +43,7 @@ export const COMPLETION_MODEL: {
   flags: ["--json", "--plain", "--dry-run", "--help", "--version", "--quiet", "--cwd"],
 };
 
-export const SUPPORTED_SHELLS = ["bash", "zsh", "fish", "powershell"] as const;
+export const SUPPORTED_SHELLS = ["bash", "zsh", "fish", "powershell", "nushell", "xonsh"] as const;
 
 /** Programmatic access for tests and embedders. */
 export function completionCommands(): string[] {
@@ -60,6 +60,10 @@ export function completionScript(shell: string): string {
       return fishScript();
     case "powershell":
       return powershellScript();
+    case "nushell":
+      return nushellScript();
+    case "xonsh":
+      return xonshScript();
     default:
       throw new VaerionError("E1600", `unknown shell: ${shell}`, {
         supported: [...SUPPORTED_SHELLS],
@@ -182,4 +186,64 @@ function powershellScript(): string {
     "",
   ].join("\n");
   return header("powershell", "UNVERIFIED — POWERSHELL: generated and structurally reviewed; no pwsh host in the generating environment. Dot-source in $PROFILE.") + body;
+}
+
+function nushellScript(): string {
+  const cmds = COMPLETION_MODEL.commands.map((c) => `"${c}"`).join(", ");
+  const flags = COMPLETION_MODEL.flags.map((c) => `"${c}"`).join(", ");
+  const subs = Object.entries(COMPLETION_MODEL.subcommands)
+    .map(([c, list]) => `  "${c}": [${list.map((s) => `"${s}"`).join(", ")}]`)
+    .join(",\n");
+  const body = [
+    "# vae external completer for Nushell — add to $nu.config-path (or source this file):",
+    "def vae-completer [spans: list<string>] {",
+    `  let commands = [${cmds}]`,
+    `  let flags = [${flags}]`,
+    "  let subcommands = {",
+    subs,
+    "  }",
+    "  let partial = $spans | last",
+    "  let candidates = if ($spans | length) <= 1 {",
+    "    $commands | append $flags",
+    "  } else {",
+    "    let sub = $spans | get 1",
+    "    match ($subcommands | get -o $sub) {",
+    "      null => $flags,",
+    "      s => $s,",
+    "    }",
+    "  }",
+    "  $candidates | where { |w| $w starts-with $partial }",
+    "}",
+    "$env.config.completions.external.completer = { |spans| vae-completer $spans }",
+    "",
+  ].join("\n");
+  return header("nushell", "UNVERIFIED — NUSHELL: generated and structurally reviewed; no nu host in the generating environment. Source in $nu.config-path.") + body;
+}
+
+function xonshScript(): string {
+  const cmds = JSON.stringify(COMPLETION_MODEL.commands);
+  const flags = JSON.stringify(COMPLETION_MODEL.flags);
+  const subs = Object.entries(COMPLETION_MODEL.subcommands)
+    .map(([c, list]) => `    "${c}": ${JSON.stringify(list)},`)
+    .join("\n");
+  const body = [
+    "# vae completer for xonsh — import in ~/.xonshrc (xonsh -s this file or paste):",
+    "def _vae_complete(prefix, line, begidx, endidx, ctx):",
+    `    commands = ${cmds}`,
+    `    flags = ${flags}`,
+    "    subcommands = {",
+    subs,
+    "    }",
+    "    parts = line[:begidx].split()",
+    "    if len(parts) <= 1:",
+    "        candidates = commands + flags",
+    "    else:",
+    "        candidates = subcommands.get(parts[1], flags)",
+    "    return [c for c in candidates if c.startswith(prefix)]",
+    "",
+    "from xonsh.completers.completer import add_one_completer",
+    'add_one_completer("vae", _vae_complete, "start")',
+    "",
+  ].join("\n");
+  return header("xonsh", "UNVERIFIED — XONSH: generated and structurally reviewed; no xonsh host in the generating environment. Import in ~/.xonshrc.") + body;
 }

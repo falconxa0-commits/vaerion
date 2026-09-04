@@ -1250,3 +1250,21 @@ Work Log:
 Stage Summary:
 - The upgrade path is no longer a narration: two real engine versions, one real installer, one real prefix, and a vN journal that verifies under vN+1 — pinned forever as a regression test. LIMITATIONS §2 updated honestly.
 
+
+---
+Task ID: B-5
+Agent: Auren — Principal Architect (ASCENSION XXVI+, engineering)
+Task: Shell completion expansion — verify the existing four shells, implement nushell and xonsh generators.
+
+Work Log:
+- VERIFIED the existing four: bash/zsh/fish/powershell all generate from the ONE completion model (D-B) and the dx-surface suite pins model⇄registry coherence; bash -n measured on this host; the other three carry honest UNVERIFIED markers; the unknown-shell refusal (E1600) measured.
+- IMPLEMENTED nushell: a generated external completer (def vae-completer with the model's commands/flags/subcommands rendered in, match-based subcommand dispatch, prefix filtering) wired via $env.config.completions.external.completer — the sanctioned Nushell external-completion site.
+- IMPLEMENTED xonsh: a generated old-style completer (prefix, line, begidx, endidx, ctx) with the same model rendered in, registered through xonsh.completers.completer.add_one_completer — the documented registration API.
+- BOTH carry UNVERIFIED — NUSHELL/XONSH markers (no such host in this environment — the honesty law, same as zsh/fish/powershell); the model stays the single source of truth (the generators render FROM it, no second list exists to drift).
+- HELP ALWAYS TEACHES: both help frames (main --help list + the completions topic) now name all six shells with install instructions and the honesty marker; docs/CLI.md's stale claim ("completions are being implemented… not yet part of the registry" — false since Phase XXII) replaced with the true, current state.
+- NEW dx-surface test: markers baked in; BOTH generators render EVERY model command and every subcommand mapping (a model entry added without the generators picking it up would silently narrow completions — the test makes that impossible); registration sites pinned.
+- ALL GATES GREEN, exit 0 (544 tests).
+
+Stage Summary:
+- Six shells ship completions from one model: four previously verified, two new with the same honesty markers — and a test now pins that the generators can never silently lag the model. The last of the five named engineering items is closed.
+

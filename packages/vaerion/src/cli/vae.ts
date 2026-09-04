@@ -128,9 +128,9 @@ Command surface (the Daily Seven + additive commands):
   help [COMMAND]             the help frames for COMMAND (unknown topics
                              fall back to this help — help always teaches)
   completions <shell>        emit shell completions for
-                             bash|zsh|fish|powershell (generated from the
-                             command registry of record; source into your
-                             shell profile)
+                             bash|zsh|fish|powershell|nushell|xonsh
+                             (generated from the command registry of
+                             record; source into your shell profile)
 
 Global flags:
   --json                     stable NDJSON output (machine mode, guaranteed)
@@ -428,7 +428,7 @@ vae ai models
   The help frames for COMMAND (the same text --help shows for that topic).
   An unknown topic falls back to the main help — help always teaches and
   never executes. Alias of the global --help flag.`,
-  completions: `vae completions <bash|zsh|fish|powershell>
+  completions: `vae completions <bash|zsh|fish|powershell|nushell|xonsh>
 
   Emit shell completion code for the chosen shell, generated from the ONE
   completion model pinned against the command registry
@@ -441,9 +441,11 @@ vae ai models
     fish        save to ~/.config/fish/completions/vae.fish
                                                  (UNVERIFIED — FISH)
     powershell  dot-source in $PROFILE           (UNVERIFIED — POWERSHELL)
+    nushell     source in $nu.config-path        (UNVERIFIED — NUSHELL)
+    xonsh       import in ~/.xonshrc             (UNVERIFIED — XONSH)
 
-  The zsh/fish/powershell scripts carry the honest platform marker: no host
-  for them exists in the generating environment.`,
+  Every script except bash carries the honest platform marker: no host for
+  it exists in the generating environment.`,
 };
 
 interface ParsedArgs {

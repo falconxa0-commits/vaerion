@@ -163,6 +163,27 @@ describe("DX-3 — shell completions", () => {
     expect(completionScript("bash")).toContain("bash -n");
   });
 
+  test("the nushell and xonsh generators render from the ONE completion model (ASCENSION XXVI+)", () => {
+    const nu = completionScript("nushell");
+    const xonsh = completionScript("xonsh");
+    // Honest platform markers (no nu/xonsh host in the generating environment).
+    expect(nu).toContain("UNVERIFIED — NUSHELL");
+    expect(xonsh).toContain("UNVERIFIED — XONSH");
+    // Both render EVERY model command — a model entry added without the
+    // generators picking it up would silently narrow completions.
+    for (const c of COMPLETION_MODEL.commands) {
+      expect(nu).toContain(`"${c}"`);
+      expect(xonsh).toContain(`"${c}"`);
+    }
+    for (const [c, subs] of Object.entries(COMPLETION_MODEL.subcommands)) {
+      expect(nu).toContain(`"${c}": [`);
+      expect(xonsh).toContain(`"${c}": ${JSON.stringify(subs)}`);
+    }
+    // The registration sites (the part that makes them completers at all).
+    expect(nu).toContain("$env.config.completions.external.completer");
+    expect(xonsh).toContain("add_one_completer(\"vae\", _vae_complete");
+  });
+
   test("the completion model and the command registry can never disagree (D-B)", () => {
     // every registry topic is completable
     for (const topic of Object.keys(COMMAND_HELP)) {

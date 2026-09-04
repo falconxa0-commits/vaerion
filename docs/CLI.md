@@ -8,10 +8,12 @@
 > verified by executing `vae <command> --help` on this tree before this file
 > was written. Flags not present in the registry are not documented.
 >
-> Shell completions are being implemented in this same campaign and are
-> not yet part of the registry, so they are not documented here. There is
-> no `--version` global flag; the version is printed by the welcome banner
-> and `vae dev`.
+> Shell completions are a registry command (`vae completions
+> <bash|zsh|fish|powershell|nushell|xonsh>` — generated from the ONE
+> completion model pinned against the registry; bash is `bash -n`-measured
+> on the generating host, the other five carry honest UNVERIFIED markers
+> until their hosts run them). There is no `--version` global flag; the
+> version is printed by the welcome banner and `vae dev`.
 
 ---
 
