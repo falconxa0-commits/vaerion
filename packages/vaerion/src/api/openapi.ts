@@ -156,6 +156,7 @@ export function generateOpenApi(): Record<string, unknown> {
       { name: "events", description: "SSE streams with journal-cursor replay (R-RT1)." },
       { name: "models", description: "Gateway capability surface (names only, never secret values)." },
       { name: "tools", description: "Declared tool surface." },
+      { name: "packages", description: "Reproducible .vxn bundles over the wire (pack/verify/import — ADR-0016 wire parity)." },
       { name: "admin", description: "Daemon hygiene." },
     ],
     paths,

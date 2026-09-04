@@ -15,8 +15,8 @@
  *    and continue are separate, explicit human steps.
  */
 
-import { join } from "node:path";
-import { mkdir, stat } from "node:fs/promises";
+import { join, basename, relative, resolve } from "node:path";
+import { mkdir, stat, writeFile, readFile } from "node:fs/promises";
 import { VaerionError } from "../kernel/errors.ts";
 import type { Clock } from "../kernel/clock.ts";
 import { SystemClock, SystemRng } from "../kernel/clock.ts";
@@ -25,6 +25,8 @@ import { loadConfig, validateConfig, CONFIG_SCHEMA_VERSION, policyFromConfig, ty
 import { canonicalJson } from "../kernel/canonical.ts";
 import { blake3HexOf } from "../kernel/hash.ts";
 import { RunHarness, initialRunState, runStateReducer, type RunState } from "../runtime/run.ts";
+import { buildBundle, resolveBundleOutPath, verifyBundleBytes, lockFromBundle, serializeLock } from "../package/index.ts";
+import { LOCAL_HUMAN_ACTOR } from "../identity/identity.ts";
 import { readJournal, type ReadResult } from "../journal/reader.ts";
 import { verifyJournal, type VerifyReport } from "../journal/verify.ts";
 import { listJournals, RUN_ID_RE } from "../journal/ls.ts";
@@ -798,6 +800,211 @@ export class RunRegistry {
     ];
     const seen = new Set(declared.map((d) => d.name));
     return [...declared, ...builtins.filter((b) => !seen.has(b.name))];
+  }
+
+  /* ── the packages route group (MS-6 wire parity, ASCENSION XXVI+) ── */
+
+  /** Daemon path law: resolve against the workspace root, refuse escape
+   *  (E2204) — the wire surface is least-privilege over the filesystem. */
+  private resolveWorkspacePath(raw: string): string {
+    const abs = resolve(this.ws.root, raw);
+    const rel = relative(this.ws.root, abs);
+    if (rel.startsWith("..") || resolve(abs) === resolve(this.ws.root)) {
+      throw new VaerionError("E2204", `bundle path "${raw}" resolves outside the workspace`);
+    }
+    return abs;
+  }
+
+  /** Wire view of `vae package build` — the SAME deterministic fold, the
+   *  SAME lock regeneration, the SAME package.built journal event (P2, #7). */
+  async packagePack(opts: { out?: string; dryRun?: boolean }): Promise<Record<string, unknown>> {
+    const { config, fingerprint, adhoc } = await loadWorkspaceConfig(this.ws);
+    if (adhoc || !config.package) {
+      throw new VaerionError("E1600", "package build requires vaerion.yaml with a package block (Fix: declare package.include in vaerion.yaml — `vae init` scaffolds the file)");
+    }
+    const outRel = resolveBundleOutPath(this.ws.root, config, opts.out);
+    const built = await buildBundle(this.ws.root, config, fingerprint);
+    const plan: Record<string, unknown> = {
+      command: "package",
+      kind: "build",
+      out: outRel,
+      entries: built.manifest.entries.map((e) => ({ path: e.path, bytes: e.size, blake3: e.blake3.slice(0, 12) + "…" })),
+      entry_count: built.manifest.entries.length,
+      pins: built.manifest.pins,
+      bundle_blake3: built.bundleBlake3,
+      bytes: built.bytes.length,
+      lock: "vaerion.lock (regenerated)",
+    };
+    if (opts.dryRun) {
+      return { ...plan, dry_run: true, side_effects: 0 };
+    }
+    await this.ensureDirs();
+    await mkdir(join(this.ws.root, ".vaerion", "package"), { recursive: true });
+    const clock = new SystemClock();
+    const idGen = new SystemIdGen();
+    const runId = crn("run", idGen.next());
+    const traceId = `t_pkg_${idGen.next().slice(-10).toLowerCase()}`;
+    const graph = graphFromConfig(config, `graph_${fingerprint.slice(0, 12)}`);
+    const harness = await RunHarness.create({ workspaceDir: this.ws.root, runId, traceId, configFingerprint: fingerprint, clock, idGen, permissionGraph: graph });
+    try {
+      await writeFile(join(this.ws.root, outRel), built.bytes);
+      const lock = lockFromBundle(config, fingerprint, outRel, built.manifest, built.bundleBlake3, built.bytes.length);
+      await writeFile(join(this.ws.root, "vaerion.lock"), serializeLock(lock));
+      await harness.emit(
+        "package.built",
+        {
+          bundle_blake3: built.bundleBlake3,
+          path: outRel,
+          bytes: built.bytes.length,
+          entries: built.manifest.entries.length,
+          pins: built.manifest.pins,
+          config_fingerprint: fingerprint,
+        },
+        LOCAL_HUMAN_ACTOR,
+        { kind: "origin", ref: null },
+      );
+      const closed = await harness.close(`package build ${outRel}: ${built.manifest.entries.length} entry(ies), ${built.bytes.length} bytes, digest ${built.bundleBlake3.slice(0, 12)}…; vaerion.lock regenerated`);
+      return { ...plan, run_id: runId, trace_id: traceId, receipt: closed?.receipt ?? null, journal_verified: closed?.verify.ok ?? null };
+    } catch (err) {
+      await harness.close(`package build failed: ${(err as Error).message.slice(0, 120)}`).catch(() => undefined);
+      throw err;
+    } finally {
+      await harness.release().catch(() => undefined);
+    }
+  }
+
+  /** Wire view of `vae package verify BUNDLE` — the SAME pure check
+   *  (digests recomputed, pins compared, content never executed). */
+  async packageVerify(opts: { path: string; dryRun?: boolean }): Promise<Record<string, unknown>> {
+    const bundlePath = this.resolveWorkspacePath(opts.path);
+    const bytes = new Uint8Array(await readFile(bundlePath).catch((err: NodeJS.ErrnoException) => {
+      if (err?.code === "ENOENT") throw new VaerionError("E1600", `bundle not found at ${opts.path}`);
+      throw err;
+    }));
+    const { config, fingerprint, adhoc } = await loadWorkspaceConfig(this.ws);
+    const report = await verifyBundleBytes(bytes, { config: adhoc ? undefined : config, configFingerprint: adhoc ? null : fingerprint, root: this.ws.root });
+    const payload: Record<string, unknown> = {
+      command: "package",
+      kind: "verify",
+      bundle: opts.path,
+      ok: report.ok,
+      code: report.ok ? undefined : "E2206",
+      bundle_blake3: report.bundleBlake3,
+      bytes: report.bundleSize,
+      entries: report.entryCount,
+      entries_verified: report.entriesVerified,
+      pins_checked: report.pinsChecked,
+      findings: report.findings,
+      checks_passed: report.checksPassed,
+    };
+    if (opts.dryRun) {
+      return { ...payload, dry_run: true, side_effects: 0 };
+    }
+    const clock = new SystemClock();
+    const idGen = new SystemIdGen();
+    const runId = crn("run", idGen.next());
+    const traceId = `t_pkg_${idGen.next().slice(-10).toLowerCase()}`;
+    const graph = graphFromConfig(config, `graph_${fingerprint.slice(0, 12)}`);
+    const harness = await RunHarness.create({ workspaceDir: this.ws.root, runId, traceId, configFingerprint: fingerprint, clock, idGen, permissionGraph: graph });
+    try {
+      await harness.emit(
+        "package.verified",
+        {
+          bundle_blake3: report.bundleBlake3,
+          path: opts.path,
+          ok: report.ok,
+          findings: report.findings,
+          entries_verified: report.entriesVerified,
+          pins_checked: report.pinsChecked,
+        },
+        LOCAL_HUMAN_ACTOR,
+        { kind: "origin", ref: null },
+      );
+      const closed = await harness.close(`package verify ${opts.path}: ${report.ok ? "ok" : "FAILED"} (${report.entriesVerified} entries, ${report.pinsChecked} pins)`);
+      return { ...payload, run_id: runId, trace_id: traceId, receipt: closed?.receipt ?? null, journal_verified: closed?.verify.ok ?? null };
+    } finally {
+      await harness.release().catch(() => undefined);
+    }
+  }
+
+  /** Admit an externally produced bundle: verify FIRST (a failing bundle is
+   *  never admitted, E2206), then admit at .vaerion/package/<name>.vxn with
+   *  a lock regenerated FROM the bundle, journaled as package.imported. */
+  async packageImport(opts: { path: string; dryRun?: boolean }): Promise<Record<string, unknown>> {
+    const bundlePath = this.resolveWorkspacePath(opts.path);
+    const bytes = new Uint8Array(await readFile(bundlePath).catch((err: NodeJS.ErrnoException) => {
+      if (err?.code === "ENOENT") throw new VaerionError("E1600", `bundle not found at ${opts.path}`);
+      throw err;
+    }));
+    const { config, fingerprint, adhoc } = await loadWorkspaceConfig(this.ws);
+    const report = await verifyBundleBytes(bytes, { config: adhoc ? undefined : config, configFingerprint: adhoc ? null : fingerprint, root: this.ws.root });
+    if (!report.ok || !report.manifest) {
+      throw new VaerionError("E2206", `bundle failed verification and was NOT admitted: ${report.findings.length} finding(s)`);
+    }
+    const destRel = join(".vaerion", "package", basename(bundlePath));
+    if (opts.dryRun) {
+      return {
+        command: "package",
+        kind: "import",
+        source: opts.path,
+        would_admit: destRel,
+        bundle_blake3: report.bundleBlake3,
+        bytes: report.bundleSize,
+        entries: report.entryCount,
+        pins_checked: report.pinsChecked,
+        dry_run: true,
+        side_effects: 0,
+      };
+    }
+    await this.ensureDirs();
+    await mkdir(join(this.ws.root, ".vaerion", "package"), { recursive: true });
+    const clock = new SystemClock();
+    const idGen = new SystemIdGen();
+    const runId = crn("run", idGen.next());
+    const traceId = `t_pkg_${idGen.next().slice(-10).toLowerCase()}`;
+    const graph = graphFromConfig(config, `graph_${fingerprint.slice(0, 12)}`);
+    const harness = await RunHarness.create({ workspaceDir: this.ws.root, runId, traceId, configFingerprint: fingerprint, clock, idGen, permissionGraph: graph });
+    try {
+      await writeFile(join(this.ws.root, destRel), bytes);
+      const lock = lockFromBundle(config, fingerprint, destRel, report.manifest, report.bundleBlake3, report.bundleSize);
+      const lockText = serializeLock(lock);
+      await writeFile(join(this.ws.root, "vaerion.lock"), lockText);
+      const lockDigest = await blake3HexOf(new TextEncoder().encode(lockText));
+      await harness.emit(
+        "package.imported",
+        {
+          bundle_blake3: report.bundleBlake3,
+          path: destRel,
+          source: opts.path,
+          bytes: report.bundleSize,
+          entries: report.entryCount,
+          pins_checked: report.pinsChecked,
+          lock_digest: lockDigest,
+        },
+        LOCAL_HUMAN_ACTOR,
+        { kind: "origin", ref: null },
+      );
+      const closed = await harness.close(`package import ${destRel}: admitted after verification (${report.entryCount} entries, digest ${report.bundleBlake3.slice(0, 12)}…)`);
+      return {
+        command: "package",
+        kind: "import",
+        source: opts.path,
+        admitted: destRel,
+        bundle_blake3: report.bundleBlake3,
+        bytes: report.bundleSize,
+        entries: report.entryCount,
+        lock_digest: lockDigest,
+        run_id: runId,
+        trace_id: traceId,
+        receipt: closed?.receipt ?? null,
+        journal_verified: closed?.verify.ok ?? null,
+      };
+    } catch (err) {
+      await harness.close(`package import failed: ${(err as Error).message.slice(0, 120)}`).catch(() => undefined);
+      throw err;
+    } finally {
+      await harness.release().catch(() => undefined);
+    }
   }
 
   /* ── shutdown ── */

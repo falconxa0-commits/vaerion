@@ -10,13 +10,18 @@
  */
 
 import { afterAll, describe, expect, test } from "bun:test";
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { startDaemon, type DaemonHandle } from "../../src/api/server.ts";
 import { generateOpenApi } from "../../src/api/openapi.ts";
 import { VaerionError } from "../../src/kernel/errors.ts";
 import { runCli } from "../../src/cli/vae.ts";
+import { readJournal } from "../../src/journal/reader.ts";
+import { listJournals } from "../../src/journal/ls.ts";
+import { RunHarness } from "../../src/runtime/run.ts";
+import { VaeDaemonClient } from "../../../../sdks/typescript/src/index.ts";
+import type { EvtRecord } from "../../src/journal/records.ts";
 import type { PlanStep } from "../../src/agents/planner.ts";
 
 const workspaces: string[] = [];
@@ -328,5 +333,188 @@ describe("daemon: shutdown echo guard + CLI serve", () => {
     expect(shutdown.status).toBe(200);
     const result = await serving;
     expect(result.code).toBe(0);
+  });
+});
+
+/* ───────── the packages route group (MS-6 wire parity, ASCENSION XXVI+) ───────────── */
+
+const PACKAGE_YAML = `schemaVersion: "0.1"
+project:
+  name: daemon-packages
+  description: "wire parity for the packages route group"
+package:
+  include:
+    - docs
+    - prompts/p.md
+telemetry:
+  enabled: false
+`;
+
+async function makePackageWorkspace(): Promise<string> {
+  const ws = await makeWorkspace(PACKAGE_YAML);
+  await mkdir(join(ws, "docs"), { recursive: true });
+  await mkdir(join(ws, "prompts"), { recursive: true });
+  await writeFile(join(ws, "docs", "a.md"), "# A\nwire-parity doc\n");
+  await writeFile(join(ws, "prompts", "p.md"), "PROMPT: answer with citations\n");
+  return ws;
+}
+
+async function journalTypes(ws: string, runId: string): Promise<string[]> {
+  const read = await readJournal(RunHarness.journalPathFor(ws, runId));
+  return read.records.filter((r): r is EvtRecord => r.k === "evt").map((r) => r.env.type);
+}
+
+async function onlyRunId(ws: string): Promise<string> {
+  const runs = await listJournals(join(ws, ".vaerion", "journal"));
+  expect(runs.length).toBe(1);
+  return runs[0]!.run_id;
+}
+
+describe("daemon: the packages route group (pack/verify/import — ADR-0016 wire parity)", () => {
+  test("the generated contract advertises exactly the implemented package routes", () => {
+    const spec = generateOpenApi() as { paths: Record<string, unknown>; tags: Array<{ name: string }> };
+    for (const p of ["/packages/pack", "/packages/verify", "/packages/import"]) {
+      expect(spec.paths[p]).toBeDefined();
+    }
+    expect(spec.tags.some((t) => t.name === "packages")).toBe(true);
+  });
+
+  test("pack over the wire journals the SAME event contract as `vae package build`", async () => {
+    // CLI journey.
+    const cliWs = await makePackageWorkspace();
+    const cliResult = await runCli(["package", "build"], { out: () => undefined, err: () => undefined }, cliWs);
+    expect(cliResult.code).toBe(0);
+    const cliTypes = await journalTypes(cliWs, await onlyRunId(cliWs));
+    expect(cliTypes).toContain("package.built");
+
+    // Wire journey — dry_run FIRST: plan only, nothing written, nothing journaled.
+    const wireWs = await makePackageWorkspace();
+    const handle = await startDaemon({ workspaceDir: wireWs, port: 0, token: "pkg" });
+    try {
+      const dry = await jsonFetch(handle, "POST", "/packages/pack", { token: "pkg", body: { dry_run: true } });
+      expect(dry.status).toBe(200);
+      expect(dry.body.dry_run).toBe(true);
+      expect(dry.body.side_effects).toBe(0);
+      await expect(readFile(join(wireWs, String(dry.body.out)))).rejects.toThrow();
+      expect((await listJournals(join(wireWs, ".vaerion", "journal"))).length).toBe(0);
+
+      const res = await jsonFetch(handle, "POST", "/packages/pack", { token: "pkg", body: {} });
+      expect(res.status).toBe(200);
+      expect(res.body.ok === undefined).toBe(true); // plan shape, not a verify report
+      expect(res.body.bundle_blake3).toBeString();
+      expect(res.body.journal_verified).toBe(true);
+      const wireTypes = await journalTypes(wireWs, String(res.body.run_id));
+      expect(wireTypes).toEqual(cliTypes); // the Machine Parity invariant, over the wire
+      expect((await listJournals(join(wireWs, ".vaerion", "journal"))).length).toBe(1); // only the real pack
+    } finally {
+      await handle.stop({ force: true });
+    }
+  });
+
+  test("pack without a package block is refused with E1600 (the CLI's own law)", async () => {
+    const ws = await makeWorkspace(ALLOW_YAML);
+    const handle = await startDaemon({ workspaceDir: ws, port: 0, token: "pkg" });
+    try {
+      const res = await jsonFetch(handle, "POST", "/packages/pack", { token: "pkg", body: {} });
+      expect(res.status).toBe(400);
+      expect((res.body.error as { code?: string }).code).toBe("E1600");
+    } finally {
+      await handle.stop({ force: true });
+    }
+  });
+
+  test("verify over the wire passes a real bundle and refuses a tampered one", async () => {
+    const ws = await makePackageWorkspace();
+    const handle = await startDaemon({ workspaceDir: ws, port: 0, token: "pkg" });
+    try {
+      const pack = await jsonFetch(handle, "POST", "/packages/pack", { token: "pkg", body: {} });
+      expect(pack.status).toBe(200);
+      const bundleRel = String(pack.body.out);
+
+      const good = await jsonFetch(handle, "POST", "/packages/verify", { token: "pkg", body: { path: bundleRel } });
+      expect(good.status).toBe(200);
+      expect(good.body.ok).toBe(true);
+      expect(good.body.code).toBeUndefined();
+      expect(Number(good.body.entries_verified)).toBeGreaterThan(0);
+      expect(good.body.journal_verified).toBe(true);
+      expect(await journalTypes(ws, String(good.body.run_id))).toContain("package.verified");
+
+      // dry_run verify: report only — no new journal.
+      const before = (await listJournals(join(ws, ".vaerion", "journal"))).length;
+      const dry = await jsonFetch(handle, "POST", "/packages/verify", { token: "pkg", body: { path: bundleRel, dry_run: true } });
+      expect(dry.status).toBe(200);
+      expect(dry.body.dry_run).toBe(true);
+      expect((await listJournals(join(ws, ".vaerion", "journal"))).length).toBe(before);
+
+      // Tamper: flip one payload byte — the pure check must refuse.
+      const bytes = await readFile(join(ws, bundleRel));
+      expect(bytes.length).toBeGreaterThan(0);
+      const last = bytes.length - 1;
+      bytes[last] = (bytes[last] ?? 0) ^ 0xff;
+      const badRel = "bad.vxn";
+      await writeFile(join(ws, badRel), bytes);
+      const bad = await jsonFetch(handle, "POST", "/packages/verify", { token: "pkg", body: { path: badRel } });
+      expect(bad.status).toBe(200); // an honest negative report, not a transport error
+      expect(bad.body.ok).toBe(false);
+      expect(bad.body.code).toBe("E2206");
+      expect(Array.isArray(bad.body.findings)).toBe(true);
+
+      // The path law: traversal outside the workspace is refused.
+      const outside = await jsonFetch(handle, "POST", "/packages/verify", { token: "pkg", body: { path: "../outside.vxn" } });
+      expect(outside.status).toBe(400);
+      expect((outside.body.error as { code?: string }).code).toBe("E2204");
+    } finally {
+      await handle.stop({ force: true });
+    }
+  });
+
+  test("import admits a verified bundle through the SDK client and refuses a tampered one", async () => {
+    // Produce a bundle in a source workspace via the CLI.
+    const srcWs = await makePackageWorkspace();
+    const built = await runCli(["package", "build"], { out: () => undefined, err: () => undefined }, srcWs);
+    expect(built.code).toBe(0);
+    const bundleBytes = await readFile(join(srcWs, ".vaerion", "package", "daemon-packages.vxn"));
+
+    const ws = await makePackageWorkspace();
+    await mkdir(join(ws, "incoming"), { recursive: true });
+    await writeFile(join(ws, "incoming", "daemon-packages.vxn"), bundleBytes);
+
+    const handle = await startDaemon({ workspaceDir: ws, port: 0, token: "pkg" });
+    try {
+      const client = new VaeDaemonClient({ base: `http://127.0.0.1:${handle.port}`, token: "pkg" });
+
+      // dry-run import: report what would be admitted, write nothing.
+      const dry = (await client.packageImport({ path: "incoming/daemon-packages.vxn", dryRun: true })) as Record<string, unknown>;
+      expect(dry.dry_run).toBe(true);
+      expect(dry.would_admit).toBe(join(".vaerion", "package", "daemon-packages.vxn"));
+
+      // Real admission through the sanctioned client site.
+      const done = (await client.packageImport({ path: "incoming/daemon-packages.vxn" })) as Record<string, unknown>;
+      expect(done.admitted).toBe(join(".vaerion", "package", "daemon-packages.vxn"));
+      expect(done.journal_verified).toBe(true);
+      const admittedBytes = await readFile(join(ws, String(done.admitted)));
+      expect(Buffer.from(admittedBytes).equals(Buffer.from(bundleBytes))).toBe(true);
+      expect(await journalTypes(ws, String(done.run_id))).toContain("package.imported");
+
+      // The admitted bundle verifies against the importing workspace.
+      const verified = (await client.packageVerify({ path: String(done.admitted) })) as Record<string, unknown>;
+      expect(verified.ok).toBe(true);
+
+      // A tampered bundle is NEVER admitted (verify-first law, E2206).
+      const evil = Buffer.from(bundleBytes);
+      expect(evil.length).toBeGreaterThan(0);
+      const evilLast = evil.length - 1;
+      evil[evilLast] = (evil[evilLast] ?? 0) ^ 0xff;
+      await writeFile(join(ws, "incoming", "evil.vxn"), evil);
+      try {
+        await client.packageImport({ path: "incoming/evil.vxn" });
+        expect.unreachable();
+      } catch (err) {
+        expect((err as { code?: string }).code).toBe("E2206");
+      }
+      await expect(readFile(join(ws, ".vaerion", "package", "evil.vxn"))).rejects.toThrow();
+    } finally {
+      await handle.stop({ force: true });
+    }
   });
 });

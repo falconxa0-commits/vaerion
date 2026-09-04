@@ -206,6 +206,10 @@
       "description": "Declared tool surface."
     },
     {
+      "name": "packages",
+      "description": "Reproducible .vxn bundles over the wire (pack/verify/import — ADR-0016 wire parity)."
+    },
+    {
       "name": "admin",
       "description": "Daemon hygiene."
     }
@@ -766,6 +770,168 @@
         ]
       }
     },
+    "/packages/pack": {
+      "post": {
+        "operationId": "packagePack",
+        "summary": "Build the workspace bundle — wire parity with `vae package build`.",
+        "description": "The SAME deterministic fold the CLI runs (ADR-0016): declared inputs plus pin-verified extension artifacts, folded into a reproducible .vxn bundle with a regenerated vaerion.lock, journaled (package.built) with a receipt. Body: {out (workspace-relative bundle path), dry_run}. dry_run:true returns the plan and writes nothing. Requires vaerion.yaml with a package block (E1600 otherwise).",
+        "tags": [
+          "packages"
+        ],
+        "responses": {
+          "200": {
+            "description": "PackagePackResult (plan + run receipt)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "E1600 no package block / invalid body"
+          },
+          "403": {
+            "description": "E2100 pin mismatch"
+          }
+        },
+        "security": [
+          {
+            "bearerToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "out": {
+                    "type": "string",
+                    "description": "Workspace-relative bundle output path (default .vaerion/package/<project>.vxn)."
+                  },
+                  "dry_run": {
+                    "type": "boolean",
+                    "description": "Plan only: fold and report, write nothing, journal nothing."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/verify": {
+      "post": {
+        "operationId": "packageVerify",
+        "summary": "Verify a bundle — wire parity with `vae package verify BUNDLE`.",
+        "description": "The SAME pure check the CLI runs (ADR-0016 decision 3): digests recomputed, pins compared, content never executed, reported as an honest per-check findings list against the workspace config + lock. Body: {path, dry_run}. The path is resolved against the workspace root; traversal outside the workspace is refused (E2204). Journaled (package.verified) with a receipt unless dry_run.",
+        "tags": [
+          "packages"
+        ],
+        "responses": {
+          "200": {
+            "description": "PackageVerifyResult (ok + findings)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "E1600 missing path / bundle not found · E2204 path outside workspace · E2206 failed verification"
+          }
+        },
+        "security": [
+          {
+            "bearerToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path"
+                ],
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "Bundle path, resolved against the workspace root (E2204 outside)."
+                  },
+                  "dry_run": {
+                    "type": "boolean",
+                    "description": "Report only: no journal record."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packages/import": {
+      "post": {
+        "operationId": "packageImport",
+        "summary": "Admit an externally produced bundle into the workspace.",
+        "description": "Imports a .vxn bundle file: the bundle FIRST passes the same pure verification the CLI runs (a failing bundle is never admitted, E2206), then the file is admitted at .vaerion/package/<name>.vxn, a fresh vaerion.lock is generated FROM the bundle (the lock is generated, never hand-edited), and the admission is journaled (package.imported) with a receipt. Body: {path, dry_run}. Content is never executed (ADR-0016 law).",
+        "tags": [
+          "packages"
+        ],
+        "responses": {
+          "200": {
+            "description": "PackageImportResult (admitted + receipt)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "E1600 missing path / bundle not found · E2204 path outside workspace · E2206 failed verification (never admitted)"
+          }
+        },
+        "security": [
+          {
+            "bearerToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path"
+                ],
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "Bundle path, resolved against the workspace root (E2204 outside)."
+                  },
+                  "dry_run": {
+                    "type": "boolean",
+                    "description": "Verify only: report what would be admitted, write nothing."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/shutdown": {
       "post": {
         "operationId": "shutdownDaemon",
@@ -818,7 +984,7 @@
     }
   },
   "x-vaerion-contracts": {
-    "eventTypes": 41,
+    "eventTypes": 42,
     "errorCodes": 81,
     "envelopeVersion": 1,
     "engineVersion": "0.1.13-rc1"

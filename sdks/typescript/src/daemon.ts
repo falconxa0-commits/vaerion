@@ -184,6 +184,32 @@ export class VaeDaemonClient {
     return raiseForStatus<{ tools: Array<{ name: string; scope: string; description: string | null; builtin: boolean }> }>(r, "tool list failed").tools ?? [];
   }
 
+  /* ── packages (ADR-0016 wire parity — the same fold/verify/import the CLI runs) ── */
+
+  /** Build the workspace bundle over the wire (same contract as `vae package build`). */
+  async packagePack(input: { out?: string; dryRun?: boolean } = {}): Promise<Record<string, unknown>> {
+    const r = await this.wire.request<Record<string, unknown>>("POST", "/packages/pack", {
+      body: { ...(input.out !== undefined ? { out: input.out } : {}), ...(input.dryRun !== undefined ? { dry_run: input.dryRun } : {}) },
+    });
+    return raiseForStatus(r, "package pack failed");
+  }
+
+  /** Verify a bundle over the wire (same pure check as `vae package verify BUNDLE`). */
+  async packageVerify(input: { path: string; dryRun?: boolean }): Promise<Record<string, unknown>> {
+    const r = await this.wire.request<Record<string, unknown>>("POST", "/packages/verify", {
+      body: { path: input.path, ...(input.dryRun !== undefined ? { dry_run: input.dryRun } : {}) },
+    });
+    return raiseForStatus(r, "package verify failed");
+  }
+
+  /** Admit an externally produced bundle into the workspace (verify-first law). */
+  async packageImport(input: { path: string; dryRun?: boolean }): Promise<Record<string, unknown>> {
+    const r = await this.wire.request<Record<string, unknown>>("POST", "/packages/import", {
+      body: { path: input.path, ...(input.dryRun !== undefined ? { dry_run: input.dryRun } : {}) },
+    });
+    return raiseForStatus(r, "package import failed");
+  }
+
   /* ── admin ── */
 
   async shutdown(): Promise<{ shutting_down: boolean }> {

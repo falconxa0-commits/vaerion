@@ -39,9 +39,10 @@ measured status of record; item numbering below matches that list):
 8. **Coverage floors are total-based.** Per-module ratchets are a
    mechanical follow-up; totals only move up (`ROADMAP_PROGRESS.md`).
 9. **MS-6 leftovers** (`ROADMAP_PROGRESS.md` — "Recommended next work"):
-   native single-binary installers (host-gated; see §2) and the daemon
-   packages route group (wire parity + `spec/openapi.json` regeneration)
-   are not done.
+   native single-binary installers (host-gated; see §2) are not done. The
+   daemon packages route group (pack/verify/import) **is done** — ASCENSION
+   XXVI+ closed it with wire-parity tests and `spec/openapi.json`
+   regeneration; `package.imported` joined the event registry additively.
 
 ## 2. Platform verification gaps (UNVERIFIED until their hosts run them)
 

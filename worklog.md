@@ -1152,3 +1152,66 @@ Work Log:
 
 Stage Summary:
 - Public Beta Ready -> GA Ready: the engineering gap is five named small items; the remaining gates are the Founder's (F-2 legal name, F-4 substrate, F-5 publication, F-6 recordings, R-7 channel) and the platforms' (reviews, host executions). The first production-signed release is live, certified, and anonymously verifiable. The Founder holds the decision packet.
+
+---
+Task ID: R-1
+Agent: Registry Reality Measurement Agent (ASCENSION XXVI+, parallel)
+Task: Measure real publication state of npm/PyPI/Homebrew/winget/Flatpak/Snap/Chocolatey/Scoop/vaerion.dev; verify Dependabot bun-ecosystem support; resolve pinning SHAs for actions/checkout, oven-sh/setup-bun, actions/upload-artifact.
+
+Work Log:
+- npm `vaerion`: GET registry.npmjs.org/vaerion -> HTTP 404 {"error":"Not found"}; npm search API text=vaerion -> total:0. NOT PUBLISHED; name unclaimed by anyone.
+- npm `@vaerion/cli`: GET registry.npmjs.org/@vaerion%2Fcli -> HTTP 404 {"error":"Not found"}. NOT PUBLISHED; scope unclaimed.
+- PyPI: GET pypi.org/pypi/vaerion/json -> HTTP 404 {"message":"Not Found"}; pypi.org/simple/vaerion/ -> 404. NOT PUBLISHED.
+- Homebrew: api.github.com/repos/falconxa0-commits/homebrew-vaerion -> HTTP 404; HTML check 404; falconxa0/* variants 404 (user "falconxa0" does not exist); formulae.brew.sh/api/formula/vaerion.json -> 404 (GitHub Pages 404); api/cask/vaerion.json -> 404. NO tap, NOT in core/casks.
+- winget: unauthenticated GitHub code search q=vaerion repo:microsoft/winget-pkgs -> HTTP 401 Requires authentication (that exact query UNMEASURABLE-auth). Direct evidence: raw.githubusercontent.com/microsoft/winget-pkgs/master/manifests/v/vaerion/ -> 404 and .../v/vaerion/vaerion/ -> 404 (no publisher dir); web search "winget-pkgs vaerion manifest" -> zero vaerion results. NOT PUBLISHED.
+- Flathub: POST flathub.org/api/v2/search {"query":"vaerion"} -> HTTP 200, 21 hits, ZERO mentioning vaerion (GET /api/v2/apps -> 404, endpoint does not exist); web search -> nothing. NOT PUBLISHED.
+- Snap: GET api.snapcraft.io/v2/snaps/info/vaerion (Snap-Device-Series: 16) -> HTTP 404 {"error-list":[{"code":"resource-not-found","message":"No snap named 'vaerion' found in series '16'."}]}. NOT PUBLISHED.
+- Chocolatey: GET community.chocolatey.org/api/v2/Packages?$filter=Id eq 'vaerion' -> HTTP 200, valid Atom feed with ZERO <entry>; /packages/vaerion -> 404; web search -> nothing. NOT PUBLISHED.
+- Scoop: api.github.com/repos/falconxa0-commits/scoop-vaerion -> 404; HTML 404 for scoop-vaerion and scoop-bucket; raw buckets Main/Extras/Versions vaerion.json -> 404/404/404; web search -> nothing. NOT PUBLISHED.
+- vaerion.dev: getent hosts -> exit 2; curl -> could not resolve host; Google DoH -> Status 3 NXDOMAIN (authority: dev. TLD, charlestonroadregistry.com); RDAP rdap.org -> 302 -> pubapi.registry.google/rdap/domain/vaerion.dev -> HTTP 404 {"description":["vaerion.dev not found"]} — THE DOMAIN IS NOT REGISTERED (stronger than "no DNS").
+- GitHub inventory: GET api.github.com/users/falconxa0-commits/repos?per_page=100 -> HTTP 200, exactly 2 public repos: SwiftRamadan, vaerion. NO homebrew tap, NO scoop bucket, NO site repo exists under the account.
+- dependabot.yml on GitHub main: API 403 (unauth rate limit exhausted mid-run, measured via /rate_limit: core remaining 0, reset 1788488543) -> measured instead by fresh shallow clone of github main: HEAD 6df7f645bf82bf56a54ae35a2ce4d3488a0d6d7b (2026-09-04 00:20:39 +0000); .github/ has ISSUE_TEMPLATE/, PULL_REQUEST_TEMPLATE.md, workflows/ — NO dependabot.yml. CONFIRMED ABSENT.
+- Dependabot bun: SUPPORTED (GA since 2025-02-13). Exact ecosystem identifier: `bun`. Docs table (fetched live): "Bun | bun | >=v1.1.39" in dependabot-options-reference; changelog source: github.blog/changelog/2025-02-13-dependabot-version-updates-now-support-the-bun-package-manager-ga/.
+- SHA resolution (git protocol, no API quota): all three tags measured LIGHTWEIGHT (ref object type "commit", tag SHA == commit SHA); each verified independently via github.com/commit/<sha> -> HTTP 200. actions/checkout v4 line: latest v4.* = v4.4.0 -> 11d5960a326750d5838078e36cf38b85af677262 (commit 2026-07-16 15:43:47 -0400, "backport fixes to releases-v4 (#2524)"; moving tag v4 -> same SHA). oven-sh/setup-bun v2 line: latest v2.* = v2.2.0 -> 0c5077e51419868618aeaa5fe8019c62421857d6 (commit 2026-03-14 10:37:27 +0100, "release: v2.2.0 (#177)"; moving tag v2 -> same SHA). actions/upload-artifact v4 line: latest v4.* = v4.6.2 -> ea165f8d65b6e75b540449e92b4886f43607fa02 (commit 2025-03-19 10:34:59 -0700; moving tag v4 -> same SHA). NOTE: checkout/upload-artifact have since grown v5/v6/v7 (checkout v7.0.1 latest overall) — the requested v4/v2 lines are measured exactly as asked.
+- Full report written: docs/ga/REGISTRY-STATE-MEASUREMENT-2026-09-04.md.
+
+Stage Summary:
+- MEASURED TRUTH: vaerion is published NOWHERE except GitHub Releases. All 8 registry surfaces (npm, @vaerion/cli, PyPI, Homebrew core/tap, winget, Flathub, Snap, Chocolatey, Scoop) return authoritative absence; the name "vaerion" is unclaimed on every registry; vaerion.dev is not even registered. The F-5 Founder-gated publication gate is measured clean — no squatters, no conflicts, nothing to reclaim.
+- Deliverables measured for the next phase: Dependabot supports bun (exact string `bun`, GA 2025-02-13, >=v1.1.39); dependabot.yml confirmed ABSENT on GitHub main at 6df7f645; three verified SHA pins delivered: checkout v4.4.0 = 11d5960a326750d5838078e36cf38b85af677262, setup-bun v2.2.0 = 0c5077e51419868618aeaa5fe8019c62421857d6, upload-artifact v4.6.2 = ea165f8d65b6e75b540449e92b4886f43607fa02.
+- Honesty record: winget code-search unauthenticated = UNMEASURABLE-auth (401), replaced by direct raw-path 404s + web search; GitHub API quota exhausted mid-run -> git protocol + HTML fallbacks used, every verdict rests on a direct measured source, nothing inferred or fabricated.
+
+---
+Task ID: B-1
+Agent: Auren — Principal Security Auditor (ASCENSION XXVI+, engineering)
+Task: Dependabot enablement + SHA-pinning every external workflow action (the two named low residuals from the FINAL-SECURITY-AUDIT).
+
+Work Log:
+- MEASURED first: no .github/dependabot.yml (local AND on GitHub main — fresh clone at 6df7f645); both workflows carried tag-pinned actions (checkout@v4 ×2, setup-bun@v2 ×2, upload-artifact@v4 ×2, checkout/setup-bun in release-publish).
+- Dependabot authored for THREE ecosystems with the law in comments: "bun" (the ONE root bun.lock covers the whole workspace — re-declaring subdirectories would be a lie; Bun support GA per github.blog 2025-02-13), "github-actions" (watches the now-SHA-pinned refs), "pip" (packaging/python). Weekly Monday 06:00 UTC sweep; minor+patch grouped; majors EXCLUDED from bot rides as single-PR reviewed work (P11 evolution-without-betrayal law, named in the ignore rules).
+- SHA-PINNED every action to full 40-hex commit SHAs with the tag-of-record comment: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 (v4.4.0), oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 (v2.2.0), actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 (v4.6.2). Each SHA independently re-verified via the GitHub commits API (HTTP 200) — the subagent's R-1 resolution was NOT trusted on sight.
+- THREE permanent contract tests added to ci-truth.test.ts: (1) every `uses:` in both workflows must be owner/repo@<40-hex> — a floating major tag now FAILS the suite; (2) the pinned SHAs are the measured tags of record; (3) dependabot covers bun/actions/pip, every ecosystem carries a weekly schedule, grouping present, majors deliberately ignored.
+- First test run caught two defects in MY OWN test (regex missed the trailing comment; comment-stripping needed for the header assertion) — fixed, 19/19 green.
+- YAML validity of all three files machine-checked (python3 yaml.safe_load ×3 OK).
+
+Stage Summary:
+- The two named security residuals are closed with enforcement, not narration: the supply-chain pins are now a failing-test offense, and Dependabot watches all three dependency surfaces. Gate-relevant lesson re-learned: the Read display can swallow `[x` sequences (it showed `branches: ain]` on a CORRECT file) — raw byte measurement (`od -c`) is the arbiter, the file was intact.
+
+---
+Task ID: B-2
+Agent: Auren — Principal Architect (ASCENSION XXVI+, engineering)
+Task: The daemon `packages` route group (MS-6 leftover): pack/verify/import over the wire with wire parity + spec regen + integration tests.
+
+Work Log:
+- READ THE LAW FIRST: blueprint §7.3 names POST /packages/{pack,verify,import}; routes.ts law = "only implemented routes are described"; Machine Parity (#7) means the SAME engine composition as the CLI, not a parallel one.
+- EVENT REGISTRY (additive-only, P3): `package.imported` joined EVENT_TYPES + spec/events/registry.json with a description; constitutional C4 sync verified by the gates.
+- THREE REGISTRY METHODS (RunRegistry — the engine-composition layer, mirroring the CLI composition exactly): packagePack (buildBundle fold → bundle bytes + lockFromBundle regeneration → package.built journaled → receipt; dry_run pure), packageVerify (verifyBundleBytes pure check → package.verified journaled; dry_run report-only), packageImport (verify-FIRST — a failing bundle is NEVER admitted, E2206 — then admitted at .vaerion/package/<name>.vxn with a lock regenerated FROM the bundle → package.imported journaled with the lock digest).
+- DAEMON PATH LAW: resolveWorkspacePath refuses any path escaping the workspace (E2204) — the wire surface is least-privilege over the filesystem where the CLI is desktop-local; recorded in the route descriptions.
+- HANDLERS + ROUTES + OPENAPI: three routes in DAEMON_ROUTES (tag "packages"), handlers thin over the registry, tags list in openapi.ts; spec/openapi.json REGENERATED via the sanctioned generator (17 paths, was 14).
+- SDK PARITY: VaeDaemonClient.packagePack/packageVerify/packageImport added (sdks/typescript/src/daemon.ts) — the sanctioned client site covers the whole surface.
+- FIVE INTEGRATION TESTS over real sockets (daemon.test.ts): the generated contract advertises the three routes; pack over the wire journals the IDENTICAL event-type sequence as `vae package build` (toEqual — the parity proof); pack without a package block refuses E1600; verify passes a real bundle, dry-runs without journaling, refuses a byte-flipped bundle (E2206 findings list), refuses traversal (E2204); import admits a verified bundle through the SDK client (bytes byte-identical, package.imported journaled, admitted bundle re-verifies) and refuses a tampered one WITHOUT writing it.
+- DEFECTS CAUGHT AND FIXED: (1) my own test asserted dry-run file-absence AFTER the real pack had already written the bundle — reordered (dry first, then real); (2) tsc strict (noUncheckedIndexedAccess) refused the byte-flip lines — explicit guards; (3) first full-gate run EXIT 1 on exactly that typecheck — fixed, re-run EXIT 0.
+- LIMITATIONS.md item 9 updated honestly (the route group is DONE; the native installers remain host-gated). ALL GATES GREEN 538/0/42, exit 0 (was 530/0/42 — +3 ci-truth, +5 daemon).
+
+Stage Summary:
+- MS-6's last engineering leftover is closed: the daemon now carries the full package lifecycle over the wire with PROVEN parity (identical journal contracts) and the SDK client reaches all of it. The blueprint's §7.3 packages row is implemented, described, and tested — nothing aspirational remains in the route table.
+

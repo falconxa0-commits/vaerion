@@ -163,6 +163,10 @@
       "description": "A .vxn bundle was verified as a pure check (digests recomputed, pins compared; content never executed); the payload carries the outcome and the bundle blake3 digest."
     },
     {
+      "type": "package.imported",
+      "description": "An externally produced .vxn bundle was admitted into the workspace after a passing pure verification; the payload carries the bundle blake3 digest, the admitted path, and the regenerated lock digest."
+    },
+    {
       "type": "release.readiness.evaluated",
       "description": "A release readiness evaluation completed as a measured, evidence-carrying audit (gates, git trust, CI validity, version lockstep, artifacts); the payload carries the verdict, blockers, and honesty labels."
     }

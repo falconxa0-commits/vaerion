@@ -26,7 +26,7 @@ export interface DaemonRoute {
   operationId: string;
   summary: string;
   description: string;
-  tag: "meta" | "runs" | "events" | "models" | "tools" | "admin";
+  tag: "meta" | "runs" | "events" | "models" | "tools" | "packages" | "admin";
   /** OpenAPI request-body schema (POST routes); generated verbatim. */
   requestBody?: Record<string, unknown>;
   /** Response notes rendered into the OpenAPI responses map. */
@@ -220,6 +220,65 @@ export const DAEMON_ROUTES: readonly DaemonRoute[] = [
       "The intersection the agent pipeline can actually use: tools declared in vaerion.yaml (name, scope, description) and the engine builtins (echo, clock.read).",
     tag: "tools",
     responses: { "200": "Array of ToolDescription" },
+  },
+  {
+    method: "POST",
+    path: "/packages/pack",
+    auth: true,
+    operationId: "packagePack",
+    summary: "Build the workspace bundle — wire parity with `vae package build`.",
+    description:
+      "The SAME deterministic fold the CLI runs (ADR-0016): declared inputs plus pin-verified extension artifacts, folded into a reproducible .vxn bundle with a regenerated vaerion.lock, journaled (package.built) with a receipt. Body: {out (workspace-relative bundle path), dry_run}. dry_run:true returns the plan and writes nothing. Requires vaerion.yaml with a package block (E1600 otherwise).",
+    tag: "packages",
+    requestBody: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        out: { type: "string", description: "Workspace-relative bundle output path (default .vaerion/package/<project>.vxn)." },
+        dry_run: { type: "boolean", description: "Plan only: fold and report, write nothing, journal nothing." },
+      },
+    },
+    responses: { "200": "PackagePackResult (plan + run receipt)", "400": "E1600 no package block / invalid body", "403": "E2100 pin mismatch" },
+  },
+  {
+    method: "POST",
+    path: "/packages/verify",
+    auth: true,
+    operationId: "packageVerify",
+    summary: "Verify a bundle — wire parity with `vae package verify BUNDLE`.",
+    description:
+      "The SAME pure check the CLI runs (ADR-0016 decision 3): digests recomputed, pins compared, content never executed, reported as an honest per-check findings list against the workspace config + lock. Body: {path, dry_run}. The path is resolved against the workspace root; traversal outside the workspace is refused (E2204). Journaled (package.verified) with a receipt unless dry_run.",
+    tag: "packages",
+    requestBody: {
+      type: "object",
+      additionalProperties: false,
+      required: ["path"],
+      properties: {
+        path: { type: "string", description: "Bundle path, resolved against the workspace root (E2204 outside)." },
+        dry_run: { type: "boolean", description: "Report only: no journal record." },
+      },
+    },
+    responses: { "200": "PackageVerifyResult (ok + findings)", "400": "E1600 missing path / bundle not found · E2204 path outside workspace · E2206 failed verification" },
+  },
+  {
+    method: "POST",
+    path: "/packages/import",
+    auth: true,
+    operationId: "packageImport",
+    summary: "Admit an externally produced bundle into the workspace.",
+    description:
+      "Imports a .vxn bundle file: the bundle FIRST passes the same pure verification the CLI runs (a failing bundle is never admitted, E2206), then the file is admitted at .vaerion/package/<name>.vxn, a fresh vaerion.lock is generated FROM the bundle (the lock is generated, never hand-edited), and the admission is journaled (package.imported) with a receipt. Body: {path, dry_run}. Content is never executed (ADR-0016 law).",
+    tag: "packages",
+    requestBody: {
+      type: "object",
+      additionalProperties: false,
+      required: ["path"],
+      properties: {
+        path: { type: "string", description: "Bundle path, resolved against the workspace root (E2204 outside)." },
+        dry_run: { type: "boolean", description: "Verify only: report what would be admitted, write nothing." },
+      },
+    },
+    responses: { "200": "PackageImportResult (admitted + receipt)", "400": "E1600 missing path / bundle not found · E2204 path outside workspace · E2206 failed verification (never admitted)" },
   },
   {
     method: "POST",

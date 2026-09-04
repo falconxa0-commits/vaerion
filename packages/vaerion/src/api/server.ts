@@ -316,6 +316,30 @@ async function handle(request: Request, route: DaemonRoute, params: Record<strin
       const tools = await ctx.registry.tools();
       return Response.json({ tools });
     }
+    case "packagePack": {
+      const body = await readJsonBody(request);
+      const result = await ctx.registry.packagePack({
+        out: typeof body.out === "string" ? body.out : undefined,
+        dryRun: body.dry_run === true,
+      });
+      return Response.json(result);
+    }
+    case "packageVerify": {
+      const body = await readJsonBody(request);
+      if (typeof body.path !== "string" || body.path.length === 0) {
+        throw new VaerionError("E1600", "body.path is required (the bundle to verify)");
+      }
+      const result = await ctx.registry.packageVerify({ path: body.path, dryRun: body.dry_run === true });
+      return Response.json(result);
+    }
+    case "packageImport": {
+      const body = await readJsonBody(request);
+      if (typeof body.path !== "string" || body.path.length === 0) {
+        throw new VaerionError("E1600", "body.path is required (the bundle to import)");
+      }
+      const result = await ctx.registry.packageImport({ path: body.path, dryRun: body.dry_run === true });
+      return Response.json(result);
+    }
     case "shutdownDaemon": {
       const body = await readJsonBody(request);
       const echoed = typeof body.token === "string" ? body.token : null;
