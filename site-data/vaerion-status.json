@@ -1,25 +1,30 @@
 {
-  "generatedAt": "2026-09-03T21:48:03.562Z",
-  "engineVersion": "0.1.12-rc1",
+  "generatedAt": "2026-09-04T02:33:40.861Z",
+  "engineVersion": "0.1.13-rc1",
   "substrate": "TypeScript on Bun (ADR-0018 — provisional with recorded migration path; Founder ratification pending)",
   "verification": {
-    "generatedAt": "2026-09-03T21:43:56.103Z",
+    "generatedAt": "2026-09-04T02:31:04.732Z",
     "ok": true,
     "gates": [
       {
         "gate": "typecheck-engine",
         "ok": true,
-        "durationMs": 4342
+        "durationMs": 4453
       },
       {
         "gate": "typecheck-sdk",
         "ok": true,
-        "durationMs": 3398
+        "durationMs": 3416
       },
       {
         "gate": "tests",
         "ok": true,
-        "durationMs": 6913
+        "durationMs": 7932
+      },
+      {
+        "gate": "coverage-ratchet",
+        "ok": true,
+        "durationMs": 1
       },
       {
         "gate": "layerlint",
@@ -29,29 +34,29 @@
       {
         "gate": "constitutional-check",
         "ok": true,
-        "durationMs": 250
+        "durationMs": 234
       },
       {
         "gate": "perf-budget",
         "ok": true,
-        "durationMs": 328
+        "durationMs": 295
       },
       {
         "gate": "a11y-structural",
         "ok": true,
-        "durationMs": 27
+        "durationMs": 26
       },
       {
         "gate": "repo-lint",
         "ok": true,
-        "durationMs": 10700
+        "durationMs": 10921
       }
     ],
     "measured": {
-      "testsPassed": 523,
+      "testsPassed": 545,
       "testsFailed": 0,
-      "expectations": 3200,
-      "testFiles": 41
+      "expectations": 3932,
+      "testFiles": 43
     }
   },
   "constitution": {
@@ -59,9 +64,9 @@
     "version": "v1.7"
   },
   "tests": {
-    "suites": 41,
-    "assertedExpectations": 3200,
-    "totalTests": 523,
+    "suites": 43,
+    "assertedExpectations": 3932,
+    "totalTests": 545,
     "testsFailed": 0,
     "coverage": {
       "lines": 86.52,
@@ -73,19 +78,19 @@
   "code": {
     "engine": {
       "files": 107,
-      "lines": 21649
+      "lines": 22018
     },
     "engineTests": {
-      "files": 41,
-      "lines": 11311
+      "files": 43,
+      "lines": 12012
     },
     "sdk": {
       "files": 3,
-      "lines": 779
+      "lines": 805
     },
     "tools": {
-      "files": 14,
-      "lines": 2694
+      "files": 15,
+      "lines": 2886
     }
   },
   "contracts": {
@@ -401,7 +406,7 @@
     "passed": 8,
     "total": 12,
     "blockers": [
-      "git-tree-clean: working tree dirty: 0 staged, 5 unstaged, 3 untracked",
+      "git-tree-clean: working tree dirty: 0 staged, 3 unstaged, 0 untracked",
       "release-tag-binding: HEAD is not exactly at a v* release tag",
       "release-artifacts: artifact set incomplete: dist/MANIFEST.json, dist/MANIFEST.json.sig, dist/SHA256SUMS, dist/VERIFY.md missing"
     ]
@@ -450,7 +455,7 @@
       "blockers": [
         {
           "check": "git-tree-clean",
-          "detail": "working tree dirty: 0 staged, 5 unstaged, 3 untracked"
+          "detail": "working tree dirty: 0 staged, 3 unstaged, 0 untracked"
         },
         {
           "check": "release-tag-binding",
@@ -473,13 +478,12 @@
     "ModelPlanner success path needs a recorded real-provider cassette for end-to-end golden coverage (environment has no provider network access).",
     "zstd byte-determinism holds for the pinned level (19) on the current toolchain; a toolchain bump could change bytes — the format version in the magic is the escape hatch (never a silent rebuild).",
     "Per-process breaker state is deliberately not journaled (the failures are); multi-process sharing is a daemon concern needing an ADR.",
-    "Coverage floors are total-based; per-module ratchets are mechanical follow-up, and totals only move up."
+    "Per-module coverage floors are enforced by the coverage-ratchet gate (116-module baseline of record, 1pp measured jitter band); totals stay floored by bunfig — a silent decrease fails CI by name."
   ],
   "nextWork": [
     "No campaign is in flight: the D-T ledger records FINAL FOUR PHASES complete through Phase 26 (evidence of record in the constitution's §11 Amendment Log); the next program awaits Founder ratification (P4).",
-    "GA remains rehearsed and PENDING FOUNDER GO (P4); the Founder gates (F-2 legal name, F-3 key ceremony, F-4 substrate ratification, F-5 publish, F-6 real-provider cassettes) are the remaining path to full GA.",
-    "MS-6 leftovers: native single-binary installers (host-gated: brew/winget/dmg/rpm authored in Phase 1, awaiting their platforms); the daemon packages route group (wire parity, spec/openapi regen).",
-    "Release train steps (publish, announce, key ceremony) — Founder-gated; artifacts are reproducible via tools/dist-pack.ts at the release tag.",
-    "Coverage: per-module ratchets on top of the total-based floors (mechanical follow-up)."
+    "GA remains rehearsed and PENDING FOUNDER GO (P4); the Founder gates (F-2 legal name, F-4 substrate ratification, F-5 publication (registries + hosted site), F-6 real-provider recordings, R-7 public disclosure channel) are the remaining path to full GA (F-3 closed at ASCENSION XXV — the production key signs from CI).",
+    "Host-gated single-binary installers (brew/winget/dmg/rpm authored, awaiting their platforms); the daemon packages route group is DONE (ASCENSION XXVI+ — pack/verify/import over the wire with proven parity).",
+    "Release train steps (publish, announce) — Founder-gated; artifacts are reproducible via tools/dist-pack.ts at the release tag."
   ]
 }

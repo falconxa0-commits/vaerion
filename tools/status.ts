@@ -155,7 +155,7 @@ const status = {
     "ModelPlanner success path needs a recorded real-provider cassette for end-to-end golden coverage (environment has no provider network access).",
     "zstd byte-determinism holds for the pinned level (19) on the current toolchain; a toolchain bump could change bytes — the format version in the magic is the escape hatch (never a silent rebuild).",
     "Per-process breaker state is deliberately not journaled (the failures are); multi-process sharing is a daemon concern needing an ADR.",
-    "Coverage floors are total-based; per-module ratchets are mechanical follow-up, and totals only move up.",
+    "Per-module coverage floors are enforced by the coverage-ratchet gate (116-module baseline of record, 1pp measured jitter band); totals stay floored by bunfig — a silent decrease fails CI by name.",
   ],
   nextWork: [
     // DERIVED from the D-T ledger state (MASTER DIRECTIVE Phase 16) — this
@@ -172,10 +172,9 @@ const status = {
       }
       return "The D-T ledger carries no parseable rows — the program state is UNMEASURABLE (fail-closed).";
     })(),
-    "GA remains rehearsed and PENDING FOUNDER GO (P4); the Founder gates (F-2 legal name, F-3 key ceremony, F-4 substrate ratification, F-5 publish, F-6 real-provider cassettes) are the remaining path to full GA.",
-    "MS-6 leftovers: native single-binary installers (host-gated: brew/winget/dmg/rpm authored in Phase 1, awaiting their platforms); the daemon packages route group (wire parity, spec/openapi regen).",
-    "Release train steps (publish, announce, key ceremony) — Founder-gated; artifacts are reproducible via tools/dist-pack.ts at the release tag.",
-    "Coverage: per-module ratchets on top of the total-based floors (mechanical follow-up).",
+    "GA remains rehearsed and PENDING FOUNDER GO (P4); the Founder gates (F-2 legal name, F-4 substrate ratification, F-5 publication (registries + hosted site), F-6 real-provider recordings, R-7 public disclosure channel) are the remaining path to full GA (F-3 closed at ASCENSION XXV — the production key signs from CI).",
+    "Host-gated single-binary installers (brew/winget/dmg/rpm authored, awaiting their platforms); the daemon packages route group is DONE (ASCENSION XXVI+ — pack/verify/import over the wire with proven parity).",
+    "Release train steps (publish, announce) — Founder-gated; artifacts are reproducible via tools/dist-pack.ts at the release tag.",
   ],
 };
 

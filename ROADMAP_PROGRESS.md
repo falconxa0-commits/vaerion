@@ -5,10 +5,10 @@
 > v1.6 A6 Phase 11: the roadmap report of record comes from the ONE measured status source).
 > Regenerate with `bun tools/status.ts`; hand edits are defects.
 
-- Engine version of record: `0.1.12-rc1`
+- Engine version of record: `0.1.13-rc1`
 - Constitution of record: `v1.7` (Amendment Log §11)
-- Verification record: GREEN — 8/8 gates ok (`.vaerion-verification.json`)
-- Measured tests: 523 pass · 0 fail · 3200 expectations · 41 files
+- Verification record: GREEN — 9/9 gates ok (`.vaerion-verification.json`)
+- Measured tests: 545 pass · 0 fail · 3932 expectations · 43 files
 - Coverage floors: bunfig.toml coverageThreshold (OBJ-Q6, ratcheted at MS-6 bundle close: 0.86/0.74/0.86/0.90; held at every ASCENSION phase close)
 
 ## Milestone board (§7)
@@ -61,10 +61,9 @@
 ## Recommended next work (priority order)
 
 1. No campaign is in flight: the D-T ledger records FINAL FOUR PHASES complete through Phase 26 (evidence of record in the constitution's §11 Amendment Log); the next program awaits Founder ratification (P4).
-2. GA remains rehearsed and PENDING FOUNDER GO (P4); the Founder gates (F-2 legal name, F-3 key ceremony, F-4 substrate ratification, F-5 publish, F-6 real-provider cassettes) are the remaining path to full GA.
-3. MS-6 leftovers: native single-binary installers (host-gated: brew/winget/dmg/rpm authored in Phase 1, awaiting their platforms); the daemon packages route group (wire parity, spec/openapi regen).
-4. Release train steps (publish, announce, key ceremony) — Founder-gated; artifacts are reproducible via tools/dist-pack.ts at the release tag.
-5. Coverage: per-module ratchets on top of the total-based floors (mechanical follow-up).
+2. GA remains rehearsed and PENDING FOUNDER GO (P4); the Founder gates (F-2 legal name, F-4 substrate ratification, F-5 publication (registries + hosted site), F-6 real-provider recordings, R-7 public disclosure channel) are the remaining path to full GA (F-3 closed at ASCENSION XXV — the production key signs from CI).
+3. Host-gated single-binary installers (brew/winget/dmg/rpm authored, awaiting their platforms); the daemon packages route group is DONE (ASCENSION XXVI+ — pack/verify/import over the wire with proven parity).
+4. Release train steps (publish, announce) — Founder-gated; artifacts are reproducible via tools/dist-pack.ts at the release tag.
 
 ## Technical risks (top)
 
@@ -76,7 +75,7 @@
 6. ModelPlanner success path needs a recorded real-provider cassette for end-to-end golden coverage (environment has no provider network access).
 7. zstd byte-determinism holds for the pinned level (19) on the current toolchain; a toolchain bump could change bytes — the format version in the magic is the escape hatch (never a silent rebuild).
 8. Per-process breaker state is deliberately not journaled (the failures are); multi-process sharing is a daemon concern needing an ADR.
-9. Coverage floors are total-based; per-module ratchets are mechanical follow-up, and totals only move up.
+9. Per-module coverage floors are enforced by the coverage-ratchet gate (116-module baseline of record, 1pp measured jitter band); totals stay floored by bunfig — a silent decrease fails CI by name.
 
 ---
 
