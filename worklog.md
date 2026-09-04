@@ -1119,3 +1119,19 @@ Work Log:
 
 Stage Summary:
 - The platform story is honest and complete: measured where measurable, labeled where host-gated, deliberately-unsupported where designed — nothing faked, nothing hidden.
+
+---
+Task ID: 9
+Agent: Auren — Principal Security Auditor (ASCENSION XXV, Phase XXXIII)
+Task: GA Security Audit — supply chain, repository, and release audits; produce docs/ga/FINAL-SECURITY-AUDIT.md.
+
+Work Log:
+- SUPPLY CHAIN MEASURED: bun.lock audit (~1039 pinned entries, 948 direct sha512 integrity hashes, dedup peers resolve through parent pins; zero git/file/http sources — the "non-registry" regex hits were bun's registry tarball-URL records, examined and dismissed); CI frozen install; published package = 3 permissively-licensed deps; Bun pinned 1.3.14 in every workflow. RESIDUAL: Dependabot absent (named, low, owner Founder).
+- REPOSITORY MEASURED: token-pattern sweep of the tracked tree AND the last 30 commits' trees — only C5-allow-listed [REDACTED:github_token] test vectors, zero real material; git config carries zero credential entries (campaign token env-only, outside the repo, chmod 600); /keys/*.key gitignored; the production key exists ONLY as the write-only GitHub secret; branch protection LIVE (GET 200) with the admin-bypass residual honestly recorded; workflow privilege audit (verify.yml contents:read; release-publish.yml the ONLY contents:write, with tag-input validation + the bootstrap publish refusal). RESIDUAL: first-party actions pinned by major tag not SHA (named, low).
+- RELEASE MEASURED: reproducibility (twice byte-compare in the CI pack report + the publish path re-packs ON the tag), provenance (annotated tag -> CI run -> commit-pinned report -> assets), signature (production key; three verification legs; the anonymous consumer pass), channel honesty (rc prerelease flag; the notes-of-record as the Release body), registry publication honestly NOT YET (F-5).
+- RISK LEDGER SNAPSHOT: R-2 CLOSED (this campaign), branch protection CLOSED (this campaign), R-1/R-3/R-5/R-6 engineering-open, R-4/R-7 Founder-gated, two new low residuals named with owners.
+- DELIVERABLE: docs/ga/FINAL-SECURITY-AUDIT.md (the audit of record).
+- ALL GATES GREEN (doc-only change on a green tree; audit measurements were independent of the gates).
+
+Stage Summary:
+- The security posture at GA candidacy is measured end-to-end: pinned supply chain, clean repository, production-keyed reproducible releases verified three ways — with every residual named, owned, and risk-ranked. Nothing hidden.
